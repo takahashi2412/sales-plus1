@@ -34,10 +34,10 @@
 - Claude Code：設計、未決事項の整理と確認、計画ファイルづくり、レビュー、本線への取り込みとpush
 - Antigravity：実装、動作確認、テスト
 - 2つのツールは順番に使う。同じフォルダで同時に作業させない
-- 計画ファイルは `docs/tasks/plan_内容_v1.md`。Antigravityには `/plan @docs/tasks/plan_内容_v1.md` で渡す
+- 計画ファイルは `docs/tasks/plan_template.md` をもとに `docs/tasks/plan_内容_v1.md` として作る。Antigravityには `/plan @docs/tasks/plan_内容_v1.md` で渡す
 - Antigravity は CLAUDE.md を読まない。守らせたいルール（上の「守ること」と下の「Git」）は、計画ファイルに必ず書く
 - Antigravity の作業結果は `docs/reports/` にファイルで残させる
-- ファイルの担当：Claude Code＝CLAUDE.md・NOTES.md・docs/・.gitignore・守りのテスト／Antigravity＝アプリのコードとそれ以外のテスト
+- ファイルの担当：Claude Code＝CLAUDE.md・NOTES.md・docs/（docs/reports/ を除く）・.gitignore・守りのテスト／Antigravity＝アプリのコードとそれ以外のテスト・docs/reports/
 
 ## Git（Workspaceの「Gitは使わない」の例外。このアプリはここに従う）
 
@@ -46,7 +46,7 @@
 - Antigravity は作業用ブランチ（例：`task/内容`）で作業し、コミットまで行う。本線への取り込みとpushはしない
 - Claude Code は本線との差分をレビューする。守りのテストが変わっていないかを必ず見る
 - 本人のOKのあと、Claude Code が本線に取り込む。push は毎回確認を取ってから行う。`--force` は使わない
-- Claude Code が書くファイル（docs/・NOTES.md など）は、本線に直接コミットしてよい
+- Claude Code が書くファイル（docs/・NOTES.md など。docs/reports/ を除く）は、本線に直接コミットしてよい。コミットの前に、本線にいることを `git status` で確かめる
 - 作業が終わったら本線（main）に戻す
 - .gitignore を緩める変更（Gitに入るファイルを増やす変更）は、確認を取ってから行う
 - Claude Code の実行環境からは GitHub のサインイン画面を出せない。サインインは本人のターミナルで行う

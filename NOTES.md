@@ -67,9 +67,9 @@
 
 | 変える決定 | 直すファイル |
 |---|---|
-| git方針・作業の流れ | apps\sales-plus1\CLAUDE.md（開発体制・Git）、NOTES.md（決定事項）、計画ファイルのひな形、Antigravityガイド（training\antigravity） |
+| git方針・作業の流れ | apps\sales-plus1\CLAUDE.md（開発体制・Git）、NOTES.md（決定事項）、docs\tasks\plan_template.md（0章・7章Git・8章）、Antigravityガイド（training\antigravity）、図解 sales-plus1_rule-layers（2章） |
 | Gitで管理するアプリの追加・削除 | C:\Workspace\CLAUDE.md（一覧） |
-| 守ること（機密・本人版など） | apps\sales-plus1\CLAUDE.md、計画ファイルのひな形、.gitignore、（将来）AGENTS.md |
+| 守ること（機密・本人版など） | apps\sales-plus1\CLAUDE.md、docs\tasks\plan_template.md（7章）、.gitignore、（将来）AGENTS.md |
 | ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 sales-plus1_rule-layers |
 | 個人ルール | ~\.claude\CLAUDE.md（2台とも）、（将来）~\.gemini\GEMINI.md |
 | 2台目の手順 | NOTES.md「2台目の準備」 |
@@ -97,11 +97,11 @@
 - Git導入後の点検：CLAUDE.md にGitのルールがない、Workspaceの CLAUDE.md が「未導入」のまま、2台目の手順がない、録音ファイルが .gitignore で止まらない、などの漏れを見つけて修正した
 - 点検で、training\antigravity の過去の決定（Gitなし・順番に使う・計画ファイルを@で渡す・AGENTS.md見送り）との食い違いを見つけ、上の「決定事項」のとおり整理した
 - 図解を v2 に作り直した（v1の確かめ方「バージョン1.20.3以上」は旧IDEの番号で誤り → 2.0アプリに実際に聞いて確かめる、に修正。Git導入後の作業の流れを追加）。v1は残した
+- 計画ファイルのひな形 docs\tasks\plan_template.md を作った（最初と最後のGit手順、決めてよいこと／いけないこと、守ること、報告書の書式）
 - 気づき：Claudeアプリのターミナルパネルは、ユーザー名の「髙」を含むパスで部品を読み込めず動かなかった。日本語パスでの読み込み失敗は実際に起きる → AGENTS.md・GEMINI.md の読み込みも必ず実機で確認する
 - 気づき：Claude Code の実行環境からはGitHubのサインイン画面を出せない。初回サインインは本人のターミナルで行う（2台目も同じ）
 
 ### 次にやること
-- 計画ファイルのひな形（docs\tasks\）を作る。守ること・Gitのルールを入れる
 - Antigravityガイド v3 に、Gitありの案件（sales-plus1）の使い方を反映する（training\antigravity）
 - 2台目の準備（上の「2台目の準備」）
 - ルールの共有方法を決め、AGENTS.md・GEMINI.md・CLAUDE.md の下書きを作る（作る前にAntigravityで読み込みを確認）
