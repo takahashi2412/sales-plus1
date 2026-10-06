@@ -177,7 +177,9 @@
 | 変える決定 | 直すファイル |
 |---|---|
 | git方針・作業の流れ | apps\sales-plus1\CLAUDE.md（開発体制・Git）、NOTES.md（決定事項）、docs\tasks\plan_template.md（0章・7章Git・8章）、Antigravityガイド（training\antigravity）、図解 sales-plus1_rule-layers（2章） |
-| Gitで管理するアプリの追加・削除 | C:\Workspace\CLAUDE.md（一覧） |
+| Gitで管理するアプリの追加・削除 | C:\Workspace\CLAUDE.md（一覧）、図解 claude-setup_claudemd-cheatsheet・claude-setup_workspace-guide（版を上げる） |
+| Workspace・個人の CLAUDE.md の文面 | 図解 claude-setup_claudemd-cheatsheet（原文の欄。scratchpad の make_cheatsheet スクリプトで実ファイルから差し込む）、claude-setup_workspace-guide |
+| Antigravityとの作業のしかた | Antigravityガイド（visuals\antigravity_usage-guide、training\antigravity\NOTES.md） |
 | 守ること（機密・本人版など） | apps\sales-plus1\CLAUDE.md、docs\tasks\plan_template.md（7章）、.gitignore、（将来）AGENTS.md |
 | ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 sales-plus1_rule-layers |
 | 個人ルール | ~\.claude\CLAUDE.md（2台とも）、（将来）~\.gemini\GEMINI.md |
@@ -223,6 +225,7 @@
 - 点検：v8に見本データ以前の言葉（接続率・架電数・アポ率）が残っていた → v9で今の項目名（実率・総・ア・ア/オ）にそろえた。rule-layers_v2 の .gitignore の古い記述1行をその場で修正
 - 点検：見本データ（実名）を samples\ に置いたことが、Workspace と sales-plus1 の CLAUDE.md の「実名は置かない」と食い違っていた → 両方に例外として明記（Gitの対象外、実名を書き写さない、Antigravityには読ませない）
 - C:\Workspace\CLAUDE.md に「図解HTML・ダッシュボードの品質基準」を追記（基準の見本＝ダッシュボードv9）。ほかの案件でも同じ水準で作る
+- 古くなっていた図解を作り直した：claude-setup_claudemd-cheatsheet_v2（原文を最新に差し替え、選択式・Git例外・機密の例外・品質基準を反映）、claude-setup_workspace-guide_v2（Git導入とsales-plus1の例外、2台目の手順）、antigravity_usage-guide_v3（Gitで管理する案件の流れ、Review ペインの使い方）。Workspace の CLAUDE.md の見出し「同期について（Gitは導入検討中）」も直した
 - 気づき：Claudeアプリのターミナルパネルは、ユーザー名の「髙」を含むパスで部品を読み込めず動かなかった。日本語パスでの読み込み失敗は実際に起きる → AGENTS.md・GEMINI.md の読み込みも必ず実機で確認する
 - 気づき：Claude Code の実行環境からはGitHubのサインイン画面を出せない。初回サインインは本人のターミナルで行う（2台目も同じ）
 
@@ -232,14 +235,15 @@
 2. まとまり6：画面ごとに出す項目を決め、アプリ画面の試作（ダッシュボード／チーム一覧など）を架空データで作る
 3. まとまり7：技術構成（DB・ホスティング・AI連携）。条件＝Microsoft 365ログイン、ブラウザ自動操作を動かせる場所、PC・スマホ両対応、利用者30〜60人
 4. まとまり8：段階導入の日付
-5. 2台目の準備（上の「2台目の準備」）、Antigravityガイド v3、ルールの共有方法（AGENTS.md）
+5. 2台目の準備（上の「2台目の準備」）、ルールの共有方法（AGENTS.md）
 - 未確認：電話システムの利用規約（自動操作の可否）と製品名、既存アプリ（rushup-weekly-report）との関係、保守する人と予算
 
 ### もう1台に渡すもの
 - apps\sales-plus1 の中身：GitHubから取得する（手でコピーしない）
 - C:\Users\髙橋圭ktakahashi\.claude\CLAUDE.md（個人ルール。2台目では「このPCの役割」だけ書き換える）
-- C:\Workspace\CLAUDE.md（Gitで管理するアプリの一覧、機密ファイルの例外、図解HTML・ダッシュボードの品質基準を追加）
-- C:\Workspace\training\antigravity\NOTES.md（次にやることを1行追加）
+- C:\Workspace\CLAUDE.md（Gitで管理するアプリの一覧、機密ファイルの例外、図解HTML・ダッシュボードの品質基準を追加、同期の見出しを修正）
+- C:\Workspace\training\antigravity\NOTES.md（ガイドv3の作成を記録）
+- C:\Workspace\visuals\claude-setup_claudemd-cheatsheet_v2.html、claude-setup_workspace-guide_v2.html、antigravity_usage-guide_v3.html（新規）
 - C:\Workspace\visuals\sales-plus1_rule-layers_v1.html
 - C:\Workspace\visuals\sales-plus1_rule-layers_v2.html（.gitignore の記述1行を修正済み）
 - C:\Workspace\visuals\sales-plus1_project-dashboard_v1.html
