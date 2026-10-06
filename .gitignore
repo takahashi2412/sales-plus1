@@ -11,6 +11,17 @@
 !samples/**/*.csv
 ~$*
 
+# 通話録音・個人情報が入りやすい文書は入れない（必要なものは確認して例外を足す）
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.wma
+*.pdf
+*.docx
+*.doc
+*.zip
+
 # 開発で自動生成されるもの
 node_modules/
 dist/
