@@ -178,7 +178,7 @@
 |---|---|
 | git方針・作業の流れ | apps\sales-plus1\CLAUDE.md（開発体制・Git）、NOTES.md（決定事項）、docs\tasks\plan_template.md（0章・7章Git・8章）、Antigravityガイド（training\antigravity）、図解 sales-plus1_rule-layers（2章） |
 | Gitで管理するアプリの追加・削除 | C:\Workspace\CLAUDE.md（一覧）、図解 claude-setup_claudemd-cheatsheet・claude-setup_workspace-guide（版を上げる） |
-| Workspace・個人の CLAUDE.md の文面 | 図解 claude-setup_claudemd-cheatsheet（原文の欄。scratchpad の make_cheatsheet スクリプトで実ファイルから差し込む）、claude-setup_workspace-guide |
+| Workspace・個人の CLAUDE.md の文面 | 図解 claude-setup_claudemd-cheatsheet（原文の欄。手で写さず、実際のCLAUDE.mdを読み込んで差し込む）、claude-setup_workspace-guide |
 | Antigravityとの作業のしかた | Antigravityガイド（visuals\antigravity_usage-guide、training\antigravity\NOTES.md） |
 | 守ること（機密・本人版など） | apps\sales-plus1\CLAUDE.md、docs\tasks\plan_template.md（7章）、.gitignore、（将来）AGENTS.md |
 | ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 sales-plus1_rule-layers |
