@@ -126,6 +126,7 @@
 - 見本データは samples\ に実名のまま入れてよい（本人の判断）。まとめる資料には実名を書かない
 - 企画ダッシュボード C:\Workspace\visuals\sales-plus1_project-dashboard_v1.html を作った（全体の流れ・6業務・AIサイクル・段階導入・開発体制・未決事項・決定事項・次にやること）
 - 企画ダッシュボード v2 を作った（図中心：システム構成図、データのつながり図、画面と権限の表、カルテと日報入力のワイヤーフレーム、1日のレーン図と1週間の流れ、AIサイクルの循環図、段階導入の道のり、開発の流れのレーン図、未決事項）。画面と権限・構図は案で、聞き取りと見本データで確定する
+- 企画ダッシュボード v3 を作った（システム設計をしたことがない人向け。専門用語をなくし、今とこれからの比較、使う人ごとのうれしいこと、1日・1週間の流れ、カルテの画面イメージ、安心の約束、進め方、決まったこと／まだ、次にやること、用語集。作る側の話は rule-layers_v2 に分けた）
 - 気づき：Claudeアプリのターミナルパネルは、ユーザー名の「髙」を含むパスで部品を読み込めず動かなかった。日本語パスでの読み込み失敗は実際に起きる → AGENTS.md・GEMINI.md の読み込みも必ず実機で確認する
 - 気づき：Claude Code の実行環境からはGitHubのサインイン画面を出せない。初回サインインは本人のターミナルで行う（2台目も同じ）
 
@@ -146,4 +147,5 @@
 - C:\Workspace\visuals\sales-plus1_rule-layers_v2.html
 - C:\Workspace\visuals\sales-plus1_project-dashboard_v1.html
 - C:\Workspace\visuals\sales-plus1_project-dashboard_v2.html
+- C:\Workspace\visuals\sales-plus1_project-dashboard_v3.html
 - samples\ の見本データは渡さない（Gitに入らず、実名を含むため。必要なら本人が判断）
