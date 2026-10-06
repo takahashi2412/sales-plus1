@@ -3,12 +3,15 @@
 .env.*
 !.env.example
 
-# 実データの保険：Excel・CSVは入れない（見本は samples\ の中だけ許可）
+# 本物の見本データ（実名を含む）は、形式に関係なくフォルダごと入れない
+/samples/
+
+# 実データの保険：Excel・CSVは入れない（開発用の架空データは fixtures\ の中だけ許可）
 *.xlsx
 *.xls
 *.xlsm
 *.csv
-!samples/**/*.csv
+!fixtures/**/*.csv
 ~$*
 
 # 通話録音・個人情報が入りやすい文書は入れない（必要なものは確認して例外を足す）
