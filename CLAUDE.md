@@ -8,7 +8,7 @@
 
 引き継ぎ資料と NOTES.md の「決定事項」が食い違うときは、NOTES.md を優先する。
 
-**設計書は企画ダッシュボード**（`C:\Workspace\visuals\sales-plus1_project-dashboard_vN.html` のいちばん新しい版）。8つのまとまりを1つずつ確定させ、すべて確定してから開発に進む。決定が変わったら、版を上げて反映する（品質基準は `C:\Workspace\CLAUDE.md` の「図解HTML・ダッシュボードの品質基準」）。
+**設計書は企画ダッシュボード**（`docs/design/project-dashboard_vN.html` のいちばん新しい版。以前の版は `docs/design/old/`）。このアプリの図解は `docs/design/` に置く（Workspaceの visuals\ の例外）。8つのまとまりを1つずつ確定させ、すべて確定してから開発に進む。決定が変わったら、版を上げて反映する（品質基準は `C:\Workspace\CLAUDE.md` の「図解HTML・ダッシュボードの品質基準」）。
 
 ## コミュニケーション
 

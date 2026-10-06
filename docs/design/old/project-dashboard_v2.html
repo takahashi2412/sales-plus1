@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALES +1 企画ダッシュボード</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --chart-muted: #C8C8CC;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-full: 999px;
+    --doc-width: 920px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+      --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A;
+      --warn: #E0A04A; --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E; --chart-muted: #55565C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+    --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A;
+    --warn: #E0A04A; --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E; --chart-muted: #55565C;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.4; margin: 0; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin-bottom: var(--space-2); }
+  h3 { font-size: 15px; }
+  p { margin: 0; max-width: 44em; }
+  .small { font-size: 13px; color: var(--ink-muted); }
+
+  .doc-header { margin-bottom: var(--space-6); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+  .toc { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+  .toc a { font-size: 13px; color: var(--navy-text); text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 26px; }
+  .toc a:hover { background: var(--navy-soft); }
+  .toc a:focus-visible { outline: 2px solid var(--navy-band); outline-offset: 2px; }
+
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+
+  section { margin-top: var(--space-12); scroll-margin-top: var(--space-4); }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 14px; margin-right: var(--space-2); vertical-align: 2px; }
+  .lead { margin-bottom: var(--space-4); color: var(--ink-muted); font-size: 14px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); }
+  .note { font-size: 13px; color: var(--ink-muted); margin-top: var(--space-2); }
+
+  .tag { display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700; border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 22px; white-space: nowrap; }
+  .tag--navy { background: var(--navy-soft); color: var(--navy-text); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+  .tag--bad { background: var(--bad-soft); color: var(--ink); }
+
+  /* タイル */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+  .tile .t-label { font-size: 13px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; }
+  .tile .t-value { font-family: var(--font-figure); font-weight: 700; font-size: 32px; line-height: 1.2; }
+  .tile .t-value .unit { font-family: var(--font-body); font-size: 14px; font-weight: 500; margin-left: 2px; }
+  .tile .t-value.text { font-family: var(--font-display); font-size: 22px; }
+  .tile .t-note { font-size: 13px; color: var(--ink-muted); }
+
+  /* SVG 共通 */
+  .svg-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); }
+  .svg-wrap svg { display: block; width: 100%; min-width: 780px; height: auto; }
+  svg text { font-family: var(--font-body); }
+  .s-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .s-src { fill: var(--surface-sunken); stroke: var(--ink-muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .s-core { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 2; }
+  .s-wrap { fill: var(--surface-sunken); stroke: var(--navy-band); stroke-width: 1.5; }
+  .s-band { fill: var(--navy-band); }
+  .s-warn { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+  .s-lane { fill: var(--surface-sunken); }
+  .s-lane2 { fill: var(--surface); }
+  .s-bar { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 1; }
+  .s-bar-muted { fill: var(--bad-soft); }
+  .s-dot { fill: var(--surface); stroke: var(--navy-band); stroke-width: 2; }
+  .s-line { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+  .s-spoke { stroke: var(--line); stroke-width: 2; fill: none; }
+  .s-dash { stroke-dasharray: 5 4; }
+  .s-grid { stroke: var(--line); stroke-width: 1; }
+  .s-ah { fill: var(--ink-muted); }
+  .t-title { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .t-big { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .t-body { fill: var(--ink); font-size: 13px; }
+  .t-muted { fill: var(--ink-muted); font-size: 12px; }
+  .t-on { fill: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .t-navy { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-warn { fill: var(--warn); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-fig { fill: var(--ink-muted); font-family: var(--font-figure); font-size: 12px; }
+
+  /* 画面と権限 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 640px; }
+  th { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; text-align: center; padding: var(--space-2) var(--space-3); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--line); text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; font-family: var(--font-display); font-weight: 700; }
+  .cell { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+  .dot { width: 14px; height: 14px; border-radius: var(--radius-full); display: inline-block; flex: none; }
+  .dot.in { background: var(--navy-band); }
+  .dot.view { border: 2px solid var(--navy-band); }
+  .none { color: var(--chart-muted); font-family: var(--font-figure); font-weight: 700; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-2); font-size: 13px; color: var(--ink-muted); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ワイヤーフレーム */
+  .wf-row { display: grid; grid-template-columns: 1fr 240px; gap: var(--space-6); align-items: start; }
+  .wf-cap { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-2); }
+  .wf { border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; display: grid; grid-template-columns: 112px 1fr; min-height: 360px; }
+  .wf-side { background: var(--navy-band); padding: var(--space-3) var(--space-2); display: flex; flex-direction: column; gap: 6px; }
+  .wf-side .logo { color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-bottom: var(--space-2); }
+  .wf-side span { color: var(--on-dark); opacity: .75; font-size: 11px; padding: 2px 6px; border-radius: var(--radius-sm); }
+  .wf-side span.on { opacity: 1; background: rgba(255,255,255,.18); }
+  .wf-main { padding: var(--space-3); display: grid; gap: var(--space-2); grid-template-columns: repeat(4, 1fr); grid-auto-rows: min-content; background: var(--paper); }
+  .blk { background: var(--surface); border: 1px dashed var(--chart-muted); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 11px; color: var(--ink-muted); position: relative; min-height: 44px; }
+  .blk b { display: block; color: var(--ink); font-family: var(--font-display); font-size: 12px; }
+  .blk .mk { position: absolute; top: -8px; right: -6px; width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .span4 { grid-column: span 4; }
+  .span3 { grid-column: span 3; }
+  .span2 { grid-column: span 2; }
+  .mini-bars { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin-top: 4px; position: relative; }
+  .mini-bars i { flex: 1; background: var(--chart-muted); border-radius: 2px 2px 0 0; }
+  .mini-bars i.me { background: var(--navy-band); }
+  .mini-bars .mark { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--ink-muted); }
+  .hbars { display: grid; gap: 3px; margin-top: 4px; }
+  .hbars i { display: block; height: 6px; background: var(--navy-soft); border-radius: 2px; }
+  .hbars i.low { background: var(--warn); }
+  .tl { display: grid; gap: 4px; margin-top: 4px; }
+  .tl i { display: block; height: 8px; border-radius: 2px; background: var(--bad-soft); }
+  .phone { width: 240px; border: 2px solid var(--ink-muted); border-radius: 22px; padding: 14px 10px; background: var(--paper); }
+  .phone .bar { height: 6px; width: 60px; border-radius: 3px; background: var(--chart-muted); margin: 0 auto 10px; }
+  .phone .ph { display: grid; gap: 8px; }
+  .phone .k3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .phone .k3 .blk { min-height: 40px; padding: 4px; text-align: center; }
+  .phone .ta { min-height: 92px; }
+  .phone .btn { background: var(--navy-band); color: var(--on-dark); border-radius: var(--radius-sm); text-align: center; font-family: var(--font-display); font-size: 12px; padding: 8px; }
+  .wf-legend { margin-top: var(--space-3); display: grid; grid-template-columns: repeat(5, auto); gap: var(--space-2) var(--space-4); font-size: 13px; color: var(--ink-muted); justify-content: start; }
+  .wf-legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .wf-legend .mk { position: static; width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+
+  /* 1週間 */
+  .week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: var(--space-3); }
+  .wk { position: relative; background: var(--surface); border: 1px solid var(--line); padding: var(--space-2) var(--space-3); font-size: 13px; margin-right: 14px; border-radius: var(--radius-sm); }
+  .wk::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .wk:last-child { margin-right: 0; }
+  .wk:last-child::after { display: none; }
+  .wk b { display: block; font-family: var(--font-display); }
+  .wk .when { color: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .wk.human { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+
+  /* AIの2つの版 */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-4); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+  .chip-x { background: var(--bad-soft); color: var(--ink-muted); text-decoration: line-through; }
+
+  /* ロードマップ */
+  .road { display: grid; grid-template-columns: 110px repeat(4, 1fr); gap: 6px; align-items: center; }
+  .road .rh { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); text-align: center; }
+  .road .rl { font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .road .seg { border-radius: var(--radius-sm); padding: 6px 8px; font-size: 12px; min-height: 36px; display: flex; align-items: center; }
+  .seg.now { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; }
+  .seg.plan { background: var(--navy-soft); color: var(--navy-text); }
+  .seg.chg { background: var(--warn-soft); color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .seg.empty { background: transparent; }
+  .c2 { grid-column: span 2; }
+  .c3 { grid-column: span 3; }
+
+  /* 未決事項チップ */
+  .issues { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .iss { border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 13px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 2px; }
+  .iss .no { font-family: var(--font-figure); font-weight: 700; font-size: 12px; color: var(--ink-muted); }
+  .iss b { font-family: var(--font-display); font-size: 13px; }
+  .iss.done { background: var(--good-soft); border-color: var(--good); }
+  .iss.review { background: var(--navy-soft); border-color: var(--navy-band); }
+  .iss.wait { background: var(--warn-soft); border-color: var(--warn); }
+  .bar { display: flex; height: 14px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--line); margin-top: var(--space-4); }
+  .bar span { display: block; height: 100%; }
+
+  /* 次にやること */
+  .next { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+  .nx { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-3); margin-right: 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+  .nx::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .nx:last-child { margin-right: 0; }
+  .nx:last-child::after { display: none; }
+  .nx.first { border: 2px solid var(--navy-band); }
+  .nx .n { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); }
+  .nx b { font-family: var(--font-display); }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 22px; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .wf-row { grid-template-columns: 1fr; }
+    .wf { grid-template-columns: 84px 1fr; }
+    .phone { margin: 0 auto; }
+    .wf-legend { grid-template-columns: 1fr 1fr; }
+    .week, .next { grid-template-columns: 1fr; gap: 14px; }
+    .wk, .nx { margin-right: 0; }
+    .wk::after, .nx::after { right: 50%; top: auto; bottom: -14px; transform: translateX(50%); border-left-color: transparent; border-top-color: var(--ink-muted); }
+    .two { grid-template-columns: 1fr; }
+    .issues { grid-template-columns: 1fr 1fr; }
+    .road { grid-template-columns: 76px repeat(4, minmax(64px, 1fr)); overflow-x: auto; }
+  }
+  @media (max-width: 420px) {
+    .tiles { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- 矢印の共通定義 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ah" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ 企画ダッシュボード v2</div>
+    <h1>6業務を1枚のカルテに集め、AIで毎週「+1」を回す</h1>
+    <p class="small" style="margin-top:var(--space-2)">2026年10月6日（火）時点 ／ 図で見る全体像</p>
+    <nav class="toc" aria-label="目次">
+      <a href="#s1">システム構成</a><a href="#s2">データのつながり</a><a href="#s3">画面と権限</a><a href="#s4">画面の構図</a><a href="#s5">1日・1週間</a><a href="#s6">AIサイクル</a><a href="#s7">段階導入</a><a href="#s8">開発の流れ</a><a href="#s9">未決事項と次の一手</a>
+    </nav>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">結論</div>
+    <p>開発の土台は整いました。次は6業務の見本データを見て、図の中身（項目・画面・権限）を確定させます。</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="t-label">未決事項の決定</span><span class="t-value">2<span class="unit">／11件</span></span><span class="t-note">検討中1・待ち1・未着手7</span></div>
+    <div class="tile"><span class="t-label">対象の業務</span><span class="t-value">6<span class="unit">業務</span></span><span class="t-note">Excel管理を1つに統合</span></div>
+    <div class="tile"><span class="t-label">画面</span><span class="t-value">10<span class="unit">画面</span></span><span class="t-note">モックあり3・なし7</span></div>
+    <div class="tile"><span class="t-label">今の段階</span><span class="t-value text">開発準備</span><span class="t-note">次は見本データ</span></div>
+  </div>
+
+  <!-- 1 システム構成 -->
+  <section id="s1">
+    <h2><span class="section-num">1</span>システム構成：電話システムのデータと人の記録が、1つのアプリに集まる</h2>
+    <p class="lead">KPIは電話システムから取り込み、ほかの5業務は人が入力します。計算はプログラム、解釈はAIが行います。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 430" role="img" aria-label="システム構成図。電話システムからCSVを取り込み、データベース、集計、AI分析、アラート判定を経て画面に表示し、メンバー、リーダー・MGR、経営が使う">
+        <!-- 左：入るもの -->
+        <text class="t-navy" x="90" y="40" text-anchor="middle">入るもの</text>
+        <rect class="s-src" x="10" y="64" width="160" height="60" rx="8"/>
+        <text class="t-title" x="90" y="90" text-anchor="middle">電話システム</text>
+        <text class="t-muted" x="90" y="110" text-anchor="middle">CTI・APIなし</text>
+
+        <rect class="s-box" x="10" y="316" width="160" height="80" rx="8"/>
+        <text class="t-title" x="90" y="342" text-anchor="middle">人が入力</text>
+        <text class="t-muted" x="90" y="362" text-anchor="middle">日報・責任者日報</text>
+        <text class="t-muted" x="90" y="380" text-anchor="middle">部下メモ・ロープレ・教育</text>
+
+        <!-- 中央：アプリ -->
+        <rect class="s-wrap" x="215" y="20" width="425" height="392" rx="8"/>
+        <rect class="s-band" x="216" y="21" width="423" height="32" rx="7"/>
+        <text class="t-on" x="427" y="42" text-anchor="middle">SALES +1（Webアプリ）</text>
+
+        <rect class="s-box" x="235" y="68" width="175" height="64" rx="8"/>
+        <text class="t-title" x="322" y="94" text-anchor="middle">CSV取り込み</text>
+        <text class="t-muted" x="322" y="114" text-anchor="middle">今：手動 → いずれ自動</text>
+
+        <rect class="s-core" x="445" y="68" width="175" height="64" rx="8"/>
+        <text class="t-title" x="532" y="94" text-anchor="middle">データベース</text>
+        <text class="t-muted" x="532" y="114" text-anchor="middle">6業務とメンバーの記録</text>
+
+        <rect class="s-box" x="445" y="160" width="175" height="64" rx="8"/>
+        <text class="t-title" x="532" y="186" text-anchor="middle">集計プログラム</text>
+        <text class="t-muted" x="532" y="206" text-anchor="middle">率・前週比・平均との差</text>
+
+        <rect class="s-box" x="445" y="252" width="175" height="64" rx="8"/>
+        <text class="t-title" x="532" y="278" text-anchor="middle">AI分析</text>
+        <text class="t-muted" x="532" y="298" text-anchor="middle">原因の仮説・改善の提案</text>
+
+        <rect class="s-box" x="235" y="160" width="175" height="64" rx="8"/>
+        <text class="t-title" x="322" y="186" text-anchor="middle">アラート判定</text>
+        <text class="t-muted" x="322" y="206" text-anchor="middle">基準値で判定（AIなし）</text>
+
+        <rect class="s-core" x="235" y="336" width="385" height="60" rx="8"/>
+        <text class="t-title" x="427" y="361" text-anchor="middle">画面</text>
+        <text class="t-muted" x="427" y="381" text-anchor="middle">ダッシュボード ｜ カルテ ｜ 入力 ｜ AIレポート</text>
+
+        <!-- 矢印 -->
+        <path class="s-line" d="M170,94 L233,98" marker-end="url(#ah)"/>
+        <text class="t-muted" x="202" y="86" text-anchor="middle">CSV</text>
+        <path class="s-line" d="M410,100 L443,100" marker-end="url(#ah)"/>
+        <path class="s-line" d="M532,132 L532,158" marker-end="url(#ah)"/>
+        <path class="s-line" d="M532,224 L532,250" marker-end="url(#ah)"/>
+        <path class="s-line" d="M445,192 L412,192" marker-end="url(#ah)"/>
+        <path class="s-line" d="M532,316 L532,334" marker-end="url(#ah)"/>
+        <path class="s-line" d="M322,224 L322,334" marker-end="url(#ah)"/>
+        <path class="s-line" d="M170,356 L233,362" marker-end="url(#ah)"/>
+        <text class="t-muted" x="202" y="348" text-anchor="middle">入力</text>
+
+        <!-- 右：使う人 -->
+        <text class="t-navy" x="770" y="40" text-anchor="middle">使う人</text>
+        <rect class="s-box" x="690" y="64" width="160" height="64" rx="8"/>
+        <text class="t-title" x="770" y="90" text-anchor="middle">メンバー</text>
+        <text class="t-muted" x="770" y="110" text-anchor="middle">スマホ・日報・本人版</text>
+
+        <rect class="s-box" x="690" y="176" width="160" height="80" rx="8"/>
+        <text class="t-title" x="770" y="202" text-anchor="middle">リーダー／MGR</text>
+        <text class="t-muted" x="770" y="222" text-anchor="middle">カルテ・指導記録</text>
+        <text class="t-muted" x="770" y="240" text-anchor="middle">指導版・アラート通知</text>
+
+        <rect class="s-box" x="690" y="300" width="160" height="56" rx="8"/>
+        <text class="t-title" x="770" y="324" text-anchor="middle">経営（代表）</text>
+        <text class="t-muted" x="770" y="342" text-anchor="middle">全体を閲覧</text>
+
+        <path class="s-line" d="M620,366 C656,366 652,96 688,96" marker-end="url(#ah)"/>
+        <path class="s-line" d="M620,366 C656,366 652,216 688,216" marker-end="url(#ah)"/>
+        <path class="s-line" d="M620,366 C650,366 656,328 688,328" marker-end="url(#ah)"/>
+      </svg>
+    </div>
+    <p class="note">DB・認証・ホスティング・AIの連携先は未決です。技術構成で決めます。自動取り込みには「ブラウザを動かせる場所」が必要です。</p>
+  </section>
+
+  <!-- 2 データのつながり -->
+  <section id="s2">
+    <h2><span class="section-num">2</span>データのつながり：すべての記録が「メンバー」を中心に結びつく</h2>
+    <p class="lead">記録は「メンバーID × 日付 × 記入者」で紐づきます。だからカルテで1人分を1画面に並べられます。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 380" role="img" aria-label="データのつながり図。中心のメンバーに、KPI、一般日報、責任者日報、部下メモ、ロープレメモ、週間教育、AIレポート、アラートがつながる">
+        <path class="s-spoke" d="M430,190 L125,58"/>
+        <path class="s-spoke" d="M430,190 L430,48"/>
+        <path class="s-spoke" d="M430,190 L735,58"/>
+        <path class="s-spoke" d="M430,190 L735,190"/>
+        <path class="s-spoke" d="M430,190 L735,322"/>
+        <path class="s-spoke" d="M430,190 L430,332"/>
+        <path class="s-spoke" d="M430,190 L125,322"/>
+        <path class="s-spoke" d="M430,190 L125,190"/>
+
+        <rect class="s-core" x="345" y="150" width="170" height="80" rx="8"/>
+        <text class="t-big" x="430" y="184" text-anchor="middle">メンバー</text>
+        <text class="t-muted" x="430" y="208" text-anchor="middle">ID × 日付 × 記入者</text>
+
+        <rect class="s-box" x="40" y="30" width="170" height="56" rx="8"/>
+        <text class="t-title" x="125" y="54" text-anchor="middle">日々のKPI</text>
+        <text class="t-muted" x="125" y="74" text-anchor="middle">時間帯別・CSV取り込み</text>
+
+        <rect class="s-box" x="345" y="20" width="170" height="56" rx="8"/>
+        <text class="t-title" x="430" y="44" text-anchor="middle">一般日報</text>
+        <text class="t-muted" x="430" y="64" text-anchor="middle">業後・KPIを見て書く</text>
+
+        <rect class="s-box" x="650" y="30" width="170" height="56" rx="8"/>
+        <text class="t-title" x="735" y="54" text-anchor="middle">責任者日報</text>
+        <text class="t-muted" x="735" y="74" text-anchor="middle">言及メンバーで個人へ</text>
+
+        <rect class="s-warn" x="650" y="162" width="170" height="56" rx="8"/>
+        <text class="t-title" x="735" y="186" text-anchor="middle">部下メモ</text>
+        <text class="t-warn" x="735" y="206" text-anchor="middle">本人には非表示</text>
+
+        <rect class="s-box" x="650" y="294" width="170" height="56" rx="8"/>
+        <text class="t-title" x="735" y="318" text-anchor="middle">ロープレメモ</text>
+        <text class="t-muted" x="735" y="338" text-anchor="middle">誰に・内容・何分</text>
+
+        <rect class="s-box" x="345" y="304" width="170" height="56" rx="8"/>
+        <text class="t-title" x="430" y="328" text-anchor="middle">週間教育</text>
+        <text class="t-muted" x="430" y="348" text-anchor="middle">狙うKPI・問題→原因→行動</text>
+
+        <rect class="s-box" x="40" y="294" width="170" height="56" rx="8"/>
+        <text class="t-title" x="125" y="318" text-anchor="middle">AIレポート・提案</text>
+        <text class="t-muted" x="125" y="338" text-anchor="middle">本人版／指導版・採否</text>
+
+        <rect class="s-box" x="40" y="162" width="170" height="56" rx="8"/>
+        <text class="t-title" x="125" y="186" text-anchor="middle">アラート</text>
+        <text class="t-muted" x="125" y="206" text-anchor="middle">対応済／不要だった</text>
+      </svg>
+    </div>
+    <p class="note">項目の中身（列）は、見本データを見て確定します。週間教育の「狙うKPI」は、効果をプログラムで判定するための必須の欄です。</p>
+  </section>
+
+  <!-- 3 画面と権限 -->
+  <section id="s3">
+    <h2><span class="section-num">3</span>画面と権限：部下メモはメンバー本人に見せない</h2>
+    <p class="lead">誰がどの画面で入力・閲覧するかの案です。権限の細かさは聞き取りで確定します。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>画面</th><th>メンバー</th><th>リーダー</th><th>MGR</th><th>経営</th><th>モック</th></tr></thead>
+        <tbody>
+          <tr><td>ダッシュボード（チーム一覧）</td><td><span class="none">－</span></td><td><span class="cell"><i class="dot view"></i>自チーム</span></td><td><span class="cell"><i class="dot view"></i>全チーム</span></td><td><span class="cell"><i class="dot view"></i>全体</span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>メンバーカルテ</td><td><span class="cell"><i class="dot view"></i>自分・制限版</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--good">あり</span></td></tr>
+          <tr><td>一般日報</td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>KPIのCSV取り込み</td><td><span class="none">－</span></td><td colspan="3"><span class="tag tag--warn">誰が取り込むか未決</span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>責任者日報</td><td><span class="none">－</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>部下メモ</td><td><span class="none">－ 非表示</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>ロープレメモ</td><td><span class="cell"><i class="dot view"></i>自分</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>週間教育</td><td><span class="cell"><i class="dot view"></i>自分</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>AIレポート 本人版</td><td><span class="cell"><i class="dot view"></i>自分</span></td><td colspan="2"><span class="tag tag--warn">見せるか未決</span></td><td><span class="none">－</span></td><td><span class="tag tag--good">あり</span></td></tr>
+          <tr><td>AIレポート 指導版</td><td><span class="none">－</span></td><td><span class="cell"><i class="dot in"></i>判断</span></td><td><span class="cell"><i class="dot in"></i>判断</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--good">あり</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span><i class="dot in"></i>入力・判断する</span>
+      <span><i class="dot view"></i>見る</span>
+      <span><b class="none">－</b>使わない</span>
+    </div>
+  </section>
+
+  <!-- 4 画面の構図 -->
+  <section id="s4">
+    <h2><span class="section-num">4</span>画面の構図：カルテは「数字 → 推移 → 時間帯 → 記録」の順に並べる</h2>
+    <p class="lead">配置だけを示した略図（ワイヤーフレーム）です。見た目の仕上げは、アプリ画面の試作で行います。</p>
+    <div class="wf-row">
+      <div>
+        <div class="wf-cap">メンバーカルテ（リーダー／MGR・PC）</div>
+        <div class="wf" role="img" aria-label="メンバーカルテの配置。左に縦メニュー、右に基本情報、KPIタイル4つ、推移グラフと時間帯別グラフ、タイムライン">
+          <div class="wf-side">
+            <div class="logo">SALES +1</div>
+            <span>ダッシュボード</span>
+            <span class="on">メンバーカルテ</span>
+            <span>日報</span>
+            <span>責任者日報</span>
+            <span>部下メモ</span>
+            <span>ロープレ</span>
+            <span>週間教育</span>
+            <span>AIレポート</span>
+          </div>
+          <div class="wf-main">
+            <div class="blk span4"><span class="mk">1</span><b>基本情報</b>メンバーA ／ チーム・役割・入社日・担当リーダー</div>
+            <div class="blk"><span class="mk">2</span><b>架電数</b>前週比 ▲</div>
+            <div class="blk"><b>接続率</b>前週比 ▼</div>
+            <div class="blk"><b>アポ数</b>目標の進み</div>
+            <div class="blk"><b>アポ率</b>前週比 ▲</div>
+            <div class="blk span3"><span class="mk">3</span><b>KPIの週ごとの推移</b>縦線＝面談・ロープレ・教育の日
+              <div class="mini-bars"><i style="height:40%"></i><i style="height:48%"></i><i style="height:38%"></i><i style="height:52%"></i><i style="height:58%"></i><i style="height:66%"></i><i class="me" style="height:72%"></i><span class="mark" style="left:42%"></span></div>
+            </div>
+            <div class="blk"><span class="mk">4</span><b>時間帯別</b>弱い時間帯を強調
+              <div class="hbars"><i style="width:80%"></i><i style="width:70%"></i><i class="low" style="width:35%"></i><i style="width:75%"></i><i style="width:60%"></i></div>
+            </div>
+            <div class="blk span4"><span class="mk">5</span><b>タイムライン</b>日報・責任者日報・部下メモ・ロープレ・教育・AI提案を日付順に（種類で絞り込み）
+              <div class="tl"><i style="width:90%"></i><i style="width:70%"></i><i style="width:80%"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="wf-cap">一般日報の入力（メンバー・スマホ）</div>
+        <div class="phone" role="img" aria-label="日報入力のスマホ画面の配置。上に取り込み済みの今日のKPI、中に所感の入力欄、下に送信ボタン">
+          <div class="bar"></div>
+          <div class="ph">
+            <div class="blk"><b>今日のKPI</b>取り込み済み（入力しない）</div>
+            <div class="k3"><div class="blk"><b>架電</b>数字</div><div class="blk"><b>接続</b>数字</div><div class="blk"><b>アポ</b>数字</div></div>
+            <div class="blk ta"><b>今日の振り返り</b>KPIを見て書く所感</div>
+            <div class="btn">送信する</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-legend">
+      <span><i class="mk">1</i>基本情報</span>
+      <span><i class="mk">2</i>今週のKPI</span>
+      <span><i class="mk">3</i>推移＋指導の日</span>
+      <span><i class="mk">4</i>時間帯別</span>
+      <span><i class="mk">5</i>タイムライン</span>
+    </div>
+  </section>
+
+  <!-- 5 1日・1週間 -->
+  <section id="s5">
+    <h2><span class="section-num">5</span>1日・1週間の流れ：日中は取り込みとアラート、業後は日報</h2>
+    <p class="lead">日報は、その日のKPIを見て業後に書きます。そのため、業後までに取り込みが終わっている必要があります。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 290" role="img" aria-label="1日の流れのレーン図。電話システム、SALES +1、メンバー、リーダーの4レーンに、9時から19時と業後の動きを並べる">
+        <!-- レーン -->
+        <rect class="s-lane" x="0" y="30" width="860" height="60"/>
+        <rect class="s-lane2" x="0" y="90" width="860" height="60"/>
+        <rect class="s-lane" x="0" y="150" width="860" height="60"/>
+        <rect class="s-lane2" x="0" y="210" width="860" height="60"/>
+        <text class="t-title" x="10" y="65">電話システム</text>
+        <text class="t-title" x="10" y="125">SALES +1</text>
+        <text class="t-title" x="10" y="185">メンバー</text>
+        <text class="t-title" x="10" y="245">リーダー／MGR</text>
+        <!-- 時刻 -->
+        <text class="t-fig" x="130" y="20" text-anchor="middle">9:00</text>
+        <text class="t-fig" x="256" y="20" text-anchor="middle">11:00</text>
+        <text class="t-fig" x="382" y="20" text-anchor="middle">13:00</text>
+        <text class="t-fig" x="508" y="20" text-anchor="middle">15:00</text>
+        <text class="t-fig" x="634" y="20" text-anchor="middle">17:00</text>
+        <text class="t-fig" x="760" y="20" text-anchor="middle">19:00</text>
+        <text class="t-navy" x="812" y="20" text-anchor="middle">業後</text>
+        <path class="s-grid" d="M130,26 L130,270 M760,26 L760,270"/>
+        <!-- 電話システム -->
+        <rect class="s-bar" x="130" y="48" width="630" height="24" rx="4"/>
+        <text class="t-body" x="445" y="65" text-anchor="middle">架電・通話（記録が電話システムにたまる）</text>
+        <!-- SALES +1 -->
+        <text class="t-muted" x="136" y="106">いずれ：1時間ごとに自動取り込み → 基準値で判定</text>
+        <circle class="s-dot" cx="193" cy="128" r="5"/><circle class="s-dot" cx="256" cy="128" r="5"/><circle class="s-dot" cx="319" cy="128" r="5"/><circle class="s-dot" cx="382" cy="128" r="5"/><circle class="s-dot" cx="445" cy="128" r="5"/><circle class="s-dot" cx="508" cy="128" r="5"/><circle class="s-dot" cx="571" cy="128" r="5"/><circle class="s-dot" cx="634" cy="128" r="5"/><circle class="s-dot" cx="697" cy="128" r="5"/>
+        <rect class="s-core" x="768" y="100" width="86" height="44" rx="6"/>
+        <text class="t-body" x="811" y="118" text-anchor="middle">当日分を</text>
+        <text class="t-body" x="811" y="136" text-anchor="middle">取り込み</text>
+        <!-- メンバー -->
+        <rect class="s-bar-muted" x="130" y="168" width="630" height="24" rx="4"/>
+        <text class="t-body" x="445" y="185" text-anchor="middle">架電（入力はしない）</text>
+        <rect class="s-box" x="768" y="160" width="86" height="44" rx="6"/>
+        <text class="t-body" x="811" y="178" text-anchor="middle">KPIを見て</text>
+        <text class="t-body" x="811" y="196" text-anchor="middle">日報</text>
+        <path class="s-line" d="M811,144 L811,158" marker-end="url(#ah)"/>
+        <!-- リーダー -->
+        <rect class="s-warn" x="300" y="222" width="170" height="36" rx="6"/>
+        <text class="t-body" x="385" y="245" text-anchor="middle">アラートを受けて対応</text>
+        <path class="s-line s-dash" d="M382,134 L385,220" marker-end="url(#ah)"/>
+        <rect class="s-box" x="500" y="222" width="230" height="36" rx="6"/>
+        <text class="t-body" x="615" y="245" text-anchor="middle">部下メモ・ロープレ（随時）</text>
+        <rect class="s-box" x="768" y="218" width="86" height="44" rx="6"/>
+        <text class="t-body" x="811" y="236" text-anchor="middle">責任者</text>
+        <text class="t-body" x="811" y="254" text-anchor="middle">日報</text>
+      </svg>
+    </div>
+
+    <div class="week">
+      <div class="wk"><span class="when">月曜の朝</span><b>AIレポート</b>本人版・指導版を自動で作る</div>
+      <div class="wk human"><span class="when">月曜</span><b>判断</b>リーダーが採用／修正／却下</div>
+      <div class="wk"><span class="when">週の間</span><b>週間教育</b>問題 → 原因 → 行動</div>
+      <div class="wk"><span class="when">週末</span><b>振り返り</b>狙うKPIが動いたか</div>
+      <div class="wk"><span class="when">翌週</span><b>次の提案へ</b>結果をAIに反映</div>
+    </div>
+  </section>
+
+  <!-- 6 AIサイクル -->
+  <section id="s6">
+    <h2><span class="section-num">6</span>AIサイクル：計算はプログラム、解釈と提案はAI、決めるのは人</h2>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 310" role="img" aria-label="AIの週次サイクルの循環図。集計・検知、原因の分析、改善の提案、判断、効果の確かめの5段階が輪になっている">
+        <ellipse cx="430" cy="160" rx="250" ry="118" class="s-spoke s-dash"/>
+        <text class="t-big" x="430" y="148" text-anchor="middle">毎週月曜の朝</text>
+        <text class="t-muted" x="430" y="172" text-anchor="middle">計算はプログラム</text>
+        <text class="t-muted" x="430" y="190" text-anchor="middle">解釈と提案はAI、決めるのは人</text>
+
+        <path class="s-line" d="M510,46 L640,101" marker-end="url(#ah)"/>
+        <path class="s-line" d="M670,157 L610,235" marker-end="url(#ah)"/>
+        <path class="s-line" d="M503,263 L359,263" marker-end="url(#ah)"/>
+        <path class="s-line" d="M240,237 L178,159" marker-end="url(#ah)"/>
+        <path class="s-line" d="M200,103 L348,46" marker-end="url(#ah)"/>
+
+        <rect class="s-box" x="350" y="20" width="160" height="52" rx="8"/>
+        <text class="t-title" x="430" y="42" text-anchor="middle">① 集計・検知</text>
+        <text class="t-navy" x="430" y="61" text-anchor="middle">プログラム</text>
+
+        <rect class="s-box" x="597" y="103" width="160" height="52" rx="8"/>
+        <text class="t-title" x="677" y="125" text-anchor="middle">② 原因の分析</text>
+        <text class="t-navy" x="677" y="144" text-anchor="middle">AI ・根拠の記録つき</text>
+
+        <rect class="s-box" x="503" y="237" width="160" height="52" rx="8"/>
+        <text class="t-title" x="583" y="259" text-anchor="middle">③ 改善の提案</text>
+        <text class="t-navy" x="583" y="278" text-anchor="middle">AI ・狙うKPIつき</text>
+
+        <rect class="s-core" x="197" y="237" width="160" height="52" rx="8"/>
+        <text class="t-title" x="277" y="259" text-anchor="middle">④ 判断</text>
+        <text class="t-navy" x="277" y="278" text-anchor="middle">リーダー／MGR</text>
+
+        <rect class="s-box" x="103" y="103" width="160" height="52" rx="8"/>
+        <text class="t-title" x="183" y="125" text-anchor="middle">⑤ 効果の確かめ</text>
+        <text class="t-navy" x="183" y="144" text-anchor="middle">チーム平均と比べる</text>
+      </svg>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <h3>本人版（メンバーが見る）</h3>
+        <p class="small">AIに渡すデータ</p>
+        <div class="chips"><span class="tag tag--navy">KPI</span><span class="tag tag--navy">自分の日報</span><span class="tag tag--navy">ロープレ</span><span class="tag chip-x">部下メモ</span><span class="tag chip-x">責任者日報</span></div>
+        <p class="note">部下メモと責任者日報は、コードで除外し、テストで確かめる。</p>
+      </div>
+      <div class="panel">
+        <h3>指導版（リーダー／MGRが見る）</h3>
+        <p class="small">AIに渡すデータ</p>
+        <div class="chips"><span class="tag tag--navy">KPI</span><span class="tag tag--navy">日報</span><span class="tag tag--navy">ロープレ</span><span class="tag tag--navy">部下メモ</span><span class="tag tag--navy">責任者日報</span></div>
+        <p class="note">原因の仮説と指導の打ち手を出す。採用・却下の理由を記録する。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 段階導入 -->
+  <section id="s7">
+    <h2><span class="section-num">7</span>段階導入：入力習慣を変えずに始め、価値が伝わってから広げる</h2>
+    <div class="panel">
+      <div class="road">
+        <span></span><span class="rh">準備</span><span class="rh">第1段階</span><span class="rh">第2段階</span><span class="rh">第3段階</span>
+
+        <span class="rl">基盤</span>
+        <span class="seg now">今ここ：Git・要件・技術構成</span><span class="seg empty"></span><span class="seg empty"></span><span class="seg empty"></span>
+
+        <span class="rl">KPI</span>
+        <span class="seg empty"></span><span class="seg plan">CSVを手で取り込み</span><span class="seg chg">自動取り込みへ（アプリ入力はなし）</span><span class="seg empty"></span>
+
+        <span class="rl">指導記録</span>
+        <span class="seg empty"></span><span class="seg plan c3">メンバーマスタ・部下メモ・ロープレ（リーダー層から）</span>
+
+        <span class="rl">日報</span>
+        <span class="seg empty"></span><span class="seg empty"></span><span class="seg plan">一般日報をアプリへ</span><span class="seg plan">責任者日報</span>
+
+        <span class="rl">教育</span>
+        <span class="seg empty"></span><span class="seg empty"></span><span class="seg empty"></span><span class="seg plan">週間教育</span>
+
+        <span class="rl">AI</span>
+        <span class="seg empty"></span><span class="seg plan c2">① 検知・②③ 提案レポート</span><span class="seg plan">⑤ 効果の確かめ</span>
+      </div>
+    </div>
+    <p class="note">濃紺の帯＝今いる段階。橙＝引き継ぎ資料から変わったところ。日付は未定です。</p>
+  </section>
+
+  <!-- 8 開発の流れ -->
+  <section id="s8">
+    <h2><span class="section-num">8</span>開発の流れ：本線（main）は、あなたのOKのあとにだけ変わる</h2>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 260" role="img" aria-label="開発の流れのレーン図。Claude Codeが計画、Antigravityが作業用ブランチで実装、Claude Codeがレビュー、あなたがOK、Claude Codeが本線に取り込みGitHubへpush">
+        <rect class="s-lane" x="0" y="10" width="860" height="60"/>
+        <rect class="s-lane2" x="0" y="70" width="860" height="60"/>
+        <rect class="s-lane" x="0" y="130" width="860" height="60"/>
+        <rect class="s-lane2" x="0" y="190" width="860" height="60"/>
+        <text class="t-title" x="10" y="45">Claude Code</text>
+        <text class="t-title" x="10" y="105">Antigravity</text>
+        <text class="t-title" x="10" y="165">あなた</text>
+        <text class="t-title" x="10" y="225">GitHub</text>
+
+        <rect class="s-box" x="130" y="22" width="140" height="36" rx="6"/>
+        <text class="t-body" x="200" y="45" text-anchor="middle">① 計画ファイル</text>
+        <rect class="s-box" x="290" y="82" width="170" height="36" rx="6"/>
+        <text class="t-body" x="375" y="105" text-anchor="middle">② 作業用ブランチで実装</text>
+        <text class="t-muted" x="476" y="105">本線・GitHubには触れない</text>
+        <rect class="s-box" x="490" y="22" width="140" height="36" rx="6"/>
+        <text class="t-body" x="560" y="45" text-anchor="middle">③ 差分をレビュー</text>
+        <rect class="s-core" x="600" y="142" width="120" height="36" rx="6"/>
+        <text class="t-title" x="660" y="165" text-anchor="middle">④ OKを出す</text>
+        <rect class="s-box" x="700" y="22" width="150" height="36" rx="6"/>
+        <text class="t-body" x="775" y="45" text-anchor="middle">⑤ 本線に取り込み</text>
+        <rect class="s-core" x="700" y="202" width="150" height="36" rx="6"/>
+        <text class="t-body" x="775" y="225" text-anchor="middle">main に反映</text>
+
+        <path class="s-line" d="M270,46 L320,80" marker-end="url(#ah)"/>
+        <path class="s-line" d="M440,82 L500,60" marker-end="url(#ah)"/>
+        <path class="s-line" d="M590,58 L640,140" marker-end="url(#ah)"/>
+        <path class="s-line" d="M705,142 L745,60" marker-end="url(#ah)"/>
+        <path class="s-line" d="M800,58 L800,200" marker-end="url(#ah)"/>
+        <text class="t-muted" x="808" y="128">push</text>
+        <text class="t-muted" x="808" y="144">確認後</text>
+      </svg>
+    </div>
+    <p class="note">計画ファイルは docs/tasks/、作業結果は docs/reports/。2つのツールは順番に使い、2台の受け渡しは pull／push で行います。</p>
+  </section>
+
+  <!-- 9 未決事項と次の一手 -->
+  <section id="s9">
+    <h2><span class="section-num">9</span>未決事項と次の一手：まず見本データ</h2>
+    <div class="issues">
+      <div class="iss wait"><span class="no">1</span><b>現行Excelの見本</b><span class="tag tag--warn" style="align-self:start">待ち</span></div>
+      <div class="iss"><span class="no">2</span><b>技術構成</b><span class="tag tag--plain" style="align-self:start">未着手</span></div>
+      <div class="iss"><span class="no">3</span><b>KPIの承認フロー</b><span class="tag tag--plain" style="align-self:start">見直し</span></div>
+      <div class="iss"><span class="no">4</span><b>アラートの条件</b><span class="tag tag--plain" style="align-self:start">未着手</span></div>
+      <div class="iss"><span class="no">5</span><b>AI提案の自動化</b><span class="tag tag--plain" style="align-self:start">未着手</span></div>
+      <div class="iss"><span class="no">6</span><b>ロープレ項目・メモのタグ</b><span class="tag tag--plain" style="align-self:start">未着手</span></div>
+      <div class="iss"><span class="no">7</span><b>URLの取得</b><span class="tag tag--plain" style="align-self:start">未着手</span></div>
+      <div class="iss"><span class="no">8</span><b>画面のモック</b><span class="tag tag--plain" style="align-self:start">次に作成</span></div>
+      <div class="iss done"><span class="no">9</span><b>開発体制</b><span class="tag tag--good" style="align-self:start">決定</span></div>
+      <div class="iss done"><span class="no">10</span><b>git方針</b><span class="tag tag--good" style="align-self:start">決定</span></div>
+      <div class="iss review"><span class="no">11</span><b>ルールの共有方法</b><span class="tag tag--navy" style="align-self:start">検討中</span></div>
+    </div>
+    <div class="bar" role="img" aria-label="決定2件、検討中1件、待ち1件、未着手7件">
+      <span style="width:18.18%;background:var(--good)"></span>
+      <span style="width:9.09%;background:var(--navy-band)"></span>
+      <span style="width:9.09%;background:var(--warn)"></span>
+      <span style="width:63.64%;background:var(--chart-muted)"></span>
+    </div>
+
+    <h3 style="margin:var(--space-8) 0 var(--space-3)">次の一手</h3>
+    <div class="next">
+      <div class="nx first"><span class="n">1</span><b>見本データ</b>samples\ に入れて、項目を表にまとめる<span class="tag tag--warn" style="align-self:start">あなた待ち</span></div>
+      <div class="nx"><span class="n">2</span><b>画面の試作</b>ダッシュボードを架空データで</div>
+      <div class="nx"><span class="n">3</span><b>聞き取り</b>人数・ログイン・端末・権限・予算</div>
+      <div class="nx"><span class="n">4</span><b>技術構成</b>要件から比べて決める</div>
+      <div class="nx"><span class="n">5</span><b>最初の計画</b>Antigravityに渡す</div>
+    </div>
+  </section>
+
+  <p class="small source">出典：SALES +1 引き継ぎ資料 v1、NOTES.md（決定事項・未決事項）、本人からの業務の補足。画面と権限、画面の構図は案。2026年10月6日時点。</p>
+
+</main>
+</body>
+</html>

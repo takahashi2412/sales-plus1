@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALES +1 企画ダッシュボード</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --chart-muted: #C8C8CC;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-full: 999px;
+    --doc-width: 880px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+    --font-code: Consolas, "Cascadia Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+      --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A;
+      --warn: #E0A04A; --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E; --chart-muted: #55565C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+    --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A;
+    --warn: #E0A04A; --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E; --chart-muted: #55565C;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.4; margin: 0; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin-bottom: var(--space-4); }
+  h3 { font-size: 16px; }
+  p { margin: 0; max-width: 40em; }
+  code { font-family: var(--font-code); font-size: 13px; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0 var(--space-1); word-break: break-all; }
+  .small { font-size: 13px; color: var(--ink-muted); }
+  .fig { font-family: var(--font-figure); }
+
+  /* ヘッダー */
+  .doc-header { margin-bottom: var(--space-8); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+  .doc-header .date { margin-top: var(--space-2); }
+  .toc { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+  .toc a {
+    font-size: 13px; color: var(--navy-text); text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm);
+    padding: 0 var(--space-2); line-height: 26px;
+  }
+  .toc a:hover { background: var(--navy-soft); }
+  .toc a:focus-visible { outline: 2px solid var(--navy-band); outline-offset: 2px; }
+
+  /* 囲み */
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+  .callout--point { background: var(--navy-soft); border-color: var(--navy-band); }
+  .callout--point .kind { color: var(--navy-text); }
+  .callout--warn { background: var(--warn-soft); border-color: var(--warn); }
+  .callout--warn .kind { color: var(--warn); }
+
+  section { margin-top: var(--space-12); scroll-margin-top: var(--space-4); }
+  .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: var(--radius-full);
+    background: var(--navy-band); color: var(--on-dark);
+    font-family: var(--font-figure); font-weight: 700; font-size: 14px;
+    margin-right: var(--space-2); vertical-align: 2px;
+  }
+  .lead { margin-bottom: var(--space-6); }
+
+  .tag { display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700; border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 22px; white-space: nowrap; }
+  .tag--navy { background: var(--navy-soft); color: var(--navy-text); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+  .tag--bad { background: var(--bad-soft); color: var(--ink); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); }
+
+  /* KPIタイル */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+  .tile .t-label { font-size: 13px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; }
+  .tile .t-value { font-family: var(--font-figure); font-weight: 700; font-size: 32px; line-height: 1.2; }
+  .tile .t-value .unit { font-family: var(--font-body); font-size: 14px; font-weight: 500; margin-left: 2px; }
+  .tile .t-value.text { font-family: var(--font-display); font-size: 22px; }
+  .tile .t-note { font-size: 13px; color: var(--ink-muted); }
+
+  .statusbar { margin-top: var(--space-4); }
+  .bar { display: flex; height: 16px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--line); }
+  .bar span { display: block; height: 100%; }
+  .bar .s-done { background: var(--good); }
+  .bar .s-review { background: var(--navy-band); }
+  .bar .s-wait { background: var(--warn); }
+  .bar .s-todo { background: var(--chart-muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-2); font-size: 13px; color: var(--ink-muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: var(--space-1); vertical-align: 0; }
+
+  /* 全体の流れ（3列） */
+  .flow3 { display: grid; grid-template-columns: 1.2fr 28px 1fr 28px 1fr; align-items: stretch; }
+  .col { display: flex; flex-direction: column; gap: var(--space-2); }
+  .col-head { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-1); }
+  .arrow { display: flex; align-items: center; justify-content: center; color: var(--ink-muted); font-family: var(--font-figure); font-size: 20px; }
+  .biz { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 13px; }
+  .biz .b-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: var(--space-2); align-items: center; }
+  .biz .b-desc { color: var(--ink-muted); }
+  .biz--src { background: var(--surface-sunken); border-style: dashed; }
+  .hub { background: var(--navy-soft); border: 2px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-4); height: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
+  .hub ol { margin: 0; padding-left: 1.3em; font-size: 14px; }
+  .hub li + li { margin-top: var(--space-1); }
+  .loop { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); font-size: 14px; display: flex; flex-direction: column; gap: var(--space-1); }
+  .loop .l-title { font-family: var(--font-display); font-weight: 700; }
+  .loop .l-desc { font-size: 13px; color: var(--ink-muted); }
+  .back { margin-top: var(--space-3); font-size: 13px; color: var(--ink-muted); text-align: right; }
+
+  /* 表 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; text-align: left; padding: var(--space-2) var(--space-3); white-space: nowrap; }
+  td { padding: var(--space-3); border-top: 1px solid var(--line); vertical-align: top; }
+  td.nm { font-family: var(--font-display); font-weight: 700; white-space: nowrap; }
+  td.num { font-family: var(--font-figure); text-align: right; width: 40px; }
+  td.st { white-space: nowrap; width: 1%; }
+  .t-biz { min-width: 680px; }
+  .t-open { min-width: 600px; }
+
+  /* AIサイクル */
+  .cycle { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
+  .cycle li { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); font-size: 13px; }
+  .cycle li.human { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .cycle .c-head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+  .cycle .c-what { font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .cycle .c-desc { color: var(--ink-muted); }
+  .num { width: 28px; height: 28px; border-radius: var(--radius-full); flex: none; background: var(--navy-band); color: var(--on-dark); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-figure); font-weight: 700; font-size: 14px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-4); }
+  .two .card h3 { margin-bottom: var(--space-2); }
+  .two .card ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
+
+  /* 段階導入 */
+  .stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); font-size: 13px; }
+  .stage.now { border: 2px solid var(--navy-band); background: var(--navy-soft); }
+  .stage .s-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+  .stage ul { margin: 0; padding-left: 1.2em; }
+  .stage .changed { color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .stage-ai { margin-top: var(--space-2); background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 13px; }
+
+  /* 開発の流れ */
+  .steps5 { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
+  .steps5 li { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); font-size: 13px; }
+  .steps5 li.human { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .steps5 .what { font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .steps5 .out { color: var(--ink-muted); }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-4); }
+  .facts .card { font-size: 14px; }
+  .facts .f-label { font-size: 13px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-1); }
+
+  /* 決定事項 */
+  .decisions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .decisions .card { display: flex; flex-direction: column; gap: var(--space-1); font-size: 14px; }
+  .decisions .d-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+  .decisions .d-title { font-family: var(--font-display); font-weight: 700; }
+  .decisions .d-body { color: var(--ink-muted); font-size: 13px; }
+
+  /* 次にやること */
+  .next { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  .next li { display: grid; grid-template-columns: 28px 1fr auto; gap: var(--space-3); align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .next li.first { border: 2px solid var(--navy-band); }
+  .next .n-title { font-family: var(--font-display); font-weight: 700; }
+  .next .n-desc { font-size: 13px; color: var(--ink-muted); }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 22px; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .flow3 { grid-template-columns: 1fr; gap: var(--space-2); }
+    .flow3 .arrow { transform: rotate(90deg); height: 28px; }
+    .cycle, .steps5 { grid-template-columns: 1fr; }
+    .stages { grid-template-columns: 1fr 1fr; }
+    .two, .facts, .decisions { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 420px) {
+    .tiles, .stages { grid-template-columns: 1fr; }
+    .next li { grid-template-columns: 28px 1fr; }
+    .next li .tag { grid-column: 2; justify-self: start; }
+  }
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ 企画ダッシュボード</div>
+    <h1>企画・設計は完了。次は見本データで、作るものを詰める</h1>
+    <p class="small date">2026年10月6日（火）時点 ／ 1DAY +1</p>
+    <nav class="toc" aria-label="目次">
+      <a href="#s1">全体の流れ</a><a href="#s2">6つの業務</a><a href="#s3">AIの週次サイクル</a><a href="#s4">段階導入</a><a href="#s5">開発体制とGit</a><a href="#s6">未決事項</a><a href="#s7">決定事項</a><a href="#s8">次にやること</a>
+    </nav>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">結論</div>
+    <p>開発の土台（Git・GitHub・作業の流れ）は整いました。技術構成を決める前に、6業務の見本データを見て、作るものを詰めます。</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <span class="t-label">未決事項の決定</span>
+      <span class="t-value">2<span class="unit">／11件</span></span>
+      <span class="t-note">検討中1・待ち1・未着手7</span>
+    </div>
+    <div class="tile">
+      <span class="t-label">対象の業務</span>
+      <span class="t-value">6<span class="unit">業務</span></span>
+      <span class="t-note">Excelで管理しているものを統合</span>
+    </div>
+    <div class="tile">
+      <span class="t-label">今の段階</span>
+      <span class="t-value text">開発準備</span>
+      <span class="t-note">第1段階の前</span>
+    </div>
+    <div class="tile">
+      <span class="t-label">引き継ぎ後の決定</span>
+      <span class="t-value">6<span class="unit">件</span></span>
+      <span class="t-note">NOTES.md の決定事項</span>
+    </div>
+  </div>
+
+  <div class="statusbar" aria-label="未決事項11件の状態">
+    <div class="bar" role="img" aria-label="決定2件、検討中1件、待ち1件、未着手7件">
+      <span class="s-done" style="width:18.18%"></span>
+      <span class="s-review" style="width:9.09%"></span>
+      <span class="s-wait" style="width:9.09%"></span>
+      <span class="s-todo" style="width:63.64%"></span>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--good)"></i>決定 2</span>
+      <span><i style="background:var(--navy-band)"></i>検討中 1</span>
+      <span><i style="background:var(--warn)"></i>待ち 1</span>
+      <span><i style="background:var(--chart-muted)"></i>未着手 7</span>
+    </div>
+  </div>
+
+  <!-- 1 全体の流れ -->
+  <section id="s1">
+    <h2><span class="section-num">1</span>6つの業務を、1人1枚のカルテに集めて回す</h2>
+    <p class="lead">目的の最優先は、部下の状況を人単位で一元把握することです。集めた記録をAIが分析し、週間教育で改善を回します。</p>
+
+    <div class="flow3">
+      <div class="col">
+        <div class="col-head">入る（6業務）</div>
+        <div class="biz biz--src">
+          <div class="b-name">電話システム（CTI）<span class="tag tag--plain">出どころ</span></div>
+          <div class="b-desc">今：CSVを手で取り込む → いずれ：ブラウザ自動操作で取り込む</div>
+        </div>
+        <div class="biz">
+          <div class="b-name">日々のKPI<span class="tag tag--navy">時間帯別</span></div>
+          <div class="b-desc">CSVの取り込みでアプリに反映</div>
+        </div>
+        <div class="biz">
+          <div class="b-name">一般日報<span class="tag tag--plain">メンバー</span></div>
+          <div class="b-desc">業後に、自分のKPIを確認して書く</div>
+        </div>
+        <div class="biz">
+          <div class="b-name">責任者日報<span class="tag tag--plain">リーダー／MGR</span></div>
+          <div class="b-desc">業後に、当日の組織の結果</div>
+        </div>
+        <div class="biz">
+          <div class="b-name">部下メモ<span class="tag tag--plain">リーダー／MGR</span></div>
+          <div class="b-desc">どんな指示・指摘をしたか（本人には非表示）</div>
+        </div>
+        <div class="biz">
+          <div class="b-name">ロープレメモ<span class="tag tag--plain">リーダー／MGR</span></div>
+          <div class="b-desc">誰に・どんな内容を・何分したか</div>
+        </div>
+      </div>
+
+      <div class="arrow" aria-hidden="true">→</div>
+
+      <div class="col">
+        <div class="col-head">まとまる</div>
+        <div class="hub">
+          <h3>メンバーカルテ</h3>
+          <p class="small">1人を開くと1画面で見える</p>
+          <ol>
+            <li>基本情報（チーム・役割・入社日・担当リーダー）</li>
+            <li>今週のKPI（前週比・目標の進み具合）</li>
+            <li>KPIの週ごとの推移に、面談・ロープレ・教育の日を重ねる</li>
+            <li>時間帯別のKPI。弱い時間帯を目立たせる</li>
+            <li>日報・メモ・ロープレ・教育・AI提案を日付順に並べる</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="arrow" aria-hidden="true">→</div>
+
+      <div class="col">
+        <div class="col-head">回す</div>
+        <div class="loop">
+          <span class="l-title">AI週次レポート</span>
+          <span class="l-desc">毎週月曜の朝に自動で作る。本人版と指導版の2種類</span>
+        </div>
+        <div class="loop">
+          <span class="l-title">日次アラート</span>
+          <span class="l-desc">プログラムの基準値で判定し、リーダーだけに通知</span>
+        </div>
+        <div class="loop">
+          <span class="l-title">週間教育</span>
+          <span class="l-desc">個人分析 → 問題 → 原因 → 行動 → 振り返りを週ごとに回す。狙うKPIを必ず決める</span>
+        </div>
+        <div class="loop">
+          <span class="l-title">効果の確かめ</span>
+          <span class="l-desc">狙うKPIが動いたかを、同じ期間のチーム平均と比べる</span>
+        </div>
+      </div>
+    </div>
+    <p class="back">効果の確かめの結果は、翌週のAIの提案に反映 ↺</p>
+  </section>
+
+  <!-- 2 6つの業務 -->
+  <section id="s2">
+    <h2><span class="section-num">2</span>6つの業務：本人の補足で、引き継ぎ資料から3か所が変わった</h2>
+    <p class="lead">すべての記録は「メンバーID × 日付 × 記入者」で紐づけます。見本データを見て、項目を確定させます。</p>
+    <div class="table-wrap">
+      <table class="t-biz">
+        <thead><tr><th>業務</th><th>入力者・タイミング</th><th>内容（本人の補足）</th><th>引き継ぎ資料との関係</th></tr></thead>
+        <tbody>
+          <tr><td class="nm">日々のKPI</td><td>電話システムから取り込み</td><td>CSVの取り込みでアプリに反映。いずれ自動取り込み</td><td><span class="tag tag--warn">変更</span> アプリで時間帯ごとに入力する案はなくなった</td></tr>
+          <tr><td class="nm">一般日報</td><td>メンバー・業後</td><td>個人がKPIを確認して日報を書く</td><td><span class="tag tag--navy">新しい</span> 日報の画面にその日のKPIを出す。取り込みが先に終わっている必要がある</td></tr>
+          <tr><td class="nm">責任者日報</td><td>リーダー／MGR・業後</td><td>当日の組織の結果</td><td><span class="tag tag--good">一致</span> 組織の数字はKPIから自動で集計できる</td></tr>
+          <tr><td class="nm">部下メモ</td><td>リーダー／MGR・随時</td><td>部下にどんな指示や指摘をしたか</td><td><span class="tag tag--good">一致</span> 種別タグで指示・指摘を分ける</td></tr>
+          <tr><td class="nm">ロープレメモ</td><td>リーダー／MGR・随時</td><td>誰に・どんな内容を・何分したか</td><td><span class="tag tag--warn">要確認</span> 「何分」が新しい。資料の「項目ごとの点数」とのつなぎ方は見本を見て決める</td></tr>
+          <tr><td class="nm">週間教育</td><td>リーダー／MGR・週次</td><td>個人分析して、問題と原因から行動、振り返りを週間で回す</td><td><span class="tag tag--navy">新しい</span> 「問題」「原因」の欄を足す。AI週次レポートとつなげられる</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3 AI -->
+  <section id="s3">
+    <h2><span class="section-num">3</span>AIの週次サイクル：計算はプログラム、解釈と提案はAI</h2>
+    <p class="lead">AIには計算済みの数値だけを渡します。最後に決めるのは人です。</p>
+    <ol class="cycle">
+      <li><div class="c-head"><span class="num">1</span><span class="tag tag--plain">プログラム</span></div><span class="c-what">集計・検知</span><span class="c-desc">率、前週比、チーム平均との差、時間帯の落ち込みを計算</span></li>
+      <li><div class="c-head"><span class="num">2</span><span class="tag tag--navy">AI</span></div><span class="c-what">原因の分析</span><span class="c-desc">ロープレ・メモ・日報と突き合わせ、根拠つきで仮説を出す</span></li>
+      <li><div class="c-head"><span class="num">3</span><span class="tag tag--navy">AI</span></div><span class="c-what">改善の提案</span><span class="c-desc">今週の取り組みを、狙うKPI・期間・判定日つきで提案</span></li>
+      <li class="human"><div class="c-head"><span class="num">4</span><span class="tag tag--navy">リーダー／MGR</span></div><span class="c-what">判断</span><span class="c-desc">採用／修正して採用／却下 → 週間教育に登録</span></li>
+      <li><div class="c-head"><span class="num">5</span><span class="tag tag--plain">プログラム＋AI</span></div><span class="c-what">効果の確かめ</span><span class="c-desc">狙うKPIが動いたかを、チーム平均と比べて判定</span></li>
+    </ol>
+    <div class="two">
+      <div class="card">
+        <h3>本人版（メンバーが見る）</h3>
+        <ul>
+          <li>渡すデータ：KPI・自分の日報・ロープレの結果だけ</li>
+          <li>部下メモと責任者日報は、コードで除外しテストで確かめる</li>
+          <li>伸びたところから始め、次の一手を1つに絞る</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>指導版（リーダー／MGRが見る）</h3>
+        <ul>
+          <li>渡すデータ：本人版＋部下メモ・責任者日報</li>
+          <li>原因の仮説と、指導の打ち手を出す</li>
+          <li>提案の採用・却下と理由を記録し、精度の改善に使う</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 段階導入 -->
+  <section id="s4">
+    <h2><span class="section-num">4</span>段階導入：今は準備。第2段階の中身が変わった</h2>
+    <div class="stages">
+      <div class="stage now">
+        <div class="s-title">準備<span class="tag tag--navy">今ここ</span></div>
+        <ul>
+          <li>Git・GitHub・作業の流れ（完了）</li>
+          <li>見本データで要件を詰める</li>
+          <li>技術構成を決める</li>
+        </ul>
+      </div>
+      <div class="stage">
+        <div class="s-title">第1段階</div>
+        <ul>
+          <li>メンバーマスタ</li>
+          <li>部下メモ・ロープレ（リーダー層から）</li>
+          <li>KPIはCSVを取り込んでカルテに表示</li>
+        </ul>
+      </div>
+      <div class="stage">
+        <div class="s-title">第2段階</div>
+        <ul>
+          <li>一般日報をアプリに切り替え</li>
+          <li>KPIは自動取り込みへ</li>
+        </ul>
+        <span class="changed">変更：KPIのアプリ入力はなし</span>
+      </div>
+      <div class="stage">
+        <div class="s-title">第3段階</div>
+        <ul>
+          <li>責任者日報</li>
+          <li>週間教育</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-ai"><b>AI：</b>まず①検知と②③の提案レポート。⑤効果の確かめは、取り組みのデータがたまってから。</div>
+  </section>
+
+  <!-- 5 開発体制 -->
+  <section id="s5">
+    <h2><span class="section-num">5</span>開発体制：考えるのはClaude Code、作るのはAntigravity</h2>
+    <p class="lead">本線（main）は、あなたのOKのあとにだけ変わります。2つのツールは順番に使います。</p>
+    <ol class="steps5">
+      <li><span class="tag tag--navy">Claude Code</span><span class="what">① 計画ファイルを書く</span><span class="out"><code>docs/tasks/</code>。ひな形の「守ること」を入れる</span></li>
+      <li><span class="tag tag--navy">Antigravity</span><span class="what">② 作業用ブランチで実装</span><span class="out">コミットまで。結果を <code>docs/reports/</code> に残す</span></li>
+      <li><span class="tag tag--navy">Claude Code</span><span class="what">③ 差分をレビュー</span><span class="out">守りのテストが変わっていないか見る</span></li>
+      <li class="human"><span class="tag tag--navy">あなた</span><span class="what">④ OKを出す</span><span class="out">ここを通らないと本線は変わらない</span></li>
+      <li><span class="tag tag--navy">Claude Code</span><span class="what">⑤ 取り込み・push</span><span class="out">pushは毎回確認してから</span></li>
+    </ol>
+    <div class="facts">
+      <div class="card"><div class="f-label">リポジトリ</div>takahashi2412/sales-plus1（非公開）。本線 main</div>
+      <div class="card"><div class="f-label">2台の受け渡し</div>pull／push で行う。手でコピーしない</div>
+      <div class="card"><div class="f-label">Gitに入れないもの</div>.env、Excel・CSV、録音、PDF・Word・zip</div>
+    </div>
+  </section>
+
+  <!-- 6 未決事項 -->
+  <section id="s6">
+    <h2><span class="section-num">6</span>未決事項：11件中2件が決定</h2>
+    <div class="table-wrap">
+      <table class="t-open">
+        <thead><tr><th>#</th><th>項目</th><th>状態</th><th>メモ</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>現行Excelの提供（指標名・時間帯・列構成）</td><td class="st"><span class="tag tag--warn">待ち</span></td><td>samples\ に見本を入れてもらう</td></tr>
+          <tr><td class="num">2</td><td>技術構成（DB・認証・ホスティング・AI連携）</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>見本と聞き取りのあとで決める。ブラウザを動かせる場所が条件に加わった</td></tr>
+          <tr><td class="num">3</td><td>KPI入力の承認フローの要否</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>KPIが取り込みになったので、見直しが必要</td></tr>
+          <tr><td class="num">4</td><td>日次アラートの初期条件と基準値</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>取り込みの回数しだいで、当日の途中の検知ができるか決まる</td></tr>
+          <tr><td class="num">5</td><td>AI提案の自動化レベルと移行の基準</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>推奨は段階方式</td></tr>
+          <tr><td class="num">6</td><td>ロープレの評価項目／部下メモの種別タグ</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>見本を見て決める</td></tr>
+          <tr><td class="num">7</td><td>sales-plus1.web.app を取れるか</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>技術構成が決まってから</td></tr>
+          <tr><td class="num">8</td><td>未作成画面のモック（入力・ダッシュボード）</td><td class="st"><span class="tag tag--plain">未着手</span></td><td>アプリ画面の試作を、この次に作る</td></tr>
+          <tr><td class="num">9</td><td>開発体制</td><td class="st"><span class="tag tag--good">決定</span></td><td>頭脳＝Claude Code、手＝Antigravity</td></tr>
+          <tr><td class="num">10</td><td>git方針</td><td class="st"><span class="tag tag--good">決定</span></td><td>Git＋GitHub、Local＋作業用ブランチ</td></tr>
+          <tr><td class="num">11</td><td>ルールの共有方法（AGENTS.md・GEMINI.md）</td><td class="st"><span class="tag tag--navy">検討中</span></td><td>作るまでは計画ファイルでルールを伝える</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7 決定事項 -->
+  <section id="s7">
+    <h2><span class="section-num">7</span>引き継ぎ資料のあとに決めたこと：6件</h2>
+    <div class="decisions">
+      <div class="card"><div class="d-head"><span class="d-title">開発体制</span><span class="small fig">10/6</span></div><span class="d-body">Claude Codeが設計・計画・レビュー、Antigravityが実装・テスト</span></div>
+      <div class="card"><div class="d-head"><span class="d-title">git方針</span><span class="small fig">10/6</span></div><span class="d-body">Git＋GitHub（非公開）。このアプリだけWorkspaceの例外</span></div>
+      <div class="card"><div class="d-head"><span class="d-title">Antigravityの作業のしかた</span><span class="small fig">10/6</span></div><span class="d-body">Local＋作業用ブランチ。Claude Codeと順番に使う</span></div>
+      <div class="card"><div class="d-head"><span class="d-title">計画ファイル</span><span class="small fig">10/6</span></div><span class="d-body">docs/tasks/ にひな形から作り、/plan @ で渡す</span></div>
+      <div class="card"><div class="d-head"><span class="d-title">AGENTS.md</span><span class="small fig">10/6</span></div><span class="d-body">検討を続ける。作るまでは計画ファイルで伝える</span></div>
+      <div class="card"><div class="d-head"><span class="d-title">KPIの入り方</span><span class="small fig">10/6</span></div><span class="d-body">電話システムのCSV。手で取り込み → ブラウザ自動操作へ（ID・パスワードだけでログイン可）</span></div>
+    </div>
+  </section>
+
+  <!-- 8 次にやること -->
+  <section id="s8">
+    <h2><span class="section-num">8</span>次にやること：まず見本データ</h2>
+    <ol class="next">
+      <li class="first"><span class="num">1</span><div><div class="n-title">見本データを入れて、業務ごとの項目を整理する</div><div class="n-desc">各業務のExcelと電話システムのCSVを samples\ に入れる → 項目と入力の実態を表にまとめる</div></div><span class="tag tag--warn">あなた待ち</span></li>
+      <li><span class="num">2</span><div><div class="n-title">アプリ画面の試作（ダッシュボード）</div><div class="n-desc">完成後のチーム一覧画面を、架空のデータで作る</div></div><span class="tag tag--plain">次に作成</span></li>
+      <li><span class="num">3</span><div><div class="n-title">聞き取り</div><div class="n-desc">利用者数、ログイン方法、端末、閲覧の権限、既存アプリとの関係、保守と予算</div></div><span class="tag tag--plain">未着手</span></li>
+      <li><span class="num">4</span><div><div class="n-title">要件をまとめて、技術構成を決める</div><div class="n-desc">画面一覧・データ項目・権限表・利用規模 → DB・認証・ホスティング・AI連携を比べる</div></div><span class="tag tag--plain">未着手</span></li>
+      <li><span class="num">5</span><div><div class="n-title">2台目の準備・Antigravityガイドv3</div><div class="n-desc">手順は NOTES.md の「2台目の準備」。ガイドにGitありの使い方を足す</div></div><span class="tag tag--plain">未着手</span></li>
+    </ol>
+    <div class="callout callout--warn" style="margin-top:var(--space-6)">
+      <div class="kind">まだ確かめていないこと</div>
+      <p>電話システムの利用規約で自動操作が禁止されていないか。AntigravityがAGENTS.mdを実際に読むか。</p>
+    </div>
+  </section>
+
+  <p class="small source">出典：SALES +1 引き継ぎ資料 v1、NOTES.md（決定事項・未決事項）、本人からの業務の補足。2026年10月6日時点。</p>
+
+</main>
+</body>
+</html>

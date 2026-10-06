@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ルールの3層と2ツール</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-full: 999px;
+    --doc-width: 880px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+    --font-code: Consolas, "Cascadia Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316;
+      --surface: #1C1D21;
+      --surface-sunken: #24252A;
+      --ink: #EDEDEF;
+      --ink-muted: #A8A8AE;
+      --line: #3A3B40;
+      --brand-strong: #FF6B8A;
+      --brand-soft: #3A1820;
+      --navy-text: #9DB3E0;
+      --navy-band: #23407A;
+      --navy-soft: #1E2638;
+      --good: #34B98A;
+      --good-soft: #15302A;
+      --warn: #E0A04A;
+      --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316;
+    --surface: #1C1D21;
+    --surface-sunken: #24252A;
+    --ink: #EDEDEF;
+    --ink-muted: #A8A8AE;
+    --line: #3A3B40;
+    --brand-strong: #FF6B8A;
+    --brand-soft: #3A1820;
+    --navy-text: #9DB3E0;
+    --navy-band: #23407A;
+    --navy-soft: #1E2638;
+    --good: #34B98A;
+    --good-soft: #15302A;
+    --warn: #E0A04A;
+    --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.4; margin: 0; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin-bottom: var(--space-4); }
+  h3 { font-size: 16px; }
+  p { margin: 0; max-width: 40em; }
+  code {
+    font-family: var(--font-code); font-size: 13px;
+    background: var(--surface-sunken); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 0 var(--space-1); word-break: break-all;
+  }
+  .small { font-size: 13px; color: var(--ink-muted); }
+
+  .doc-header { margin-bottom: var(--space-8); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+  .doc-header .date { margin-top: var(--space-2); }
+
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+  .callout--point { background: var(--navy-soft); border-color: var(--navy-band); }
+  .callout--point .kind { color: var(--navy-text); }
+  .callout--warn { background: var(--warn-soft); border-color: var(--warn); }
+  .callout--warn .kind { color: var(--warn); }
+
+  section { margin-top: var(--space-12); }
+  .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: var(--radius-full);
+    background: var(--navy-band); color: var(--on-dark);
+    font-family: var(--font-figure); font-weight: 700; font-size: 14px;
+    margin-right: var(--space-2); vertical-align: 2px;
+  }
+  .lead { margin-bottom: var(--space-6); }
+
+  .tag {
+    display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700;
+    border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 22px; white-space: nowrap;
+  }
+  .tag--navy { background: var(--navy-soft); color: var(--navy-text); }
+  .tag--bad { background: var(--bad-soft); color: var(--ink); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+
+  /* 1. 層カード */
+  .layers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3);
+  }
+  .card ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
+  .card li + li { margin-top: var(--space-1); }
+  .reads { display: grid; gap: var(--space-2); margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--line); }
+  .reads div { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); font-size: 14px; }
+  .card--risk { border-color: var(--warn); }
+  .risk-note { font-size: 13px; color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+
+  /* 2. 作業の流れ（Git） */
+  .steps5 { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
+  .steps5 li {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); font-size: 14px;
+  }
+  .steps5 li.me { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .steps5 .head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+  .steps5 .what { font-family: var(--font-display); font-weight: 700; }
+  .steps5 .out { font-size: 13px; color: var(--ink-muted); }
+  .num {
+    width: 28px; height: 28px; border-radius: var(--radius-full); flex: none;
+    background: var(--navy-band); color: var(--on-dark);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-figure); font-weight: 700; font-size: 14px;
+  }
+  .branch-note { margin-top: var(--space-4); display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+  /* 3. 改良案：流れ図 */
+  .flow-head, .flow-row {
+    display: grid; grid-template-columns: 1fr 32px 1.15fr 32px 1fr;
+    grid-template-areas: "left arl center arr right";
+  }
+  .flow-head { margin-bottom: var(--space-2); }
+  .flow-head div { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); text-align: center; }
+  .flow-head .h-left { grid-area: left; }
+  .flow-head .h-center { grid-area: center; }
+  .flow-head .h-right { grid-area: right; }
+  .layer-title { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-6) 0 var(--space-2); }
+  .box {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4); font-size: 14px; display: flex; flex-direction: column; gap: var(--space-2);
+  }
+  .box .how { font-size: 13px; color: var(--ink-muted); }
+  .box--source { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .box--except { background: var(--warn-soft); border-color: var(--warn); }
+  .b-left { grid-area: left; }
+  .b-center { grid-area: center; }
+  .b-right { grid-area: right; }
+  .arrow { display: flex; align-items: center; justify-content: center; color: var(--ink-muted); font-family: var(--font-figure); font-size: 20px; }
+  .arrow-l { grid-area: arl; }
+  .arrow-r { grid-area: arr; }
+
+  /* 4. 表 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  th { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; text-align: left; padding: var(--space-2) var(--space-3); }
+  td { padding: var(--space-3); border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-family: var(--font-display); font-weight: 700; width: 24%; }
+  td:nth-child(2) { color: var(--ink-muted); width: 22%; }
+  td:last-child { width: 96px; white-space: nowrap; }
+
+  /* 5. 確かめる点 */
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+  .checks li {
+    display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3);
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+  }
+  .checks .q { font-family: var(--font-display); font-weight: 700; }
+  .checks .a { font-size: 14px; color: var(--ink-muted); margin-top: var(--space-1); }
+  .checks .fixed { font-size: 13px; color: var(--warn); margin-top: var(--space-1); }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 720px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 22px; }
+    .layers { grid-template-columns: 1fr; }
+    .steps5 { grid-template-columns: 1fr; }
+    .branch-note { grid-template-columns: 1fr; }
+    .flow-head { display: none; }
+    .flow-row { grid-template-columns: 1fr 1fr; grid-template-areas: "center center" "left right"; gap: var(--space-2); }
+    .arrow { display: none; }
+  }
+  @media (max-width: 420px) {
+    .flow-row { grid-template-columns: 1fr; grid-template-areas: "center" "left" "right"; }
+  }
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ 開発体制</div>
+    <h1>ルールは3層。今は計画ファイルで伝え、事故は仕組みで止める</h1>
+    <p class="small date">2026年10月6日（火） ／ v2：確かめ方の誤りを修正し、Git導入後の作業の流れを追加</p>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">結論</div>
+    <p>AntigravityはCLAUDE.mdを読みません。AGENTS.mdを作るまでは、守らせたいルールを計画ファイルに書いて伝えます。事故につながるルールは、Gitと設定で止めます。</p>
+  </div>
+
+  <!-- 1 -->
+  <section>
+    <h2><span class="section-num">1</span>今：Antigravityは3層とも読まない</h2>
+    <p class="lead">ルールは個人・Workspace・アプリの3層にあります。Claude Codeは3つとも読みますが、AntigravityはCLAUDE.mdを読みません。</p>
+
+    <div class="layers">
+      <div class="card card--risk">
+        <div>
+          <span class="tag tag--plain">個人層</span>
+          <h3 style="margin-top:var(--space-2)"><code>~\.claude\CLAUDE.md</code></h3>
+        </div>
+        <ul>
+          <li>日本語で回答する</li>
+          <li>選択式で確認する</li>
+          <li>削除・pushの前に確認する</li>
+        </ul>
+        <div class="risk-note">コマンドを実行するAntigravityにこそ必要なルールが届いていない</div>
+        <div class="reads">
+          <div>Claude Code <span class="tag tag--navy">○ 読む</span></div>
+          <div>Antigravity <span class="tag tag--bad">× 読まない</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div>
+          <span class="tag tag--plain">Workspace層</span>
+          <h3 style="margin-top:var(--space-2)"><code>C:\Workspace\CLAUDE.md</code></h3>
+        </div>
+        <ul>
+          <li>Workspace全体ではGitを使わない（sales-plus1は例外）</li>
+          <li>機密ファイルの置き場所</li>
+          <li>デザインシステムに従う</li>
+        </ul>
+        <div class="reads">
+          <div>Claude Code <span class="tag tag--navy">○ 読む</span></div>
+          <div>Antigravity <span class="tag tag--bad">× 読まない可能性が高い</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div>
+          <span class="tag tag--plain">アプリ層</span>
+          <h3 style="margin-top:var(--space-2)"><code>apps\sales-plus1\CLAUDE.md</code></h3>
+        </div>
+        <ul>
+          <li>実名データを置かない</li>
+          <li>本人版に部下メモを渡さない</li>
+          <li>開発体制とGitのルール</li>
+        </ul>
+        <div class="reads">
+          <div>Claude Code <span class="tag tag--navy">○ 読む</span></div>
+          <div>Antigravity <span class="tag tag--bad">× 読まない</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="small" style="margin-top:var(--space-3)">Workspace層を「読まない可能性が高い」のは、apps\sales-plus1 を開いた場合、上の階層を読まないと考えられるためです（未確認）。</p>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <h2><span class="section-num">2</span>決まった作業の流れ：本線はレビューの後にだけ変わる</h2>
+    <p class="lead">sales-plus1だけGitを使います。Antigravityは作業用の枝（ブランチ）でコミットまで行い、本線（main）とGitHubには触れません。</p>
+
+    <ol class="steps5">
+      <li>
+        <div class="head"><span class="num">1</span><span class="tag tag--navy">Claude Code</span></div>
+        <div class="what">計画ファイルを書く</div>
+        <div class="out"><code>docs/tasks/plan_内容_v1.md</code>。守らせたいルールもここに書く</div>
+      </li>
+      <li>
+        <div class="head"><span class="num">2</span><span class="tag tag--navy">Antigravity</span></div>
+        <div class="what">作業用ブランチで実装・コミット</div>
+        <div class="out"><code>/plan @docs/tasks/…</code> で受け取る。結果は <code>docs/reports/</code> にも残す</div>
+      </li>
+      <li>
+        <div class="head"><span class="num">3</span><span class="tag tag--navy">Claude Code</span></div>
+        <div class="what">本線との差分をレビュー</div>
+        <div class="out">守りのテストが変わっていないかを必ず見る</div>
+      </li>
+      <li class="me">
+        <div class="head"><span class="num">4</span><span class="tag tag--navy">あなた</span></div>
+        <div class="what">OKを出す</div>
+        <div class="out">ここを通らないと本線は変わらない</div>
+      </li>
+      <li>
+        <div class="head"><span class="num">5</span><span class="tag tag--navy">Claude Code</span></div>
+        <div class="what">本線に取り込み、push</div>
+        <div class="out">pushは毎回確認を取ってから。<code>--force</code> は使わない</div>
+      </li>
+    </ol>
+
+    <div class="branch-note">
+      <div class="callout callout--point">
+        <div class="kind">ポイント</div>
+        <p>2つのツールは順番に使います（Antigravityは「Local」で作業）。同じフォルダで同時に作業させません。</p>
+      </div>
+      <div class="callout callout--point">
+        <div class="kind">2台の受け渡し</div>
+        <p>sales-plus1は手でコピーせず、作業前に pull、区切りで push します。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <h2><span class="section-num">3</span>検討中：正本は1か所、各ツールはそこを読む</h2>
+    <p class="lead">正本は、ルールを書く唯一のファイルです。この形にするかは検討中で、作る前に読み込みを実機で確かめます。</p>
+
+    <div class="flow-head" aria-hidden="true">
+      <div class="h-left">Claude Code（頭脳）</div>
+      <div class="h-center">正本（ルールを書く場所）</div>
+      <div class="h-right">Antigravity（手）</div>
+    </div>
+
+    <div class="layer-title"><h3>個人層</h3><span class="small">日本語・確認のしかた・削除前の確認</span></div>
+    <div class="flow-row">
+      <div class="box b-left">
+        <span><span class="tag tag--navy">Claude Code</span></span>
+        <code>~\.claude\CLAUDE.md</code>
+        <span class="how">「このPCの役割」を書き、正本を <code>@~/.gemini/GEMINI.md</code> で読み込む。動作を確かめるまで今の内容は消さない</span>
+      </div>
+      <div class="arrow arrow-l" aria-hidden="true">←</div>
+      <div class="box box--source b-center">
+        <span><span class="tag tag--navy">正本</span></span>
+        <code>~\.gemini\GEMINI.md</code>
+        <span>2つのツールに共通の個人ルール</span>
+      </div>
+      <div class="arrow arrow-r" aria-hidden="true">→</div>
+      <div class="box b-right">
+        <span><span class="tag tag--navy">Antigravity</span></span>
+        <span>全体ルールとして、そのまま読む</span>
+      </div>
+    </div>
+
+    <div class="layer-title"><h3>Workspace層</h3><span class="small">フォルダ・機密・デザイン</span></div>
+    <div class="flow-row">
+      <div class="box b-left">
+        <span><span class="tag tag--navy">Claude Code</span></span>
+        <span>今までどおり、そのまま読む</span>
+      </div>
+      <div class="arrow arrow-l" aria-hidden="true">←</div>
+      <div class="box box--source b-center">
+        <span><span class="tag tag--navy">正本</span></span>
+        <code>C:\Workspace\CLAUDE.md</code>
+        <span>Workspace全体のルール</span>
+      </div>
+      <div class="arrow arrow-r" aria-hidden="true">→</div>
+      <div class="box box--except b-right">
+        <span><span class="tag tag--warn">例外：一部を書き写す</span></span>
+        <span>アプリに関係する部分（機密・命名・デザイン）だけをアプリの <code>AGENTS.md</code> に入れ、出典と写した日付を書く</span>
+      </div>
+    </div>
+
+    <div class="layer-title"><h3>アプリ層</h3><span class="small">apps\sales-plus1\</span></div>
+    <div class="flow-row">
+      <div class="box b-left">
+        <span><span class="tag tag--navy">Claude Code</span></span>
+        <code>CLAUDE.md</code>
+        <span class="how">1行目の <code>@AGENTS.md</code> で正本を読み込む</span>
+        <span>＋頭脳役の仕事：設計・計画ファイル・レビュー</span>
+      </div>
+      <div class="arrow arrow-l" aria-hidden="true">←</div>
+      <div class="box box--source b-center">
+        <span><span class="tag tag--navy">正本</span></span>
+        <code>AGENTS.md</code>
+        <span>アプリの目的、守ること、命名、Gitのルール、起動コマンド</span>
+      </div>
+      <div class="arrow arrow-r" aria-hidden="true">→</div>
+      <div class="box b-right">
+        <span><span class="tag tag--navy">Antigravity</span></span>
+        <span class="how"><code>AGENTS.md</code> をそのまま読む</span>
+        <code>GEMINI.md</code>
+        <span>＋手の役の仕事：計画に従う、決めずに質問、結果を docs/reports/ に残す</span>
+      </div>
+    </div>
+
+    <div class="callout callout--point" style="margin-top:var(--space-6)">
+      <div class="kind">今の運用</div>
+      <p>AGENTS.mdを作るまでは、守らせたいルールを計画ファイルに毎回書きます。Antigravityの使い方ガイドで決めた方法と同じです。</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <h2><span class="section-num">4</span>破ってはいけないことは、仕組みで止める</h2>
+    <p class="lead">ルールファイルはAIへのお願いです。読み飛ばされると守られないので、事故につながるものはGitや設定で強制します。</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>守りたいこと</th><th>ファイルだけだと</th><th>仕組みで止める方法</th><th>状態</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>本人版レポートに部下メモを渡さない</td><td>AIが忘れると漏れる</td><td>テストで自動確認する。テストは頭脳側が持ち、Antigravityは変更しない。レビューで変更がないか見る</td><td><span class="tag tag--plain">これから</span></td></tr>
+          <tr><td>APIキーは .env に置く</td><td>キーがコードに書き込まれる</td><td>.gitignore で .env をGitに入れない（見本の .env.example だけ入る）</td><td><span class="tag tag--good">設定済み</span></td></tr>
+          <tr><td>実名データ・通話録音を置かない</td><td>本物のデータが上がる</td><td>Excel・CSV・録音・PDF・Word・zipをGitに入れない。本物の見本データの samples/ はフォルダごと入れない。開発用の架空CSVは fixtures/ だけ許可</td><td><span class="tag tag--good">設定済み</span></td></tr>
+          <tr><td>レビュー前に本線を変えない</td><td>確認前に本番の流れに入る</td><td>Antigravityは作業用ブランチでコミットまで。取り込みとpushはClaude Codeが確認後に行う</td><td><span class="tag tag--good">ルール化済み</span></td></tr>
+          <tr><td>削除・pushの前に確認</td><td>自動で実行される</td><td>Antigravityの設定でコマンドを毎回承認にする（Request Review）</td><td><span class="tag tag--plain">これから</span></td></tr>
+          <tr><td>赤は1画面1〜2か所</td><td>画面ごとに色がばらつく</td><td>色と余白をコードの1か所に部品として定義し、それ以外の色を使わない</td><td><span class="tag tag--plain">これから</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <h2><span class="section-num">5</span>AGENTS.mdを作る前に確かめる3点</h2>
+    <ol class="checks">
+      <li>
+        <span class="num">1</span>
+        <div>
+          <div class="q">Antigravity（2.0アプリ）がAGENTS.mdを読むか</div>
+          <div class="a">確かめ方：見本のAGENTS.mdを置き、Antigravityに「読み込んでいるルールファイルをすべて挙げて」と聞く</div>
+          <div class="fixed">v1の「バージョン1.20.3以上かを見る」は誤り。1.20.3は旧IDE側の番号で、2.0アプリには当てはまらない</div>
+        </div>
+      </li>
+      <li>
+        <span class="num">2</span>
+        <div>
+          <div class="q">上の階層のルールファイルを読むか</div>
+          <div class="a">確かめ方：1と同じ質問で、C:\Workspace のファイルが挙がるかを見る</div>
+        </div>
+      </li>
+      <li>
+        <span class="num">3</span>
+        <div>
+          <div class="q">日本語を含むパスで、@による読み込みが動くか</div>
+          <div class="a">確かめ方：Claude Code側で <code>@~/.gemini/GEMINI.md</code> を試す。実例として、Claudeアプリのターミナルパネルは「髙」を含むパスで部品を読み込めず、動かなかった</div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <p class="small source">出典：SALES +1 引き継ぎ資料 v1、NOTES.md の決定事項（2026年10月6日）、各CLAUDE.md、Antigravity使い方ガイド v2（training\antigravity）。Antigravityのルール仕様は第三者の解説記事による。2026年10月6日時点。</p>
+
+</main>
+</body>
+</html>

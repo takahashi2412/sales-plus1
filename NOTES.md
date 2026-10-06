@@ -7,7 +7,7 @@
 
 - フェーズ：設計書（企画ダッシュボード）を詰めている段階。8つのまとまりのうち1〜4が確定。Gitとリポジトリの準備は完了。コードはまだない
 - 正本：企画・設計は docs/sales-plus1_handoff_v1.md、それ以降の決定は下の「決定事項」（食い違うときは決定事項を優先）
-- 設計書：C:\Workspace\visuals\sales-plus1_project-dashboard_vN.html のいちばん新しい版（現在 v9）。決定のたびに版を上げて反映する
+- 設計書：docs\design\project-dashboard_vN.html のいちばん新しい版（現在 v9）。決定のたびに版を上げ、前の版は docs\design\old\ に移す
 - モック：https://claude.ai/artifact/P4LCaBUUUe9KogUY8cBWZ4
 - 未決事項：下の「未決事項の進み具合」で管理する
 - 見本データ：samples\（本物・実名あり・Gitの対象外）。KPIブックと電話システムのCSVを受領済み。残りは5業務
@@ -27,7 +27,7 @@
 | 8 | 未作成画面のモック（入力・ダッシュボード） | 未着手 | まとまり6 |
 | 9 | 開発体制（頭脳＝Claude Code、手＝Antigravity） | 決定 | 2026-10-06 |
 | 10 | git方針 | 決定 | 下の「決定事項」参照 |
-| 11 | ルールの共有方法（AGENTS.md・GEMINI.md） | 検討中 | 図解：C:\Workspace\visuals\sales-plus1_rule-layers_v2.html |
+| 11 | ルールの共有方法（AGENTS.md・GEMINI.md） | 検討中 | 図解：docs\design\rule-layers_v2.html |
 | 12 | 使う人と規模 | 決定 | まとまり1 |
 | 13 | 権限・ログイン | 決定 | まとまり2 |
 
@@ -74,7 +74,7 @@
   - 未確認：電話システムの利用規約で自動操作が禁止されていないか、製品名
 
 ### 進め方（2026-10-06）
-- 企画ダッシュボード（visuals\sales-plus1_project-dashboard_vN.html）を設計書として、「案」「未決」「要確認」を1つずつ確定させ、すべて確定してから開発に進む
+- 企画ダッシュボード（docs\design\project-dashboard_vN.html）を設計書として、「案」「未決」「要確認」を1つずつ確定させ、すべて確定してから開発に進む
 - 詰める順：①使う人と規模 → ②権限 → ③AIのルール → ④運用（取り込み回数・アラート・承認） → ⑤データの項目（見本データ） → ⑥画面（試作） → ⑦技術構成 → ⑧段階導入の日付
 - まとまりが1つ決まるたびにダッシュボードの版を上げ、完成度の表（確定／案／未決）を更新する
 
@@ -176,15 +176,15 @@
 
 | 変える決定 | 直すファイル |
 |---|---|
-| git方針・作業の流れ | apps\sales-plus1\CLAUDE.md（開発体制・Git）、NOTES.md（決定事項）、docs\tasks\plan_template.md（0章・7章Git・8章）、Antigravityガイド（training\antigravity）、図解 sales-plus1_rule-layers（2章） |
+| git方針・作業の流れ | apps\sales-plus1\CLAUDE.md（開発体制・Git）、NOTES.md（決定事項）、docs\tasks\plan_template.md（0章・7章Git・8章）、Antigravityガイド（training\antigravity）、図解 docs\design\rule-layers（2章） |
 | Gitで管理するアプリの追加・削除 | C:\Workspace\CLAUDE.md（一覧）、図解 claude-setup_claudemd-cheatsheet・claude-setup_workspace-guide（版を上げる） |
 | Workspace・個人の CLAUDE.md の文面 | 図解 claude-setup_claudemd-cheatsheet（原文の欄。手で写さず、実際のCLAUDE.mdを読み込んで差し込む）、claude-setup_workspace-guide |
 | Antigravityとの作業のしかた | Antigravityガイド（visuals\antigravity_usage-guide、training\antigravity\NOTES.md） |
 | 守ること（機密・本人版など） | apps\sales-plus1\CLAUDE.md、docs\tasks\plan_template.md（7章）、.gitignore、（将来）AGENTS.md |
-| ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 sales-plus1_rule-layers |
+| ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 docs\design\rule-layers |
 | 個人ルール | ~\.claude\CLAUDE.md（2台とも）、（将来）~\.gemini\GEMINI.md |
 | 2台目の手順 | NOTES.md「2台目の準備」 |
-| **設計の決定（まとまり1〜8、見本データでわかったこと）** | **企画ダッシュボード（版を上げて反映：完成度の表・該当の図・用語集）**、NOTES.md（決定事項・未決事項の進み具合）、必要なら CLAUDE.md・plan_template.md |
+| **設計の決定（まとまり1〜8、見本データでわかったこと）** | **企画ダッシュボード docs\design\（版を上げて反映：完成度の表・該当の図・用語集。前の版は docs\design\old\ へ）**、NOTES.md（決定事項・未決事項の進み具合）、必要なら CLAUDE.md・plan_template.md |
 | 見本データの置き場所・扱い | C:\Workspace\CLAUDE.md（機密ファイルの例外）、apps\sales-plus1\CLAUDE.md（守ること）、.gitignore（samples/）、plan_template.md（7章） |
 | KPIの項目・時間帯・目標の立て方 | 企画ダッシュボード（3-2・5・8・10・11）、NOTES.md（見本データ1・2） |
 | 図解・ダッシュボードの作り方 | C:\Workspace\CLAUDE.md（品質基準）。基準の見本ファイルの版も更新する |
@@ -226,6 +226,7 @@
 - 点検：見本データ（実名）を samples\ に置いたことが、Workspace と sales-plus1 の CLAUDE.md の「実名は置かない」と食い違っていた → 両方に例外として明記（Gitの対象外、実名を書き写さない、Antigravityには読ませない）
 - C:\Workspace\CLAUDE.md に「図解HTML・ダッシュボードの品質基準」を追記（基準の見本＝ダッシュボードv9）。ほかの案件でも同じ水準で作る
 - 古くなっていた図解を作り直した：claude-setup_claudemd-cheatsheet_v2（原文を最新に差し替え、選択式・Git例外・機密の例外・品質基準を反映）、claude-setup_workspace-guide_v2（Git導入とsales-plus1の例外、2台目の手順）、antigravity_usage-guide_v3（Gitで管理する案件の流れ、Review ペインの使い方）。Workspace の CLAUDE.md の見出し「同期について（Gitは導入検討中）」も直した
+- 図解の置き場所を変えた：sales-plus1 の図解を C:\Workspace\visuals\ から docs\design\ に移した（最新＝project-dashboard_v9.html・rule-layers_v2.html、以前の版＝docs\design\old\）。アプリの画面で開け、2台目はGitHubでそろうため。移す前に実名が入っていないことを確認。Workspace の CLAUDE.md・visuals\README.md に例外を追記（上の「やったこと」にある visuals\ のパスは移す前のもの）
 - 気づき：Claudeアプリのターミナルパネルは、ユーザー名の「髙」を含むパスで部品を読み込めず動かなかった。日本語パスでの読み込み失敗は実際に起きる → AGENTS.md・GEMINI.md の読み込みも必ず実機で確認する
 - 気づき：Claude Code の実行環境からはGitHubのサインイン画面を出せない。初回サインインは本人のターミナルで行う（2台目も同じ）
 
@@ -244,15 +245,6 @@
 - C:\Workspace\CLAUDE.md（Gitで管理するアプリの一覧、機密ファイルの例外、図解HTML・ダッシュボードの品質基準を追加、同期の見出しを修正）
 - C:\Workspace\training\antigravity\NOTES.md（ガイドv3の作成を記録）
 - C:\Workspace\visuals\claude-setup_claudemd-cheatsheet_v2.html、claude-setup_workspace-guide_v2.html、antigravity_usage-guide_v3.html（新規）
-- C:\Workspace\visuals\sales-plus1_rule-layers_v1.html
-- C:\Workspace\visuals\sales-plus1_rule-layers_v2.html（.gitignore の記述1行を修正済み）
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v1.html
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v2.html
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v3.html
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v4.html
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v5.html（まとまり1を反映、完成度の表を追加）
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v6.html（まとまり2を反映）
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v7.html（まとまり3を反映）
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v8.html（まとまり4と見本データ1〜2を反映、セクション3-2「KPIの項目」を追加、20表）
-- C:\Workspace\visuals\sales-plus1_project-dashboard_v9.html（いちばん新しい版。KPIの項目名をそろえた。品質基準の見本）
+- C:\Workspace\visuals\README.md（GitHubで管理するアプリの例外を追記）
+- sales-plus1 の図解（ダッシュボード v1〜v9、rule-layers v1〜v2）は docs\design\ に移したので、GitHubから取得する（手でコピーしない）。メイン機の visuals\ からはなくなった
 - samples\ の見本データは渡さない（Gitに入らず、実名を含むため。必要なら本人が判断）

@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALES +1 企画ダッシュボード</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --chart-muted: #C8C8CC;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 999px;
+    --doc-width: 920px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+      --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A;
+      --warn: #E0A04A; --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E; --chart-muted: #55565C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+    --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A;
+    --warn: #E0A04A; --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E; --chart-muted: #55565C;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.8; }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.45; margin: 0; }
+  h1 { font-size: 28px; }
+  h2 { font-size: 22px; }
+  h3 { font-size: 17px; }
+  p { margin: 0; }
+  .small { font-size: 13px; color: var(--ink-muted); }
+
+  .doc-header { margin-bottom: var(--space-6); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); font-size: 18px; font-family: var(--font-display); font-weight: 700; }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+
+  section { margin-top: var(--space-16); }
+  .sec-head { display: flex; gap: var(--space-3); align-items: flex-start; margin-bottom: var(--space-6); }
+  .sec-no { flex: none; width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .sec-head p { color: var(--ink-muted); font-size: 15px; margin-top: var(--space-1); }
+
+  .ic { width: 40px; height: 40px; color: var(--navy-band); flex: none; }
+  .ic-lg { width: 56px; height: 56px; }
+
+  /* 図の枠 */
+  .figure { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4); overflow-x: auto; }
+  .figure svg { display: block; width: 100%; min-width: 640px; height: auto; }
+  svg text { font-family: var(--font-body); }
+  .f-panel { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.5; }
+  .f-panel-new { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 2; }
+  .f-card { fill: var(--surface); stroke: var(--navy-band); stroke-width: 2; }
+  .f-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .f-human { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 2; }
+  .f-ring { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 6 6; }
+  .f-arrow { stroke: var(--navy-band); stroke-width: 2.5; fill: none; }
+  .f-big-arrow { fill: var(--navy-band); }
+  .f-ah { fill: var(--navy-band); }
+  .f-rowline { fill: var(--bad-soft); }
+  .f-rowline-on { fill: var(--navy-soft); }
+  .ic-muted { color: var(--chart-muted); }
+  .ic-navy { color: var(--navy-band); }
+  .tx-h { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 24px; }
+  .tx-t { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+  .tx-b { fill: var(--ink); font-size: 14px; }
+  .tx-m { fill: var(--ink-muted); font-size: 13px; }
+  .tx-cap { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+
+  /* 役割カード */
+  .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .role { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+  .role-top { display: flex; align-items: center; gap: var(--space-3); }
+  .role-top h3 { font-size: 19px; }
+  .role dl { margin: 0; display: grid; gap: var(--space-3); }
+  .role dt { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); }
+  .role dd { margin: 0; font-size: 15px; }
+  .role .joy { background: var(--good-soft); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); }
+  .role .joy dt { color: var(--good); }
+
+  /* 1日 */
+  .day { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-6); position: relative; }
+  .day::before { content: ""; position: absolute; left: 12%; right: 12%; top: 64px; border-top: 3px dashed var(--line); z-index: 0; }
+  .step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-2); }
+  .step .when { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); background: var(--navy-soft); border-radius: var(--radius-full); padding: 0 var(--space-3); }
+  .step .bubble { width: 88px; height: 88px; border-radius: var(--radius-full); background: var(--surface); border: 2px solid var(--navy-band); display: flex; align-items: center; justify-content: center; }
+  .step .who { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+  .step .what { font-size: 14px; color: var(--ink-muted); }
+  .step.auto .bubble { border-style: dashed; }
+
+  /* カルテ */
+  .karte { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-6); align-items: start; }
+  .wf { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--paper); padding: var(--space-4); display: grid; gap: var(--space-2); grid-template-columns: repeat(4, 1fr); }
+  .blk { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 12px; color: var(--ink-muted); position: relative; min-height: 56px; }
+  .blk b { display: block; color: var(--ink); font-family: var(--font-display); font-size: 13px; }
+  .blk .fig { font-family: var(--font-figure); font-weight: 700; font-size: 18px; color: var(--ink); }
+  .blk .up { display: block; white-space: nowrap; color: var(--good); font-size: 12px; font-family: var(--font-display); font-weight: 700; }
+  .blk .down { display: block; white-space: nowrap; color: var(--ink); font-size: 12px; font-family: var(--font-display); font-weight: 700; }
+  .mk { position: absolute; top: -10px; left: -10px; width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .s4 { grid-column: span 4; } .s3 { grid-column: span 3; }
+  .person-row { display: flex; align-items: center; gap: var(--space-3); }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-top: var(--space-2); position: relative; }
+  .bars i { flex: 1; background: var(--chart-muted); border-radius: 2px 2px 0 0; }
+  .bars i.me { background: var(--navy-band); }
+  .bars .mark { position: absolute; top: -4px; bottom: 0; border-left: 2px dashed var(--ink-muted); }
+  .bars .mark span { position: absolute; top: -14px; left: 4px; font-size: 11px; white-space: nowrap; color: var(--ink-muted); }
+  .hb { display: grid; gap: 4px; margin-top: var(--space-2); }
+  .hb div { display: grid; grid-template-columns: 30px 1fr; gap: 4px; align-items: center; font-size: 11px; font-family: var(--font-figure); }
+  .hb i { display: block; height: 8px; background: var(--navy-soft); border-radius: 2px; }
+  .hb i.low { background: var(--warn); }
+  .tl { display: grid; gap: 6px; margin-top: var(--space-2); }
+  .tl div { display: flex; gap: var(--space-2); align-items: center; font-size: 12px; }
+  .tl .tg { font-family: var(--font-display); font-weight: 700; font-size: 11px; border-radius: var(--radius-sm); padding: 0 6px; background: var(--navy-soft); color: var(--navy-text); white-space: nowrap; }
+  .explain { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+  .explain li { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); align-items: start; }
+  .explain .n { width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .explain b { font-family: var(--font-display); display: block; }
+  .explain span { font-size: 14px; color: var(--ink-muted); }
+
+  /* 安心 */
+  .safe { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .safe .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .safe h3 { font-size: 16px; }
+  .safe p { font-size: 14px; color: var(--ink-muted); }
+
+  /* 進め方 */
+  .road { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+  .rstep { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .rstep.now { border: 2px solid var(--navy-band); background: var(--navy-soft); }
+  .rstep .pin { position: absolute; top: -14px; left: var(--space-4); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 12px; border-radius: var(--radius-full); padding: 2px var(--space-3); }
+  .rstep .no { font-family: var(--font-figure); font-weight: 700; font-size: 26px; color: var(--navy-text); line-height: 1; }
+  .rstep h3 { font-size: 16px; }
+  .rstep ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
+  .rstep .who { font-size: 13px; color: var(--ink-muted); border-top: 1px solid var(--line); padding-top: var(--space-2); margin-top: auto; }
+  .rstep .chg { font-size: 12px; color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+
+  /* 決まった／まだ */
+  .status { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .status .col { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-4); }
+  .status h3 { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .status .count { font-family: var(--font-figure); font-size: 26px; }
+  .status ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  .status li { display: grid; grid-template-columns: 22px 1fr; gap: var(--space-2); font-size: 15px; align-items: start; }
+  .chk { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--good); margin-top: 5px; position: relative; }
+  .chk::after { content: ""; position: absolute; left: 7px; top: 3px; width: 5px; height: 10px; border: solid var(--on-dark); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .que { width: 20px; height: 20px; border-radius: var(--radius-full); border: 2px solid var(--warn); margin-top: 5px; }
+  .status li .sub { display: block; font-size: 13px; color: var(--ink-muted); }
+  .wait-tag { display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700; color: var(--warn); background: var(--warn-soft); border-radius: var(--radius-sm); padding: 0 6px; margin-left: 4px; }
+
+  /* 次 */
+  .next { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); counter-reset: n; }
+  .nx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .nx.first { border: 2px solid var(--navy-band); }
+  .nx .no { font-family: var(--font-figure); font-weight: 700; font-size: 26px; color: var(--navy-text); line-height: 1; }
+  .nx p { font-size: 14px; color: var(--ink-muted); }
+
+  /* 用語 */
+  .words { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2) var(--space-6); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-6); }
+  .words div { font-size: 14px; }
+  .words b { font-family: var(--font-display); margin-right: var(--space-2); }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 23px; }
+    h2 { font-size: 19px; }
+    .roles, .safe, .next, .status { grid-template-columns: 1fr; }
+    .day { grid-template-columns: 1fr 1fr; }
+    .day::before { display: none; }
+    .karte { grid-template-columns: 1fr; }
+    .road { grid-template-columns: 1fr 1fr; gap: var(--space-6) var(--space-4); }
+    .words { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 420px) {
+    .road { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- アイコンと矢印の定義 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path class="f-ah" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <symbol id="i-person" viewBox="0 0 48 48">
+      <circle cx="24" cy="15" r="9" fill="currentColor"/>
+      <path d="M7,45 C7,32 15,27 24,27 C33,27 41,32 41,45 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-leader" viewBox="0 0 48 48">
+      <circle cx="24" cy="15" r="9" fill="currentColor"/>
+      <path d="M7,45 C7,32 15,27 24,27 C33,27 41,32 41,45 Z" fill="currentColor"/>
+      <path d="M24,28 L20,33 L24,44 L28,33 Z" fill="var(--surface)"/>
+    </symbol>
+    <symbol id="i-boss" viewBox="0 0 48 48">
+      <path d="M14,8 L19,13 L24,5 L29,13 L34,8 L33,18 L15,18 Z" fill="currentColor"/>
+      <circle cx="24" cy="24" r="7" fill="currentColor"/>
+      <path d="M9,46 C9,36 16,32 24,32 C32,32 39,36 39,46 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-sheet" viewBox="0 0 48 48">
+      <rect x="8" y="3" width="32" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M8,14 H40 M8,24 H40 M8,34 H40 M20,3 V45" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <symbol id="i-phone" viewBox="0 0 48 48">
+      <rect x="13" y="3" width="22" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="24" cy="39" r="2" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-headset" viewBox="0 0 48 48">
+      <path d="M8,28 V22 A16,16 0 0 1 40,22 V28" fill="none" stroke="currentColor" stroke-width="3"/>
+      <rect x="5" y="26" width="9" height="13" rx="3" fill="currentColor"/>
+      <rect x="34" y="26" width="9" height="13" rx="3" fill="currentColor"/>
+      <path d="M38,39 C38,44 32,45 27,45" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    </symbol>
+    <symbol id="i-sync" viewBox="0 0 48 48">
+      <path d="M38,18 A15,15 0 0 0 10,20" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M40,8 L39,19 L28,17" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M10,30 A15,15 0 0 0 38,28" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M8,40 L9,29 L20,31" fill="none" stroke="currentColor" stroke-width="3"/>
+    </symbol>
+    <symbol id="i-pen" viewBox="0 0 48 48">
+      <rect x="8" y="5" width="28" height="38" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M14,15 H30 M14,23 H30 M14,31 H22" stroke="currentColor" stroke-width="2.5"/>
+      <path d="M30,40 L44,24 L40,20 L26,36 L25,41 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-team" viewBox="0 0 48 48">
+      <circle cx="15" cy="16" r="6" fill="currentColor"/>
+      <circle cx="33" cy="16" r="6" fill="currentColor"/>
+      <path d="M3,40 C3,31 8,27 15,27 C22,27 27,31 27,40 Z" fill="currentColor"/>
+      <path d="M21,40 C21,31 26,27 33,27 C40,27 45,31 45,40 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48">
+      <rect x="9" y="21" width="30" height="24" rx="4" fill="currentColor"/>
+      <path d="M15,21 V15 A9,9 0 0 1 33,15 V21" fill="none" stroke="currentColor" stroke-width="4"/>
+      <circle cx="24" cy="32" r="3" fill="var(--surface)"/>
+    </symbol>
+    <symbol id="i-calc" viewBox="0 0 48 48">
+      <rect x="9" y="3" width="30" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="3"/>
+      <rect x="14" y="9" width="20" height="9" rx="1" fill="currentColor"/>
+      <circle cx="17" cy="26" r="2.5" fill="currentColor"/><circle cx="24" cy="26" r="2.5" fill="currentColor"/><circle cx="31" cy="26" r="2.5" fill="currentColor"/>
+      <circle cx="17" cy="35" r="2.5" fill="currentColor"/><circle cx="24" cy="35" r="2.5" fill="currentColor"/><circle cx="31" cy="35" r="2.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48">
+      <path d="M24,3 L41,10 V23 C41,34 33,42 24,45 C15,42 7,34 7,23 V10 Z" fill="currentColor"/>
+      <path d="M16,24 L22,30 L33,18" fill="none" stroke="var(--surface)" stroke-width="3.5"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ 企画ダッシュボード v3</div>
+    <h1>バラバラの記録を、1人1枚の「カルテ」に。<br>AIが毎週「次の+1」を提案する営業部のアプリ</h1>
+    <p class="small" style="margin-top:var(--space-2)">2026年10月6日（火）時点 ／ スローガン：1DAY +1</p>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">ひとことで</div>
+    <p>部下1人ひとりの「数字」と「指導の記録」を1画面で見られるようにし、毎週の改善を回しやすくします。</p>
+  </div>
+
+  <!-- 1 今とこれから -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">1</span>
+      <div><h2>今とこれから：6つのファイルが、1枚のカルテになる</h2><p>今は業務ごとにExcelが分かれていて、1人の様子を知るのに何枚も開く必要があります。</p></div>
+    </div>
+    <div class="figure">
+      <svg viewBox="0 0 860 330" role="img" aria-label="今は6つのExcelファイルがバラバラ。これからは1人1枚のカルテに数字、推移、苦手な時間帯、日報とメモ、AIの提案がまとまる">
+        <rect class="f-panel" x="10" y="10" width="370" height="310" rx="12"/>
+        <text class="tx-h" x="34" y="50">今</text>
+        <text class="tx-m" x="34" y="74">業務ごとにExcelがバラバラ</text>
+
+        <use href="#i-sheet" class="ic-muted" x="44" y="92" width="60" height="60"/>
+        <text class="tx-b" x="74" y="172" text-anchor="middle">KPI</text>
+        <use href="#i-sheet" class="ic-muted" x="160" y="104" width="60" height="60"/>
+        <text class="tx-b" x="190" y="184" text-anchor="middle">日報</text>
+        <use href="#i-sheet" class="ic-muted" x="276" y="90" width="60" height="60"/>
+        <text class="tx-b" x="306" y="170" text-anchor="middle">責任者日報</text>
+        <use href="#i-sheet" class="ic-muted" x="54" y="186" width="60" height="60"/>
+        <text class="tx-b" x="84" y="266" text-anchor="middle">部下メモ</text>
+        <use href="#i-sheet" class="ic-muted" x="170" y="198" width="60" height="60"/>
+        <text class="tx-b" x="200" y="278" text-anchor="middle">ロープレ</text>
+        <use href="#i-sheet" class="ic-muted" x="282" y="184" width="60" height="60"/>
+        <text class="tx-b" x="312" y="264" text-anchor="middle">週間教育</text>
+        <text class="tx-cap" x="195" y="312" text-anchor="middle">1人を知るのに、6つを開く</text>
+
+        <path class="f-big-arrow" d="M392,145 L436,145 L436,128 L470,165 L436,202 L436,185 L392,185 Z"/>
+
+        <rect class="f-panel-new" x="480" y="10" width="370" height="310" rx="12"/>
+        <text class="tx-h" x="504" y="50">これから</text>
+        <text class="tx-m" x="504" y="74">1人1枚のカルテにまとまる</text>
+
+        <rect class="f-card" x="540" y="90" width="250" height="186" rx="10"/>
+        <use href="#i-person" class="ic-navy" x="556" y="102" width="40" height="40"/>
+        <text class="tx-t" x="606" y="122">メンバーA のカルテ</text>
+        <text class="tx-m" x="606" y="140">チーム・入社日・担当</text>
+        <rect class="f-rowline-on" x="556" y="154" width="218" height="20" rx="4"/>
+        <text class="tx-b" x="566" y="169">今週の数字（前週より▲▼）</text>
+        <rect class="f-rowline" x="556" y="178" width="218" height="20" rx="4"/>
+        <text class="tx-b" x="566" y="193">数字の変化と、指導した日</text>
+        <rect class="f-rowline-on" x="556" y="202" width="218" height="20" rx="4"/>
+        <text class="tx-b" x="566" y="217">苦手な時間帯</text>
+        <rect class="f-rowline" x="556" y="226" width="218" height="20" rx="4"/>
+        <text class="tx-b" x="566" y="241">日報・メモ・ロープレ</text>
+        <rect class="f-rowline-on" x="556" y="250" width="218" height="20" rx="4"/>
+        <text class="tx-b" x="566" y="265">AIからの「今週の+1」</text>
+        <text class="tx-cap" x="665" y="312" text-anchor="middle">1人を開けば、全部が1画面</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 2 誰が何をする -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">2</span>
+      <div><h2>使う人と、それぞれのうれしいこと</h2><p>メンバーの手間は増やさず、リーダーが部下を見る力を上げることを優先します。</p></div>
+    </div>
+    <div class="roles">
+      <div class="role">
+        <div class="role-top"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-person"/></svg><h3>メンバー</h3></div>
+        <dl>
+          <div><dt>やること</dt><dd>仕事の後に、その日の数字を見て日報を書く</dd></div>
+          <div><dt>見られるもの</dt><dd>自分のカルテ、毎週のAIからのアドバイス</dd></div>
+          <div class="joy"><dt>うれしいこと</dt><dd>数字は自動で入るので、入力しなくてよい。次にやることが1つに絞られる</dd></div>
+        </dl>
+      </div>
+      <div class="role">
+        <div class="role-top"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-leader"/></svg><h3>リーダー／MGR</h3></div>
+        <dl>
+          <div><dt>やること</dt><dd>指示や指摘のメモ、ロープレの記録、チームの日報、毎週の教育。AIの提案を採用するか決める</dd></div>
+          <div class="joy"><dt>うれしいこと</dt><dd>部下の状況が1画面でわかる。指導の前と後で数字がどう変わったかが見える。落ち込みにその日のうちに気づける</dd></div>
+        </dl>
+      </div>
+      <div class="role">
+        <div class="role-top"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-boss"/></svg><h3>代表</h3></div>
+        <dl>
+          <div><dt>やること</dt><dd>全体を見る</dd></div>
+          <div class="joy"><dt>うれしいこと</dt><dd>チームと個人の状態がひと目でわかる。指導が数字に効いたかどうかがわかる</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 1日 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">3</span>
+      <div><h2>1日の流れ：数字は自動で集まり、仕事の後に日報を書く</h2><p>点線の丸は、アプリが自動で行うことです。</p></div>
+    </div>
+    <div class="day">
+      <div class="step">
+        <span class="when">日中</span>
+        <div class="bubble"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-headset"/></svg></div>
+        <span class="who">メンバー</span>
+        <span class="what">電話をかける。数字は電話システムに自動でたまる</span>
+      </div>
+      <div class="step auto">
+        <span class="when">日中</span>
+        <div class="bubble"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-sync"/></svg></div>
+        <span class="who">アプリ（自動）</span>
+        <span class="what">数字を取り込む。落ち込みがあればリーダーに知らせる</span>
+      </div>
+      <div class="step">
+        <span class="when">仕事の後</span>
+        <div class="bubble"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-pen"/></svg></div>
+        <span class="who">メンバー</span>
+        <span class="what">今日の数字を見て、日報を書く</span>
+      </div>
+      <div class="step">
+        <span class="when">仕事の後</span>
+        <div class="bubble"><svg class="ic ic-lg" aria-hidden="true"><use href="#i-team"/></svg></div>
+        <span class="who">リーダー／MGR</span>
+        <span class="what">チームの結果を日報に書く。指導したことはメモに残す</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 1週間 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">4</span>
+      <div><h2>1週間の流れ：AIが提案し、人が決めて、数字で確かめる</h2><p>毎週この輪を1周するたびに、1人ひとりに「+1」が積み上がります。</p></div>
+    </div>
+    <div class="figure">
+      <svg viewBox="0 0 860 360" role="img" aria-label="1週間の輪。月曜の朝にAIが提案、リーダーが決める、週の間に取り組む、週末に数字で確かめる、を毎週くり返す">
+        <ellipse class="f-ring" cx="430" cy="180" rx="270" ry="130"/>
+        <text class="tx-h" x="430" y="166" text-anchor="middle">毎週くり返す</text>
+        <text class="tx-m" x="430" y="194" text-anchor="middle">計算はプログラム ／ 考えるのはAI</text>
+        <text class="tx-m" x="430" y="214" text-anchor="middle">決めるのは人</text>
+
+        <path class="f-arrow" d="M532,52 Q640,60 690,140" marker-end="url(#ah3)"/>
+        <path class="f-arrow" d="M690,220 Q650,300 534,302" marker-end="url(#ah3)"/>
+        <path class="f-arrow" d="M326,302 Q210,300 170,220" marker-end="url(#ah3)"/>
+        <path class="f-arrow" d="M170,140 Q210,60 326,54" marker-end="url(#ah3)"/>
+
+        <rect class="f-box" x="330" y="20" width="200" height="70" rx="10"/>
+        <text class="tx-t" x="430" y="50" text-anchor="middle">① 月曜の朝：AIが提案</text>
+        <text class="tx-m" x="430" y="72" text-anchor="middle">先週から今週の+1を出す</text>
+
+        <rect class="f-human" x="600" y="145" width="200" height="70" rx="10"/>
+        <text class="tx-t" x="700" y="175" text-anchor="middle">② リーダーが決める</text>
+        <text class="tx-m" x="700" y="197" text-anchor="middle">採用・手直し・見送り</text>
+
+        <rect class="f-box" x="330" y="270" width="200" height="70" rx="10"/>
+        <text class="tx-t" x="430" y="300" text-anchor="middle">③ 週の間に取り組む</text>
+        <text class="tx-m" x="430" y="322" text-anchor="middle">教育・ロープレで実行</text>
+
+        <rect class="f-box" x="60" y="145" width="200" height="70" rx="10"/>
+        <text class="tx-t" x="160" y="175" text-anchor="middle">④ 週末に確かめる</text>
+        <text class="tx-m" x="160" y="197" text-anchor="middle">数字が動いたかを見る</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 5 カルテ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">5</span>
+      <div><h2>カルテの画面イメージ：上から「数字 → 変化 → 苦手 → 記録」</h2><p>画面の並びのイメージです。数字と名前は架空です。</p></div>
+    </div>
+    <div class="karte">
+      <div class="wf" role="img" aria-label="カルテの画面イメージ。1 基本情報、2 今週の数字、3 数字の変化と指導した日、4 苦手な時間帯、5 日報やメモの記録">
+        <div class="blk s4"><span class="mk">1</span>
+          <div class="person-row"><svg class="ic" aria-hidden="true"><use href="#i-person"/></svg><div><b>メンバーA</b>第1チーム ／ 入社2年目 ／ 担当：リーダーB</div></div>
+        </div>
+        <div class="blk"><span class="mk">2</span><b>架電数</b><span class="fig">412</span> <span class="up">▲ 前週比</span></div>
+        <div class="blk"><b>接続率</b><span class="fig">31%</span> <span class="down">▼ 前週比</span></div>
+        <div class="blk"><b>アポ数</b><span class="fig">6</span> <span class="up">▲ 前週比</span></div>
+        <div class="blk"><b>アポ率</b><span class="fig">4.8%</span> <span class="up">▲ 前週比</span></div>
+        <div class="blk s3"><span class="mk">3</span><b>数字の変化（週ごと）</b>点線＝ロープレをした日
+          <div class="bars"><i style="height:38%"></i><i style="height:42%"></i><i style="height:36%"></i><i style="height:50%"></i><i style="height:58%"></i><i style="height:64%"></i><i class="me" style="height:74%"></i><span class="mark" style="left:43%"><span>ロープレ</span></span></div>
+        </div>
+        <div class="blk"><span class="mk">4</span><b>時間帯</b>
+          <div class="hb"><div>10時<i style="width:85%"></i></div><div>13時<i style="width:70%"></i></div><div>15時<i class="low" style="width:32%"></i></div><div>17時<i style="width:76%"></i></div></div>
+        </div>
+        <div class="blk s4"><span class="mk">5</span><b>記録（日付順）</b>
+          <div class="tl">
+            <div><span class="tg">日報</span>10/5 午後の接続が少なかった</div>
+            <div><span class="tg">ロープレ</span>10/3 切り返し 15分</div>
+            <div><span class="tg">メモ</span>10/2 名乗りを短くするよう指示</div>
+          </div>
+        </div>
+      </div>
+      <ol class="explain">
+        <li><span class="n">1</span><div><b>この人は誰か</b><span>チーム、入社時期、担当リーダー</span></div></li>
+        <li><span class="n">2</span><div><b>今週の数字</b><span>先週より上がったら▲、下がったら▼。色だけでなく記号で示す</span></div></li>
+        <li><span class="n">3</span><div><b>数字の変化と、指導した日</b><span>ロープレや面談の前後で、数字が動いたかがわかる</span></div></li>
+        <li><span class="n">4</span><div><b>苦手な時間帯</b><span>落ち込んでいる時間帯を目立たせる</span></div></li>
+        <li><span class="n">5</span><div><b>記録</b><span>日報、メモ、ロープレ、教育、AIの提案を日付順に並べる</span></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 6 安心 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">6</span>
+      <div><h2>安心して使うための約束</h2><p>ルールで頼むのではなく、仕組みとして守ります。</p></div>
+    </div>
+    <div class="safe">
+      <div class="card">
+        <svg class="ic ic-lg" aria-hidden="true"><use href="#i-lock"/></svg>
+        <h3>部下メモは、本人には見えない</h3>
+        <p>リーダーが書いた指示や指摘のメモは、メンバー本人の画面に出ません。本人向けのAIのアドバイスにも使いません。</p>
+      </div>
+      <div class="card">
+        <svg class="ic ic-lg" aria-hidden="true"><use href="#i-calc"/></svg>
+        <h3>数字の計算はAIにさせない</h3>
+        <p>率や前週比はプログラムが正確に計算します。AIは、計算済みの数字を読んで考えることだけを担当します。</p>
+      </div>
+      <div class="card">
+        <svg class="ic ic-lg" aria-hidden="true"><use href="#i-shield"/></svg>
+        <h3>決めるのは、いつも人</h3>
+        <p>AIの提案は、リーダーが採用するか決めます。本人へのアドバイスは、責める言い方ではなく次の一手で伝えます。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 進め方 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">7</span>
+      <div><h2>進め方：まずリーダーから使い、少しずつ広げる</h2><p>全員の入力を一度に変えると現場が混乱するため、段階を分けます。日付はまだ決めていません。</p></div>
+    </div>
+    <div class="road">
+      <div class="rstep now">
+        <span class="pin">今ここ</span>
+        <span class="no">0</span>
+        <h3>準備</h3>
+        <ul><li>今のExcelの中身を確認</li><li>どの仕組みで作るか決める</li></ul>
+        <span class="who">使う人：まだなし</span>
+      </div>
+      <div class="rstep">
+        <span class="no">1</span>
+        <h3>リーダーから使う</h3>
+        <ul><li>メンバーの一覧</li><li>部下メモ・ロープレの記録</li><li>数字をカルテに表示</li></ul>
+        <span class="who">使う人：リーダー／MGR</span>
+      </div>
+      <div class="rstep">
+        <span class="no">2</span>
+        <h3>全員が使う</h3>
+        <ul><li>日報をアプリで書く</li><li>数字の自動取り込み</li></ul>
+        <span class="chg">変更：数字の手入力はしない</span>
+        <span class="who">使う人：メンバーも</span>
+      </div>
+      <div class="rstep">
+        <span class="no">3</span>
+        <h3>仕上げ</h3>
+        <ul><li>チームの日報</li><li>毎週の教育</li></ul>
+        <span class="who">使う人：全員</span>
+      </div>
+    </div>
+    <p class="small" style="margin-top:var(--space-3)">AIの提案は1から少しずつ始め、効果の確かめ（④）は記録がたまってから本格的に行います。</p>
+  </section>
+
+  <!-- 8 決まった／まだ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">8</span>
+      <div><h2>決まったことと、まだ決まっていないこと</h2></div>
+    </div>
+    <div class="status">
+      <div class="col">
+        <h3><span class="count" style="color:var(--good)">5</span>決まったこと</h3>
+        <ul>
+          <li><i class="chk"></i><div>名前は「SALES +1」<span class="sub">スローガンは 1DAY +1</span></div></li>
+          <li><i class="chk"></i><div>6つの業務を1つのアプリにまとめる</div></li>
+          <li><i class="chk"></i><div>数字は電話システムから取り込む<span class="sub">最初は手作業、のちに自動</span></div></li>
+          <li><i class="chk"></i><div>部下メモは本人に見せない</div></li>
+          <li><i class="chk"></i><div>作る体制<span class="sub">考える係（Claude Code）と作る係（Antigravity）に分ける</span></div></li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3><span class="count" style="color:var(--warn)">5</span>まだ決まっていないこと</h3>
+        <ul>
+          <li><i class="que"></i><div>今のExcelの中身<span class="wait-tag">確認待ち</span><span class="sub">記録の項目を決めるために見る</span></div></li>
+          <li><i class="que"></i><div>どの仕組みで作るか<span class="sub">データの保存先、ログインの方法など</span></div></li>
+          <li><i class="que"></i><div>何人が、どの端末で使うか</div></li>
+          <li><i class="que"></i><div>落ち込みを知らせる条件</div></li>
+          <li><i class="que"></i><div>ロープレで記録する項目</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 次 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">9</span>
+      <div><h2>次にやること</h2></div>
+    </div>
+    <div class="next">
+      <div class="nx first"><span class="no">1</span><h3>今のExcelを見る</h3><p>6業務と電話システムの見本をもらい、記録の項目を整理する</p></div>
+      <div class="nx"><span class="no">2</span><h3>画面の試作を作る</h3><p>完成後の画面を、架空のデータで見られるようにする</p></div>
+      <div class="nx"><span class="no">3</span><h3>作る仕組みを決める</h3><p>人数・使い方・予算を聞いてから、作り方を選ぶ</p></div>
+    </div>
+  </section>
+
+  <!-- 用語 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-no">?</span>
+      <div><h2>この資料で使った言葉</h2></div>
+    </div>
+    <div class="words">
+      <div><b>カルテ</b>1人分の数字と記録をまとめた画面。病院のカルテと同じ考え方</div>
+      <div><b>KPI</b>架電数・アポ数など、毎日追いかける数字</div>
+      <div><b>ロープレ</b>お客様役と営業役に分かれて行う練習</div>
+      <div><b>AI</b>数字と記録を読んで、原因や次の一手を考える担当</div>
+      <div><b>電話システム</b>架電と通話の記録が自動でたまる、今使っている電話の仕組み</div>
+      <div><b>+1</b>毎日・毎週、1つずつ積み上げる改善</div>
+    </div>
+  </section>
+
+  <p class="small source">出典：SALES +1 引き継ぎ資料 v1、NOTES.md、本人からの業務の補足（2026年10月6日時点）。画面イメージの数字と名前は架空。作る側の進め方（Git・開発の流れ）は sales-plus1_rule-layers_v2.html を参照。</p>
+
+</main>
+</body>
+</html>
