@@ -7,7 +7,8 @@
 
 - フェーズ：設計書（企画ダッシュボード）を詰めている段階。8つのまとまりのうち1〜4が確定。Gitとリポジトリの準備は完了。コードはまだない
 - 正本：企画・設計は docs/sales-plus1_handoff_v1.md、それ以降の決定は下の「決定事項」（食い違うときは決定事項を優先）
-- 設計書：docs\design\project-dashboard_vN.html のいちばん新しい版（現在 v9）。決定のたびに版を上げ、前の版は docs\design\old\ に移す
+- 概要：README.md（GitHubで最初に表示される説明書）と、設計書の冒頭の「概要」の章
+- 設計書：docs\design\project-dashboard_vN.html のいちばん新しい版（現在 v10）。決定のたびに版を上げ、前の版は docs\design\old\ に移す
 - モック：https://claude.ai/artifact/P4LCaBUUUe9KogUY8cBWZ4
 - 未決事項：下の「未決事項の進み具合」で管理する
 - 見本データ：samples\（本物・実名あり・Gitの対象外）。KPIブックと電話システムのCSVを受領済み。残りは5業務
@@ -184,7 +185,7 @@
 | ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 docs\design\rule-layers |
 | 個人ルール | ~\.claude\CLAUDE.md（2台とも）、（将来）~\.gemini\GEMINI.md |
 | 2台目の手順 | NOTES.md「2台目の準備」 |
-| **設計の決定（まとまり1〜8、見本データでわかったこと）** | **企画ダッシュボード docs\design\（版を上げて反映：完成度の表・該当の図・用語集。前の版は docs\design\old\ へ）**、NOTES.md（決定事項・未決事項の進み具合）、必要なら CLAUDE.md・plan_template.md |
+| **設計の決定（まとまり1〜8、見本データでわかったこと）** | **企画ダッシュボード docs\design\（版を上げて反映：概要の章・完成度の表・該当の図・用語集。前の版は docs\design\old\ へ）**、README.md（概要・使う人・やらないこと）、NOTES.md（決定事項・未決事項の進み具合）、必要なら CLAUDE.md・plan_template.md |
 | 見本データの置き場所・扱い | C:\Workspace\CLAUDE.md（機密ファイルの例外）、apps\sales-plus1\CLAUDE.md（守ること）、.gitignore（samples/）、plan_template.md（7章） |
 | KPIの項目・時間帯・目標の立て方 | 企画ダッシュボード（3-2・5・8・10・11）、NOTES.md（見本データ1・2） |
 | 図解・ダッシュボードの作り方 | C:\Workspace\CLAUDE.md（品質基準）。基準の見本ファイルの版も更新する |
@@ -227,6 +228,7 @@
 - C:\Workspace\CLAUDE.md に「図解HTML・ダッシュボードの品質基準」を追記（基準の見本＝ダッシュボードv9）。ほかの案件でも同じ水準で作る
 - 古くなっていた図解を作り直した：claude-setup_claudemd-cheatsheet_v2（原文を最新に差し替え、選択式・Git例外・機密の例外・品質基準を反映）、claude-setup_workspace-guide_v2（Git導入とsales-plus1の例外、2台目の手順）、antigravity_usage-guide_v3（Gitで管理する案件の流れ、Review ペインの使い方）。Workspace の CLAUDE.md の見出し「同期について（Gitは導入検討中）」も直した
 - 図解の置き場所を変えた：sales-plus1 の図解を C:\Workspace\visuals\ から docs\design\ に移した（最新＝project-dashboard_v9.html・rule-layers_v2.html、以前の版＝docs\design\old\）。アプリの画面で開け、2台目はGitHubでそろうため。移す前に実名が入っていないことを確認。Workspace の CLAUDE.md・visuals\README.md に例外を追記（上の「やったこと」にある visuals\ のパスは移す前のもの）
+- アプリの概要が1か所にまとまっていなかった → README.md を新規作成し、ダッシュボード v10 の冒頭に「概要」の章（今とこれからの図、使う人とできること、6業務と出どころ、中心の考え方、やらないこと）を追加。v9 は docs\design\old\ へ。品質基準にも「設計書の最初に概要の章を置く」を追記
 - 気づき：Claudeアプリのターミナルパネルは、ユーザー名の「髙」を含むパスで部品を読み込めず動かなかった。日本語パスでの読み込み失敗は実際に起きる → AGENTS.md・GEMINI.md の読み込みも必ず実機で確認する
 - 気づき：Claude Code の実行環境からはGitHubのサインイン画面を出せない。初回サインインは本人のターミナルで行う（2台目も同じ）
 
