@@ -1,0 +1,27 @@
+# 秘密情報（APIキーなど）。見本の .env.example だけは入れる
+.env
+.env.*
+!.env.example
+
+# 実データの保険：Excel・CSVは入れない（見本は samples\ の中だけ許可）
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+!samples/**/*.csv
+~$*
+
+# 開発で自動生成されるもの
+node_modules/
+dist/
+build/
+.firebase/
+*.log
+
+# 個人ごとの設定
+.claude/settings.local.json
+
+# Windows・Macが自動で作るファイル
+Thumbs.db
+desktop.ini
+.DS_Store
