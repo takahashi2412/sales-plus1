@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ロープレの仕様</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --chart-muted: #C8C8CC;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 999px;
+    --doc-width: 940px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+    --font-code: Consolas, "Cascadia Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+      --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A;
+      --warn: #E0A04A; --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E; --chart-muted: #55565C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+    --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A;
+    --warn: #E0A04A; --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E; --chart-muted: #55565C;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.4; margin: 0; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin-bottom: var(--space-2); }
+  h3 { font-size: 15px; }
+  p { margin: 0; }
+  code { font-family: var(--font-code); font-size: 13px; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0 var(--space-1); }
+  .small { font-size: 13px; color: var(--ink-muted); }
+
+  /* 用語リンク */
+  a.term { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--navy-text); }
+  a.term:hover { background: var(--navy-soft); }
+  a.term:focus-visible, .toc a:focus-visible, .gl-back:focus-visible { outline: 2px solid var(--navy-band); outline-offset: 2px; }
+
+  .doc-header { margin-bottom: var(--space-6); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+  .toc { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+  .toc a { font-size: 13px; color: var(--navy-text); text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 26px; }
+  .toc a:hover { background: var(--navy-soft); }
+  .toc .grp { width: 100%; font-size: 12px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; margin-top: var(--space-1); }
+
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+  .callout--point { background: var(--navy-soft); border-color: var(--navy-band); }
+  .callout--point .kind { color: var(--navy-text); }
+
+  .part { margin-top: var(--space-16); padding: var(--space-2) 0; border-bottom: 2px solid var(--navy-band); display: flex; align-items: baseline; gap: var(--space-3); }
+  .part .p-no { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); font-size: 14px; }
+  .part h2 { margin: 0; font-size: 18px; color: var(--navy-text); }
+
+  section { margin-top: var(--space-12); scroll-margin-top: var(--space-4); }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-right: var(--space-2); vertical-align: 2px; }
+  .lead { margin-bottom: var(--space-4); color: var(--ink-muted); font-size: 14px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); }
+
+  /* 見方とポイント */
+  .guide { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-3); }
+  .guide > div { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .guide .g-pt { border-left-color: var(--good); }
+  .guide .g-label { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-1); }
+  .guide .g-pt .g-label { color: var(--good); }
+  .guide ul, .guide ol { margin: 0; padding-left: 1.3em; font-size: 14px; }
+  .guide li + li { margin-top: var(--space-1); }
+
+  .tag { display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700; border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 22px; white-space: nowrap; }
+  .tag--navy { background: var(--navy-soft); color: var(--navy-text); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+  .chip-x { background: var(--bad-soft); color: var(--ink-muted); text-decoration: line-through; }
+
+  /* タイル */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+  .tile .t-label { font-size: 13px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; }
+  .tile .t-value { font-family: var(--font-figure); font-weight: 700; font-size: 32px; line-height: 1.2; }
+  .tile .t-value .unit { font-family: var(--font-body); font-size: 14px; font-weight: 500; margin-left: 2px; }
+  .tile .t-value.text { font-family: var(--font-display); font-size: 22px; }
+  .tile .t-note { font-size: 13px; color: var(--ink-muted); }
+
+  /* SVG 共通 */
+  .svg-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); }
+  .svg-wrap svg { display: block; width: 100%; min-width: 800px; height: auto; }
+  svg text { font-family: var(--font-body); }
+  .s-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .s-src { fill: var(--surface-sunken); stroke: var(--ink-muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .s-core { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 2; }
+  .s-wrap { fill: var(--surface-sunken); stroke: var(--navy-band); stroke-width: 1.5; }
+  .s-band { fill: var(--navy-band); }
+  .s-warn { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+  .s-muted { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s-lane { fill: var(--surface-sunken); }
+  .s-lane2 { fill: var(--surface); }
+  .s-bar { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 1; }
+  .s-bar-muted { fill: var(--bad-soft); }
+  .s-dot { fill: var(--surface); stroke: var(--navy-band); stroke-width: 2; }
+  .s-line { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+  .s-navy { stroke: var(--navy-band); stroke-width: 2; fill: none; }
+  .s-spoke { stroke: var(--line); stroke-width: 2; fill: none; }
+  .s-dash { stroke-dasharray: 5 4; }
+  .s-grid { stroke: var(--line); stroke-width: 1; }
+  .s-x { stroke: var(--ink); stroke-width: 3; }
+  .s-ah { fill: var(--ink-muted); }
+  .s-ahn { fill: var(--navy-band); }
+  .s-hl { fill: var(--navy-soft); }
+  .b-me { fill: var(--brand); }
+  .b-me-pre { fill: var(--brand-soft); stroke: var(--brand); stroke-width: 1.5; }
+  .b-cmp { fill: var(--chart-muted); }
+  .b-cmp-pre { fill: var(--bad-soft); stroke: var(--chart-muted); stroke-width: 1.5; }
+  .t-title { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .t-big { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .t-body { fill: var(--ink); font-size: 13px; }
+  .t-muted { fill: var(--ink-muted); font-size: 12px; }
+  .t-on { fill: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .t-navy { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-key { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12.5px; }
+  .t-field { fill: var(--ink); font-size: 12.5px; }
+  .t-warn { fill: var(--warn); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-good { fill: var(--good); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .t-fig { fill: var(--ink-muted); font-family: var(--font-figure); font-size: 12px; }
+  .t-figb { fill: var(--ink); font-family: var(--font-figure); font-weight: 700; font-size: 14px; }
+
+  /* 表 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 660px; }
+  th { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; text-align: center; padding: var(--space-2) var(--space-3); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--line); text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; font-family: var(--font-display); font-weight: 700; }
+  table.left td { text-align: left; vertical-align: top; }
+  .cell { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+  .dot { width: 14px; height: 14px; border-radius: var(--radius-full); display: inline-block; flex: none; }
+  .dot.in { background: var(--navy-band); }
+  .dot.view { border: 2px solid var(--navy-band); }
+  .none { color: var(--chart-muted); font-family: var(--font-figure); font-weight: 700; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-2); font-size: 13px; color: var(--ink-muted); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* 必ず入れる設計 */
+  .musts { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); margin-top: var(--space-3); }
+  .must { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3); font-size: 13px; display: flex; flex-direction: column; gap: var(--space-1); }
+  .must b { font-family: var(--font-display); font-size: 14px; }
+  .must span { color: var(--ink-muted); }
+
+  /* ワイヤーフレーム */
+  .wf-row { display: grid; grid-template-columns: 1fr 240px; gap: var(--space-6); align-items: start; }
+  .wf-cap { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-2); }
+  .wf { border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; display: grid; grid-template-columns: 112px 1fr; min-height: 360px; }
+  .wf-side { background: var(--navy-band); padding: var(--space-3) var(--space-2); display: flex; flex-direction: column; gap: 6px; }
+  .wf-side .logo { color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-bottom: var(--space-2); }
+  .wf-side span { color: var(--on-dark); opacity: .75; font-size: 11px; padding: 2px 6px; border-radius: var(--radius-sm); }
+  .wf-side span.on { opacity: 1; background: rgba(255,255,255,.18); }
+  .wf-main { padding: var(--space-3); display: grid; gap: var(--space-2); grid-template-columns: repeat(4, 1fr); grid-auto-rows: min-content; background: var(--paper); }
+  .blk { background: var(--surface); border: 1px dashed var(--chart-muted); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 11px; color: var(--ink-muted); position: relative; min-height: 44px; }
+  .blk b { display: block; color: var(--ink); font-family: var(--font-display); font-size: 12px; }
+  .blk .mk { position: absolute; top: -8px; right: -6px; width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .span4 { grid-column: span 4; } .span3 { grid-column: span 3; }
+  .mini-bars { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin-top: 4px; position: relative; }
+  .mini-bars i { flex: 1; background: var(--chart-muted); border-radius: 2px 2px 0 0; }
+  .mini-bars i.me { background: var(--navy-band); }
+  .mini-bars .mark { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--ink-muted); }
+  .hbars { display: grid; gap: 3px; margin-top: 4px; }
+  .hbars i { display: block; height: 6px; background: var(--navy-soft); border-radius: 2px; }
+  .hbars i.low { background: var(--warn); }
+  .tl { display: grid; gap: 4px; margin-top: 4px; }
+  .tl i { display: block; height: 8px; border-radius: 2px; background: var(--bad-soft); }
+  .phone { width: 240px; border: 2px solid var(--ink-muted); border-radius: 22px; padding: 14px 10px; background: var(--paper); }
+  .phone .bar { height: 6px; width: 60px; border-radius: 3px; background: var(--chart-muted); margin: 0 auto 10px; }
+  .phone .ph { display: grid; gap: 8px; }
+  .phone .k3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .phone .k3 .blk { min-height: 40px; padding: 4px; text-align: center; }
+  .phone .ta { min-height: 92px; }
+  .phone .btn { background: var(--navy-band); color: var(--on-dark); border-radius: var(--radius-sm); text-align: center; font-family: var(--font-display); font-size: 12px; padding: 8px; }
+
+  /* 1週間 */
+  .week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: var(--space-3); }
+  .wk { position: relative; background: var(--surface); border: 1px solid var(--line); padding: var(--space-2) var(--space-3); font-size: 13px; margin-right: 14px; border-radius: var(--radius-sm); }
+  .wk::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .wk:last-child { margin-right: 0; }
+  .wk:last-child::after { display: none; }
+  .wk b { display: block; font-family: var(--font-display); }
+  .wk .when { color: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .wk.human { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-4); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+
+  /* ロードマップ */
+  .road { display: grid; grid-template-columns: 110px repeat(4, 1fr); gap: 6px; align-items: center; }
+  .road .rh { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); text-align: center; }
+  .road .rl { font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .road .seg { border-radius: var(--radius-sm); padding: 6px 8px; font-size: 12px; min-height: 36px; display: flex; align-items: center; }
+  .seg.now { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; }
+  .seg.plan { background: var(--navy-soft); color: var(--navy-text); }
+  .seg.chg { background: var(--warn-soft); color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .c2 { grid-column: span 2; } .c3 { grid-column: span 3; }
+
+  /* 未決事項 */
+  .issues { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .iss { border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 13px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 2px; }
+  .iss .no { font-family: var(--font-figure); font-weight: 700; font-size: 12px; color: var(--ink-muted); }
+  .iss b { font-family: var(--font-display); font-size: 13px; }
+  .iss.done { background: var(--good-soft); border-color: var(--good); }
+  .iss.review { background: var(--navy-soft); border-color: var(--navy-band); }
+  .iss.wait { background: var(--warn-soft); border-color: var(--warn); }
+  .sbar { display: flex; height: 14px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--line); margin-top: var(--space-4); }
+  .sbar span { display: block; height: 100%; }
+  .next { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+  .nx { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-3); margin-right: 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+  .nx::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .nx:last-child { margin-right: 0; }
+  .nx:last-child::after { display: none; }
+  .nx.first { border: 2px solid var(--navy-band); }
+  .nx .n { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); }
+  .nx b { font-family: var(--font-display); }
+
+  /* 概要 */
+  .ov-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); }
+  .ov-role { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 14px; }
+  .ov-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .ov-head b { font-family: var(--font-display); font-size: 16px; }
+  .ov-role ul { margin: 0; padding-left: 1.2em; }
+  .ov-role li + li { margin-top: 2px; }
+  .ov-no { margin-top: var(--space-2) !important; font-size: 13px; color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .ov-ideas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+  .ov-idea { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .ov-idea b { font-family: var(--font-display); font-size: 15px; display: block; margin-bottom: var(--space-1); }
+  .ov-idea p { font-size: 13px; color: var(--ink-muted); }
+
+  /* 完成度 */
+  .groups { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .grp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+  .grp-card .g-no { font-family: var(--font-figure); font-weight: 700; color: var(--ink-muted); font-size: 12px; }
+  .grp-card b { font-family: var(--font-display); font-size: 14px; }
+  .grp-card .tag { align-self: flex-start; }
+  .grp-card.done { background: var(--good-soft); border-color: var(--good); }
+  .grp-card.next { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .grp-card.wait { background: var(--warn-soft); border-color: var(--warn); }
+  table.left.nw td:nth-child(2), table.left.nw td:nth-child(4) { white-space: nowrap; }
+
+  /* 用語集 */
+  .gl-group { margin-top: var(--space-6); }
+  .gl-group h3 { font-size: 15px; color: var(--navy-text); margin-bottom: var(--space-3); padding-bottom: var(--space-1); border-bottom: 1px solid var(--line); }
+  .gl { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .gl dl { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); scroll-margin-top: var(--space-6); }
+  .gl dl:target { border: 2px solid var(--navy-band); background: var(--navy-soft); }
+  .gl dt { font-family: var(--font-display); font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+  .gl dt small { font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--ink-muted); }
+  .gl dd { margin: var(--space-1) 0 0; font-size: 14px; }
+  .gl dd.ex { font-size: 13px; color: var(--ink-muted); }
+  .gl dd.ex::before { content: "このアプリでは："; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; }
+  .gl-back { font-size: 12px; color: var(--navy-text); text-decoration: none; }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 22px; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .guide, .two, .gl { grid-template-columns: 1fr; }
+    .musts { grid-template-columns: 1fr 1fr; }
+    .wf-row { grid-template-columns: 1fr; }
+    .wf { grid-template-columns: 84px 1fr; }
+    .phone { margin: 0 auto; }
+    .week, .next { grid-template-columns: 1fr; gap: 14px; }
+    .wk, .nx { margin-right: 0; }
+    .wk::after, .nx::after { right: 50%; top: auto; bottom: -14px; transform: translateX(50%); border-left-color: transparent; border-top-color: var(--ink-muted); }
+    .issues, .groups, .ov-ideas { grid-template-columns: 1fr 1fr; }
+    .road { grid-template-columns: 76px repeat(4, minmax(64px, 1fr)); }
+    .panel.road-wrap { overflow-x: auto; }
+  }
+  @media (max-width: 420px) {
+    .tiles, .musts { grid-template-columns: 1fr; }
+  }
+  /* この資料だけで使う部品 */
+  .steps4 { grid-template-columns: repeat(4, 1fr); }
+  .judge-card { display: grid; gap: var(--space-2); }
+  .judge-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); font-size: 14px; }
+  .judge-row b { font-family: var(--font-display); }
+  .num { font-family: var(--font-figure); font-weight: 700; }
+  @media (max-width: 760px) { .steps4 { grid-template-columns: 1fr; } }
+  /* 週間教育の画面イメージ */
+  .wf2 { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
+  .wf2-head { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: var(--space-2) var(--space-4); }
+  .wf2-head span { font-family: var(--font-body); font-weight: 500; font-size: 12px; opacity: .85; margin-left: var(--space-2); }
+  .frow { display: grid; grid-template-columns: 170px 1fr; gap: var(--space-3); padding: var(--space-2) var(--space-4); border-top: 1px solid var(--line); font-size: 14px; align-items: start; }
+  .frow:first-of-type { border-top: 0; }
+  .frow .fl { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); display: flex; flex-direction: column; gap: 2px; }
+  .frow .fl small { font-family: var(--font-body); font-weight: 500; color: var(--ink-muted); font-size: 11px; }
+  .frow.auto { background: var(--surface-sunken); }
+  .frow.hl { background: var(--navy-soft); }
+  .fake-select { display: inline-block; border: 1px solid var(--navy-band); border-radius: var(--radius-sm); padding: 0 var(--space-3); background: var(--surface); font-family: var(--font-display); font-weight: 700; }
+  .fbtns { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line); }
+  .fbtn { border: 1px solid var(--navy-band); border-radius: var(--radius-sm); padding: 2px var(--space-3); font-size: 13px; font-family: var(--font-display); font-weight: 700; color: var(--navy-text); background: var(--surface); }
+  .fbtn.primary { background: var(--navy-band); color: var(--on-dark); }
+  .wk-log { display: grid; gap: 4px; }
+  .cards6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+  @media (max-width: 760px) { .frow { grid-template-columns: 1fr; gap: var(--space-1); } .cards6 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ah" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <marker id="ahn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ahn" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+</svg>
+
+
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ ロープレ v1（確認用・仕様のまとめ）</div>
+    <h1>ロープレを「記録する場」から「1つのテーマを身につくまで練習する場」に変える</h1>
+    <p class="small" style="margin-top:var(--space-2)">2026年10月9日（金）時点 ／ v1：2026年10月8日に本人と確定したロープレの仕様（設計書 v15〜v19 の5章「ロープレの形」と9章）を、図解でまとめた資料。この資料で新しく決めたことはない。決まったことと、まだ残っていることを分けて示す</p>
+    <nav class="toc" aria-label="目次">
+      <span class="grp">今のロープレ</span>
+      <a href="#s1">1 今の使い方と問題</a>
+      <span class="grp">新しい形</span>
+      <a href="#s2">2 目的と範囲</a><a href="#s3">3 1回の入力</a><a href="#s4">4 テーマと卒業</a><a href="#s5">5 トーク一覧</a><a href="#s6">6 ほかの記録とのつながり</a>
+      <span class="grp">確認</span>
+      <a href="#s7">7 表と権限</a><a href="#s8">8 決まったことと残っていること</a><a href="#glossary">用語集</a>
+    </nav>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">結論</div>
+    <p>今のロープレの表は長文の「詳細」に頼っていて、直した言い方がほとんど残らず、同じテーマのくり返しも追えません。新しい形では、1回のロープレに1つのテーマを決め、合格ラインの○△×と「今日直した点」1つだけを残します。○が2回続いたら卒業の候補にし、2週間後に確かめます。新しい言い方はトーク一覧に集め、2段階で確かめてから会社の標準にします。</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="t-label">今の記録</span><span class="t-value">120<span class="unit">件</span></span><span class="t-note">3つの表（2026年9月〜10月）</span></div>
+    <div class="tile"><span class="t-label">直した言い方が残っていた割合</span><span class="t-value">15<span class="unit">%</span></span><span class="t-note">アウト返しの34件中5件</span></div>
+    <div class="tile"><span class="t-label">毎回書く欄</span><span class="t-value">1<span class="unit">つ</span></span><span class="t-note">今日直した点。ほかは選ぶか自動</span></div>
+    <div class="tile"><span class="t-label">練習中のテーマ</span><span class="t-value text">1人2つまで</span><span class="t-note">アポと営業で1つずつ</span></div>
+  </div>
+
+  <div class="callout callout--point" style="margin-top:var(--space-6)">
+    <div class="kind">この資料の読み方</div>
+    <p>各図の下に「図の見方」と「ポイント（要点）」を置いています。点線の下線がある言葉は、押すと最後の用語集に移動します。<span class="tag tag--good">決定</span>は本人が選んだもの、<span class="tag tag--warn">残り</span>はまだ中身を確かめているものです。名前と例の数字は架空です。</p>
+  </div>
+
+  <!-- ============ PART 1 ============ -->
+  <div class="part"><span class="p-no">PART 1</span><h2>今のロープレ</h2></div>
+
+  <section id="s1">
+    <h2><span class="section-num">1</span>今の使い方と問題：ロープレをすること自体がゴールになっている</h2>
+    <p class="lead">見本は、ロープレ・研修管理表2つ（18件・66件）と指導履歴1つ（36件）の合わせて120件（2026年9月14日〜10月2日）。共通の列は、日時・時間帯（朝昼夜）・時間・名前・<a class="term" href="#g-jikko">実行者</a>・内容（アポ／営業）・詳細です。</p>
+    <div class="two">
+      <div class="panel">
+        <h3 style="margin-bottom:var(--space-2)">本人が管理表を作った理由</h3>
+        <ul style="margin:0;padding-left:1.2em;font-size:14px">
+          <li>1時間などロープレをしても、身についていなかった</li>
+          <li>ロープレをすること自体がゴールになり、「これを身につけたい・直したいからする」になっていなかった</li>
+          <li><a class="term" href="#g-out">アウト返し</a>のロープレのはずが、後半はリストや見込みの話にそれた</li>
+          <li>新人があれもこれもになってパンクし、成長が遅れた</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3 style="margin-bottom:var(--space-2)">見本の数字でわかったこと</h3>
+        <ul style="margin:0;padding-left:1.2em;font-size:14px">
+          <li>1回の平均は13〜19分。30分を超える回はない</li>
+          <li>研修・FIX・面談が合わせて16件まざっている</li>
+          <li>同じテーマを何回くり返したかが追えない</li>
+          <li>アウト返しの34件のうち、直したあとの言い方が文で残っていたのは5件（15%）。言葉がない記録が19件</li>
+          <li>結果を「その日の午後のアポ数」で見ている（1日の数字は偶然で大きく動く）</li>
+          <li>回数・時間の週の集計は、手で式を組んでいる</li>
+        </ul>
+      </div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左が本人の問題意識、右が見本（120件）を数えてわかったこと</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>管理の目的は、記録を残すことではなく「1回のロープレで身につけるものを1つに決め、身につくまで練習させること」</li><li>改善の案は「テーマを1つにしぼらせるか」「身についたかを確かめられるか」「それた話を切り離せるか」「新人に渡すテーマを減らせるか」で判断した</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 2 ============ -->
+  <div class="part"><span class="p-no">PART 2</span><h2>新しい形</h2></div>
+
+  <section id="s2">
+    <h2><span class="section-num">2</span>目的と範囲：記録するのはロープレだけ</h2>
+    <div class="two">
+      <div class="panel"><h3 style="margin-bottom:var(--space-2)">ロープレの記録に書くもの <span class="tag tag--good">決定</span></h3><ul style="margin:0;padding-left:1.2em;font-size:14px"><li>1回＝1<a class="term" href="#g-theme">テーマ</a>のロープレ</li><li><a class="term" href="#g-pass">合格ライン</a>の○△×と、今日直した点1つ</li><li>使ったトーク、<a class="term" href="#g-homework">宿題</a>、新しい言い方（ときどき）</li></ul></div>
+      <div class="panel"><h3 style="margin-bottom:var(--space-2)">ほかの記録に書くもの <span class="tag tag--good">決定</span></h3><ul style="margin:0;padding-left:1.2em;font-size:14px"><li>研修 → <a class="term" href="#g-seminar">研修の記録</a>（参加者は複数、参加した本人も見られる）</li><li>FIX → <a class="term" href="#g-memo">部下メモ</a>（種類＝指摘・指導）</li><li>面談 → 部下メモ（種類＝1on1・面談）</li><li>ロープレ中にそれた話題（リスト・見込みなど）→ ロープレの記録には書かない</li></ul></div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左がロープレの記録に書くもの、右がほかの記録に振り分けるもの</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>今の表に16件まざっていた研修・FIX・面談は、それぞれの記録に分ける</li><li>ロープレ中にほかの点を直すのはかまわない。記録に残すテーマは1つ</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="section-num">3</span>1回の入力：自動と「選ぶ」がほとんどで、毎回書くのは今日直した点1つ</h2>
+    <p class="lead">PCの画面のイメージです <span class="tag tag--good">決定</span>（本人が会話の中の画面イメージで確認。足りない欄として本人が挙げた「どんなトーク」「時間帯」「内容」「結果」「課題・目的／引継ぎ事項」も入っている）。スマホでは同じ欄を縦に並べます。名前と数字は架空です。</p>
+    <div class="wf2">
+      <div class="wf2-head">ロープレの記録<span>10/9（木） ／ 実行者：リーダーB</span></div>
+      <div class="frow auto"><div class="fl">日付・実行者・時間帯<small>自動</small></div><div>10/9（木）・リーダーB・昼</div></div>
+      <div class="frow hl"><div class="fl">課員<small>選ぶ</small></div><div><span class="fake-select">メンバーA ▼</span></div></div>
+      <div class="frow auto"><div class="fl">テーマ・内容<small>自動（練習中のテーマ）</small></div><div>アウト返し（時間切りの前）・アポ ／ 合格ライン：1回目のアウトで、受け止めてから時間切りまで進める</div></div>
+      <div class="frow auto"><div class="fl">課題・目的<small>自動（週間教育から）</small></div><div>オ率をチーム平均まで上げる（今週の行動：アウト返しのロープレ3回）</div></div>
+      <div class="frow auto"><div class="fl">前回の宿題<small>自動</small></div><div>「忙しい」への返しを3つ言えるようにする</div></div>
+      <div class="frow hl"><div class="fl">宿題の○△×・時間・くり返し<small>選ぶ</small></div><div>宿題 <span class="fake-select">△</span>　時間 <span class="fake-select">15分</span>　くり返し <span class="fake-select">4回</span></div></div>
+      <div class="frow hl"><div class="fl">使ったトーク<small>トーク一覧から選ぶ</small></div><div><span class="fake-select">OUT-012「今ちょっと忙しい」への返し ▼</span>　場面・台本・業種がまとめて残る</div></div>
+      <div class="frow hl"><div class="fl">合格ライン<small>選ぶ</small></div><div><span class="fake-select">○</span> <span class="fake-select">△</span> <span class="fake-select">×</span></div></div>
+      <div class="frow"><div class="fl">今日直した点<small>毎回1つ書く</small></div><div>受け止めの一言を「お忙しいところすみません」から「そうですよね」に短くした</div></div>
+      <div class="frow hl"><div class="fl">次回の宿題<small>例から選ぶ・書いてもよい</small></div><div><span class="fake-select">返しを録音して聞き直す ▼</span></div></div>
+      <div class="frow"><div class="fl">申し送り・新しい言い方<small>任意・ときどき</small></div><div style="color:var(--ink-muted)">相手のアウト＋直した言い方を書くと、トーク一覧に「確認待ち」で入る</div></div>
+      <div class="frow auto"><div class="fl">結果<small>翌日に自動・参考</small></div><div>ロープレ後の時間帯のアポ数と実率（偶然で動くので判定はしない）</div></div>
+      <div class="fbtns"><span class="fbtn primary">記録する</span></div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>灰色の行はアプリが自動で出す。濃紺の行は選ぶ。白い行だけを書く</li><li>書くのは「今日直した点」（毎回）と、「申し送り・新しい言い方」（任意）だけ</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>評価は合格ラインの○△×だけ。共通の項目の点数はつけない <span class="tag tag--good">決定</span></li><li>「使ったトーク」を一覧から選ぶので、どの返しを練習したかが文を書かずに残る</li><li>結果は参考の表示にとどめる。効いたかどうかは週間教育で2週間かけて判定する</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="section-num">4</span>テーマと卒業：○が2回続いたら候補にし、2週間後にもう一度確かめる</h2>
+    <p class="lead"><a class="term" href="#g-practice">練習中のテーマ</a>は、アポと営業で1つずつまでです（営業に出ていない人はアポの1つだけ） <span class="tag tag--good">決定</span>。テーマの段階（1 暗記〜6 営業）は目安で、順番の決まりにはしません。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 300" role="img" aria-label="テーマの流れ。テーマ一覧から練習中のテーマを選び、ロープレをくり返す。合格ラインの丸が2回続くと卒業の候補を知らせ、実行者が卒業にする。卒業の2週間後に確認のロープレを知らせ、丸なら卒業のまま、バツなら練習中に戻す。30分を超えたら確認、14日以上練習中なら注意">
+        <rect class="s-box" x="10" y="40" width="150" height="70" rx="10"/><text class="t-title" x="85" y="68" text-anchor="middle">テーマ一覧</text><text class="t-muted" x="85" y="90" text-anchor="middle">段階1〜6（目安）</text>
+        <rect class="s-core" x="200" y="40" width="160" height="70" rx="10"/><text class="t-title" x="280" y="68" text-anchor="middle">練習中</text><text class="t-muted" x="280" y="90" text-anchor="middle">アポ1つ・営業1つ</text>
+        <rect class="s-box" x="400" y="40" width="160" height="70" rx="10"/><text class="t-title" x="480" y="68" text-anchor="middle">○が2回続く</text><text class="t-muted" x="480" y="90" text-anchor="middle">卒業の候補を知らせる</text>
+        <rect class="s-box" x="600" y="40" width="130" height="70" rx="10"/><text class="t-title" x="665" y="68" text-anchor="middle">卒業</text><text class="t-muted" x="665" y="90" text-anchor="middle">実行者が決める</text>
+        <rect class="s-box" x="600" y="170" width="270" height="70" rx="10"/><text class="t-title" x="735" y="198" text-anchor="middle">2週間後に確認のロープレ</text><text class="t-muted" x="735" y="220" text-anchor="middle">アプリが知らせる</text>
+        <rect class="s-warn" x="200" y="170" width="300" height="70" rx="10"/><text class="t-title" x="350" y="198" text-anchor="middle">×なら練習中に戻す</text><text class="t-muted" x="350" y="220" text-anchor="middle">○なら卒業のまま</text>
+        <path class="s-navy" d="M160,75 L198,75" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M360,75 L398,75" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M560,75 L598,75" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M665,110 L665,168" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M600,205 L502,205" marker-end="url(#ahn)"/>
+        <path class="s-line s-dash" d="M280,170 L280,112" marker-end="url(#ah)"/>
+        <text class="t-muted" x="20" y="272">注意：1回が30分を超えたら確認。同じテーマを14日以上練習中なら注意（どちらの数字も設定で変えられる）</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>上の段を左から右へ。卒業したら下の段に回り、2週間後にもう一度確かめる</li><li>橙の箱が、身についていなかったときに戻る道</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>ロープレの場でできても、時間がたつと戻ることがある。だから卒業の2週間後に確かめる <span class="tag tag--good">決定</span></li><li>「○2回」「2週間」の回数と日数は設定で変えられる</li><li>新人に一度に渡すテーマを2つまでにしぼり、パンクを防ぐ</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="section-num">5</span>トーク一覧：新しい言い方は「確認待ち → 試行中 → 標準」の2段階で確かめる</h2>
+    <p class="lead"><a class="term" href="#g-talk">トーク一覧</a>には、返し（OUT-）と<a class="term" href="#g-script">スクリプト</a>（SC-）を1つにまとめ、種類・場面・業種・リストの種類・状態で絞り込みます。練習回数と合格率は、ロープレの記録から自動で出ます <span class="tag tag--good">決定</span>。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 280" role="img" aria-label="トークの状態の流れ。ロープレで新しい言い方を書くと確認待ちで入り、AIが場面と業種の候補と似たトークを示す。そのチームのリーダーが試行中にし、トーク責任者がロープレの数字と週間教育の判定を見て標準にする">
+        <rect class="s-box" x="10" y="40" width="190" height="80" rx="10"/><text class="t-title" x="105" y="68" text-anchor="middle">ロープレの記録</text><text class="t-muted" x="105" y="92" text-anchor="middle">新しい言い方を書く</text>
+        <rect class="s-muted" x="240" y="40" width="190" height="80" rx="10"/><text class="t-title" x="335" y="68" text-anchor="middle">確認待ち</text><text class="t-muted" x="335" y="92" text-anchor="middle">リーダー以上が見る</text>
+        <rect class="s-box" x="470" y="40" width="190" height="80" rx="10"/><text class="t-title" x="565" y="68" text-anchor="middle">試行中</text><text class="t-muted" x="565" y="92" text-anchor="middle">チームで試す</text>
+        <rect class="s-core" x="700" y="40" width="170" height="80" rx="10"/><text class="t-title" x="785" y="68" text-anchor="middle">標準</text><text class="t-muted" x="785" y="92" text-anchor="middle">会社の型</text>
+        <path class="s-navy" d="M200,80 L238,80" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M430,80 L468,80" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M660,80 L698,80" marker-end="url(#ahn)"/>
+        <text class="t-navy" x="449" y="146" text-anchor="middle">そのチームのリーダー</text>
+        <text class="t-muted" x="449" y="164" text-anchor="middle">（担当MGRも可）</text>
+        <text class="t-navy" x="680" y="146" text-anchor="middle">トーク責任者</text>
+        <text class="t-muted" x="680" y="164" text-anchor="middle">数字を見て判断</text>
+        <rect class="s-bar" x="240" y="200" width="430" height="56" rx="8"/>
+        <text class="t-body" x="256" y="224">AIの手伝い：場面・業種の候補と、似たトークを示す</text>
+        <text class="t-muted" x="256" y="244">選ぶのは人。次のテーマの提案はしない</text>
+        <path class="s-line s-dash" d="M335,198 L335,122" marker-end="url(#ah)"/>
+      </svg>
+    </div>
+    <div class="table-wrap" style="margin-top:var(--space-4)">
+      <table class="left">
+        <thead><tr><th>項目</th><th>決めたこと <span class="tag tag--good">決定</span></th></tr></thead>
+        <tbody>
+          <tr><td>標準にする基準</td><td><a class="term" href="#g-talkowner">トーク責任者</a>が、ロープレの数字（練習回数・合格率・練習した人数）と週間教育の判定を見て決める。決まった線は最初は作らない（実際の電話でどの返しを使ったかは記録が残らないため）</td></tr>
+          <tr><td>最初の登録</td><td>課員ごとの返し集・早見表・スクリプトを集め、重なりをまとめて場面・業種をつけた一覧案を作る。過去の記録からも候補を足す。全部「確認待ち」で入れ、トーク責任者が選ぶ</td></tr>
+          <tr><td>場面（アポ）</td><td>冒頭／アウト返し（<a class="term" href="#g-jikangiri">時間切り</a>の前）／時間切り／時間切りのあとの断り／見込み／詰め・切り際</td></tr>
+          <tr><td>場面（営業）</td><td>冒頭・ヒアリング／会社紹介・提案／クロージング</td></tr>
+          <tr><td>業種</td><td>共通／店舗／建設・リフォーム／不動産／士業／スクール／農業／その他</td></tr>
+          <tr><td>リストの種類（任意）</td><td>予約・口コミサイトの掲載店／新設法人／差分など</td></tr>
+          <tr><td>分類の言葉</td><td>上の案で始め、管理者が設定で足したり変えたりできる</td></tr>
+          <tr><td>見られる人</td><td>メンバーは標準と試行中を見られる。確認待ちはリーダー以上</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>上の図を左から右へ。矢印の下が、次の状態にする人</li><li>下の表は、トーク一覧について決めたことの一覧</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>新しい言い方を早くチームで試しつつ、会社の標準は責任を持つ人が決める</li><li>トーク責任者の権限は、代表と管理者が与え、監査ログに残す</li><li>ロープレで「使ったトーク」を選ぶたびに、練習回数と合格率がたまる</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="section-num">6</span>ほかの記録とのつながり：ロープレのたびに二度書かない</h2>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 300" role="img" aria-label="ロープレの記録とほかの記録のつながり図。週間教育の行動でテーマを選ぶと、ロープレが自動で実行回数に数えられる。ロープレの記録は、責任者日報、受けた人の一般日報、カルテ、トーク一覧に自動で並ぶ。研修とFIX・面談は、研修の記録と部下メモに振り分ける">
+        <rect class="s-box" x="10" y="30" width="230" height="70" rx="8"/><text class="t-title" x="24" y="56">週間教育</text><text class="t-muted" x="24" y="78">行動で「ロープレのテーマ」を選ぶ</text>
+        <rect class="s-box" x="10" y="200" width="230" height="70" rx="8"/><text class="t-title" x="24" y="226">研修の記録・部下メモ</text><text class="t-muted" x="24" y="248">研修・FIX・面談はこちらへ</text>
+        <rect class="s-core" x="320" y="100" width="240" height="100" rx="10"/><text class="t-title" x="440" y="140" text-anchor="middle">ロープレの記録</text><text class="t-muted" x="440" y="164" text-anchor="middle">1回1テーマ・合格ライン</text>
+        <rect class="s-box" x="640" y="10" width="230" height="60" rx="8"/><text class="t-title" x="654" y="34">責任者日報</text><text class="t-muted" x="654" y="54">誰に・テーマ・合格が並ぶ</text>
+        <rect class="s-box" x="640" y="84" width="230" height="60" rx="8"/><text class="t-title" x="654" y="108">受けた人の一般日報</text><text class="t-muted" x="654" y="128">今日のロープレ・研修</text>
+        <rect class="s-box" x="640" y="158" width="230" height="60" rx="8"/><text class="t-title" x="654" y="182">カルテ</text><text class="t-muted" x="654" y="202">タイムラインに並ぶ</text>
+        <rect class="s-box" x="640" y="232" width="230" height="60" rx="8"/><text class="t-title" x="654" y="256">トーク一覧</text><text class="t-muted" x="654" y="276">練習回数・合格率</text>
+        <path class="s-navy" d="M240,65 L318,120" marker-end="url(#ahn)"/>
+        <text class="t-muted" x="250" y="112">実行回数に</text>
+        <text class="t-muted" x="250" y="128">自動で数える</text>
+        <path class="s-line s-dash" d="M318,180 L242,225" marker-end="url(#ah)"/>
+        <path class="s-navy" d="M560,120 L638,40" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M560,140 L638,114" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M560,160 L638,188" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M560,180 L638,262" marker-end="url(#ahn)"/>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>中央がロープレの記録。左上から入り、右の4つへ自動で並ぶ</li><li>点線は、ロープレの記録に入れずに振り分けるもの</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li><a class="term" href="#g-weekly">週間教育</a>の行動で「ロープレのテーマ」を選ぶと、期間中のそのテーマのロープレが自動で実行回数に数えられる（ロープレのたびに選ばない） <span class="tag tag--good">決定</span></li><li>今のロープレの記録（3つの表、120件）は、読むだけの形でアプリに移す。ロープレ・研修・FIXはそれぞれの記録に振り分け、テーマ・合格ライン・トークはつけない</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 3 ============ -->
+  <div class="part"><span class="p-no">PART 3</span><h2>確認</h2></div>
+
+  <section id="s7">
+    <h2><span class="section-num">7</span>表と権限：5つの表に分けて持つ</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>表</th><th>項目</th><th>なぜ別の表にするか</th></tr></thead>
+        <tbody>
+          <tr><td>roleplays（ロープレ）</td><td>課員・実行者・テーマ・使ったトーク・日付・時間帯・時間（分）・宿題の○△×・くり返し回数・合格ラインの○△×・今日直した点・次回の宿題・申し送り</td><td>1回のロープレが1行</td></tr>
+          <tr><td>roleplay_themes（テーマ一覧）</td><td>テーマ番号・段階（1〜6、目安）・名前・アポ／営業・合格ラインの例</td><td>会社で共通のテーマの一覧</td></tr>
+          <tr><td>member_themes（テーマ表）</td><td>課員・テーマ・開始日・合格ライン・状態（練習中／卒業）・卒業日・確認の日</td><td>1人ごとの練習中・卒業を追い、卒業の候補と2週間後の確認を知らせる</td></tr>
+          <tr><td>talks（トーク一覧）</td><td>返し・スクリプトの番号・場面・業種・リストの種類・相手の言葉・言い方・ねらい・作った人・状態</td><td>ロープレから選ぶ一覧。練習回数と合格率は自動</td></tr>
+          <tr><td>seminars・seminar_members（研修の記録と参加者）</td><td>日付・テーマ・講師・時間・内容、参加者（複数）</td><td>研修は1回に何人も参加する</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap" style="margin-top:var(--space-4)">
+      <table>
+        <thead><tr><th>画面</th><th>メンバー</th><th>リーダー</th><th>MGR</th><th>代表</th></tr></thead>
+        <tbody>
+          <tr><td>ロープレ</td><td><span class="cell"><i class="dot in"></i>自分を見る・実行者として入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td></tr>
+          <tr><td>トーク一覧</td><td><span class="cell"><i class="dot view"></i>標準・試行中</span></td><td><span class="cell"><i class="dot in"></i>試行中にする</span></td><td><span class="cell"><i class="dot in"></i>試行中にする</span></td><td><span class="cell"><i class="dot view"></i></span></td></tr>
+          <tr><td>研修の記録</td><td><span class="cell"><i class="dot view"></i>参加した分</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend"><span><i class="dot in"></i>入力・判断する</span><span><i class="dot view"></i>見る</span></div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>上の表は、ロープレまわりの5つの表と主な項目。下の表は、画面ごとの権限（設計書の9章と同じ）</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>標準にするのは、役職とは別の「トーク責任者」の権限を持つ人</li><li>ロープレの記録は、メンバー本人も自分の分を見られる（部下メモ・責任者日報とちがう）</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s8">
+    <h2><span class="section-num">8</span>決まったことと残っていること：形は決まり、テーマとトークの中身が残る</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>項目</th><th>内容</th><th>状態</th></tr></thead>
+        <tbody>
+          <tr><td>範囲</td><td>ロープレだけを記録する。研修は研修の記録、FIX・面談は部下メモ</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>1回の入力</td><td>1回1テーマ。毎回書くのは今日直した点1つ。ほかは選ぶか自動（3章の画面）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>評価</td><td>合格ラインの○△×だけ。点数はつけない</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>練習中のテーマ</td><td>アポと営業で1つずつまで。段階は目安</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>卒業</td><td>○2回で候補、実行者が卒業にする、2週間後に確認、×なら戻す</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>注意</td><td>30分を超えたら確認、14日以上練習中なら注意（設定で変える）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>トーク一覧</td><td>2段階の確認、標準はトーク責任者が数字を見て決める、最初にまとめて登録、分類は設定で変える、AIは整理の手伝い</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>週間教育とのつなぎ</td><td>週間教育でテーマを選び、自動で実行回数に数える</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>過去の記録</td><td>120件を読むだけの形で移す（移す時期はまとまり8）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>テーマ一覧の中身</td><td>15テーマと合格ラインの例が、現場の言葉に合っているかを現場の責任者に確かめる</td><td><span class="tag tag--warn">残り</span></td></tr>
+          <tr><td>トーク一覧の中身</td><td>課員ごとの返し集・スクリプトを集めて、最初の一覧案を作る</td><td><span class="tag tag--warn">残り</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>「決定」は2026年10月8日に本人が選んだもの、「残り」は中身を確かめているもの</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>しくみの形はすべて決まっている。残っているのは、テーマとトークという「中身」の確認</li><li>正式な仕様は設計書（<a href="project-dashboard_v19.html">project-dashboard_v19.html</a>）の5章「ロープレの形」と9章</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ 用語集 ============ -->
+  <section id="glossary">
+    <div class="part" style="margin-top:0"><span class="p-no">用語集</span><h2>この資料で使った言葉</h2></div>
+    <p class="lead" style="margin-top:var(--space-3)">本文の点線の下線から移動してきた場合、その言葉の枠が濃紺で囲まれます。「このアプリでは」は、SALES +1 での具体例です。</p>
+
+    <div class="gl-group">
+      <h3>ロープレのしくみ</h3>
+      <div class="gl">
+        <dl id="g-jikko"><dt>実行者</dt><dd>ロープレで相手役をして教える側の人。リーダーやMGR、先輩のメンバー。</dd><dd class="ex">ロープレの記録を入力し、卒業の候補が出たら卒業にするかを決める。</dd></dl>
+        <dl id="g-theme"><dt>テーマ</dt><dd>1回のロープレで身につけるもの。会社で共通の一覧から選ぶ。</dd><dd class="ex">「アウト返し（時間切りの前）」など。段階1 暗記〜6 営業の目安がある。</dd></dl>
+        <dl id="g-practice"><dt>練習中のテーマ</dt><dd>その人が今身につけようとしているテーマ。</dd><dd class="ex">アポと営業で1つずつまで。ロープレの記録のテーマは、ここから自動で入る。</dd></dl>
+        <dl id="g-pass"><dt>合格ライン</dt><dd>テーマごとに決めた「ここまでできたら合格」の基準。○△×で評価する。</dd><dd class="ex">「1回目のアウトで、受け止めてから時間切りまで進める」など。○が2回続くと卒業の候補。</dd></dl>
+        <dl id="g-homework"><dt>宿題</dt><dd>次のロープレまでに練習しておくこと。</dd><dd class="ex">次のロープレの記録に「前回の宿題」として出て、できたかを○△×でつける。</dd></dl>
+        <dl id="g-seminar"><dt>研修の記録</dt><dd>複数人が参加する研修の記録。参加した本人も見られる。</dd><dd class="ex">ロープレの記録とは分けて書く。</dd></dl>
+        <dl id="g-memo"><dt>部下メモ</dt><dd>上席が部下に気づいたこと・指導したことの記録。本人には見せない。</dd><dd class="ex">FIXは「指摘・指導」、面談は「1on1・面談」の種類で書く。</dd></dl>
+        <dl id="g-weekly"><dt>週間教育</dt><dd>問題 → 原因 → 行動 → 振り返りを週ごとに回す育成の記録。効果は2週間で判定する。</dd><dd class="ex">行動で「ロープレのテーマ」を選ぶと、ロープレの回数が自動で数えられる。</dd></dl>
+      </div>
+    </div>
+
+    <div class="gl-group">
+      <h3>トーク</h3>
+      <div class="gl">
+        <dl id="g-talk"><dt>トーク一覧</dt><dd>返しとスクリプトを1つにまとめた一覧。状態（確認待ち・試行中・標準）を持つ。</dd><dd class="ex">ロープレの「使ったトーク」はここから選ぶ。練習回数と合格率が自動で出る。</dd></dl>
+        <dl id="g-out"><dt>アウト返し</dt><dd>相手の断りの言葉（アウト）に対して返す言い方。</dd><dd class="ex">「今ちょっと忙しい」への返しなど。番号は OUT- で始まる。</dd></dl>
+        <dl id="g-jikangiri"><dt>時間切り</dt><dd>電話の中で、訪問・商談の日時を具体的に決めること。</dd><dd class="ex">アポの場面の1つ。アウト返しは「時間切りの前」と「時間切りのあとの断り」に分けて持つ。</dd></dl>
+        <dl id="g-script"><dt>スクリプト</dt><dd>電話や商談で話す流れを、台本の形にまとめたもの。</dd><dd class="ex">番号は SC- で始まる。返しと同じ一覧で管理する。</dd></dl>
+        <dl id="g-talkowner"><dt>トーク責任者</dt><dd>トークを会社の標準にするかを決める人。役職とは別の権限。</dd><dd class="ex">代表と管理者が権限を与え、監査ログに残す。ロープレの数字と週間教育の判定を見て決める。</dd></dl>
+      </div>
+    </div>
+  </section>
+
+  <p class="small source">出典：ロープレの見本（samples\ のロープレ・研修管理表2つ・指導履歴1つ、合わせて120件、2026年9月14日〜10月2日。新しいロープレ管理表の案 v2）、元の案件 training\roleplay-talks の要点（NOTES.md「ロープレの前提」）、2026年10月8日に本人が選んだこと（NOTES.md「見本データ5」、設計書 v15〜v19）。名前と例の数字は架空。2026年10月9日時点。</p>
+
+</main>
+</body>
+</html>
