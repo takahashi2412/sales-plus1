@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一般日報の見直し</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --chart-muted: #C8C8CC;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 999px;
+    --doc-width: 940px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+    --font-code: Consolas, "Cascadia Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+      --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A;
+      --warn: #E0A04A; --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E; --chart-muted: #55565C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+    --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A;
+    --warn: #E0A04A; --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E; --chart-muted: #55565C;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.4; margin: 0; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin-bottom: var(--space-2); }
+  h3 { font-size: 15px; }
+  p { margin: 0; }
+  code { font-family: var(--font-code); font-size: 13px; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0 var(--space-1); }
+  .small { font-size: 13px; color: var(--ink-muted); }
+
+  /* 用語リンク */
+  a.term { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--navy-text); }
+  a.term:hover { background: var(--navy-soft); }
+  a.term:focus-visible, .toc a:focus-visible, .gl-back:focus-visible { outline: 2px solid var(--navy-band); outline-offset: 2px; }
+
+  .doc-header { margin-bottom: var(--space-6); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+  .toc { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+  .toc a { font-size: 13px; color: var(--navy-text); text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 26px; }
+  .toc a:hover { background: var(--navy-soft); }
+  .toc .grp { width: 100%; font-size: 12px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; margin-top: var(--space-1); }
+
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+  .callout--point { background: var(--navy-soft); border-color: var(--navy-band); }
+  .callout--point .kind { color: var(--navy-text); }
+
+  .part { margin-top: var(--space-16); padding: var(--space-2) 0; border-bottom: 2px solid var(--navy-band); display: flex; align-items: baseline; gap: var(--space-3); }
+  .part .p-no { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); font-size: 14px; }
+  .part h2 { margin: 0; font-size: 18px; color: var(--navy-text); }
+
+  section { margin-top: var(--space-12); scroll-margin-top: var(--space-4); }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-right: var(--space-2); vertical-align: 2px; }
+  .lead { margin-bottom: var(--space-4); color: var(--ink-muted); font-size: 14px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); }
+
+  /* 見方とポイント */
+  .guide { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-3); }
+  .guide > div { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .guide .g-pt { border-left-color: var(--good); }
+  .guide .g-label { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-1); }
+  .guide .g-pt .g-label { color: var(--good); }
+  .guide ul, .guide ol { margin: 0; padding-left: 1.3em; font-size: 14px; }
+  .guide li + li { margin-top: var(--space-1); }
+
+  .tag { display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700; border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 22px; white-space: nowrap; }
+  .tag--navy { background: var(--navy-soft); color: var(--navy-text); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+  .chip-x { background: var(--bad-soft); color: var(--ink-muted); text-decoration: line-through; }
+
+  /* タイル */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+  .tile .t-label { font-size: 13px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; }
+  .tile .t-value { font-family: var(--font-figure); font-weight: 700; font-size: 32px; line-height: 1.2; }
+  .tile .t-value .unit { font-family: var(--font-body); font-size: 14px; font-weight: 500; margin-left: 2px; }
+  .tile .t-value.text { font-family: var(--font-display); font-size: 22px; }
+  .tile .t-note { font-size: 13px; color: var(--ink-muted); }
+
+  /* SVG 共通 */
+  .svg-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); }
+  .svg-wrap svg { display: block; width: 100%; min-width: 800px; height: auto; }
+  svg text { font-family: var(--font-body); }
+  .s-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .s-src { fill: var(--surface-sunken); stroke: var(--ink-muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .s-core { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 2; }
+  .s-wrap { fill: var(--surface-sunken); stroke: var(--navy-band); stroke-width: 1.5; }
+  .s-band { fill: var(--navy-band); }
+  .s-warn { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+  .s-muted { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s-lane { fill: var(--surface-sunken); }
+  .s-lane2 { fill: var(--surface); }
+  .s-bar { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 1; }
+  .s-bar-muted { fill: var(--bad-soft); }
+  .s-dot { fill: var(--surface); stroke: var(--navy-band); stroke-width: 2; }
+  .s-line { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+  .s-navy { stroke: var(--navy-band); stroke-width: 2; fill: none; }
+  .s-spoke { stroke: var(--line); stroke-width: 2; fill: none; }
+  .s-dash { stroke-dasharray: 5 4; }
+  .s-grid { stroke: var(--line); stroke-width: 1; }
+  .s-x { stroke: var(--ink); stroke-width: 3; }
+  .s-ah { fill: var(--ink-muted); }
+  .s-ahn { fill: var(--navy-band); }
+  .s-hl { fill: var(--navy-soft); }
+  .b-me { fill: var(--brand); }
+  .b-me-pre { fill: var(--brand-soft); stroke: var(--brand); stroke-width: 1.5; }
+  .b-cmp { fill: var(--chart-muted); }
+  .b-cmp-pre { fill: var(--bad-soft); stroke: var(--chart-muted); stroke-width: 1.5; }
+  .t-title { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .t-big { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .t-body { fill: var(--ink); font-size: 13px; }
+  .t-muted { fill: var(--ink-muted); font-size: 12px; }
+  .t-on { fill: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .t-navy { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-key { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12.5px; }
+  .t-field { fill: var(--ink); font-size: 12.5px; }
+  .t-warn { fill: var(--warn); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-good { fill: var(--good); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .t-fig { fill: var(--ink-muted); font-family: var(--font-figure); font-size: 12px; }
+  .t-figb { fill: var(--ink); font-family: var(--font-figure); font-weight: 700; font-size: 14px; }
+
+  /* 表 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 660px; }
+  th { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; text-align: center; padding: var(--space-2) var(--space-3); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--line); text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; font-family: var(--font-display); font-weight: 700; }
+  table.left td { text-align: left; vertical-align: top; }
+  .cell { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+  .dot { width: 14px; height: 14px; border-radius: var(--radius-full); display: inline-block; flex: none; }
+  .dot.in { background: var(--navy-band); }
+  .dot.view { border: 2px solid var(--navy-band); }
+  .none { color: var(--chart-muted); font-family: var(--font-figure); font-weight: 700; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-2); font-size: 13px; color: var(--ink-muted); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* 必ず入れる設計 */
+  .musts { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); margin-top: var(--space-3); }
+  .must { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3); font-size: 13px; display: flex; flex-direction: column; gap: var(--space-1); }
+  .must b { font-family: var(--font-display); font-size: 14px; }
+  .must span { color: var(--ink-muted); }
+
+  /* ワイヤーフレーム */
+  .wf-row { display: grid; grid-template-columns: 1fr 240px; gap: var(--space-6); align-items: start; }
+  .wf-cap { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-2); }
+  .wf { border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; display: grid; grid-template-columns: 112px 1fr; min-height: 360px; }
+  .wf-side { background: var(--navy-band); padding: var(--space-3) var(--space-2); display: flex; flex-direction: column; gap: 6px; }
+  .wf-side .logo { color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-bottom: var(--space-2); }
+  .wf-side span { color: var(--on-dark); opacity: .75; font-size: 11px; padding: 2px 6px; border-radius: var(--radius-sm); }
+  .wf-side span.on { opacity: 1; background: rgba(255,255,255,.18); }
+  .wf-main { padding: var(--space-3); display: grid; gap: var(--space-2); grid-template-columns: repeat(4, 1fr); grid-auto-rows: min-content; background: var(--paper); }
+  .blk { background: var(--surface); border: 1px dashed var(--chart-muted); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 11px; color: var(--ink-muted); position: relative; min-height: 44px; }
+  .blk b { display: block; color: var(--ink); font-family: var(--font-display); font-size: 12px; }
+  .blk .mk { position: absolute; top: -8px; right: -6px; width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .span4 { grid-column: span 4; } .span3 { grid-column: span 3; }
+  .mini-bars { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin-top: 4px; position: relative; }
+  .mini-bars i { flex: 1; background: var(--chart-muted); border-radius: 2px 2px 0 0; }
+  .mini-bars i.me { background: var(--navy-band); }
+  .mini-bars .mark { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--ink-muted); }
+  .hbars { display: grid; gap: 3px; margin-top: 4px; }
+  .hbars i { display: block; height: 6px; background: var(--navy-soft); border-radius: 2px; }
+  .hbars i.low { background: var(--warn); }
+  .tl { display: grid; gap: 4px; margin-top: 4px; }
+  .tl i { display: block; height: 8px; border-radius: 2px; background: var(--bad-soft); }
+  .phone { width: 240px; border: 2px solid var(--ink-muted); border-radius: 22px; padding: 14px 10px; background: var(--paper); }
+  .phone .bar { height: 6px; width: 60px; border-radius: 3px; background: var(--chart-muted); margin: 0 auto 10px; }
+  .phone .ph { display: grid; gap: 8px; }
+  .phone .k3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .phone .k3 .blk { min-height: 40px; padding: 4px; text-align: center; }
+  .phone .ta { min-height: 92px; }
+  .phone .btn { background: var(--navy-band); color: var(--on-dark); border-radius: var(--radius-sm); text-align: center; font-family: var(--font-display); font-size: 12px; padding: 8px; }
+
+  /* 1週間 */
+  .week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: var(--space-3); }
+  .wk { position: relative; background: var(--surface); border: 1px solid var(--line); padding: var(--space-2) var(--space-3); font-size: 13px; margin-right: 14px; border-radius: var(--radius-sm); }
+  .wk::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .wk:last-child { margin-right: 0; }
+  .wk:last-child::after { display: none; }
+  .wk b { display: block; font-family: var(--font-display); }
+  .wk .when { color: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .wk.human { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-4); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+
+  /* ロードマップ */
+  .road { display: grid; grid-template-columns: 110px repeat(4, 1fr); gap: 6px; align-items: center; }
+  .road .rh { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); text-align: center; }
+  .road .rl { font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .road .seg { border-radius: var(--radius-sm); padding: 6px 8px; font-size: 12px; min-height: 36px; display: flex; align-items: center; }
+  .seg.now { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; }
+  .seg.plan { background: var(--navy-soft); color: var(--navy-text); }
+  .seg.chg { background: var(--warn-soft); color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .c2 { grid-column: span 2; } .c3 { grid-column: span 3; }
+
+  /* 未決事項 */
+  .issues { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .iss { border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 13px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 2px; }
+  .iss .no { font-family: var(--font-figure); font-weight: 700; font-size: 12px; color: var(--ink-muted); }
+  .iss b { font-family: var(--font-display); font-size: 13px; }
+  .iss.done { background: var(--good-soft); border-color: var(--good); }
+  .iss.review { background: var(--navy-soft); border-color: var(--navy-band); }
+  .iss.wait { background: var(--warn-soft); border-color: var(--warn); }
+  .sbar { display: flex; height: 14px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--line); margin-top: var(--space-4); }
+  .sbar span { display: block; height: 100%; }
+  .next { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+  .nx { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-3); margin-right: 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+  .nx::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .nx:last-child { margin-right: 0; }
+  .nx:last-child::after { display: none; }
+  .nx.first { border: 2px solid var(--navy-band); }
+  .nx .n { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); }
+  .nx b { font-family: var(--font-display); }
+
+  /* 概要 */
+  .ov-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); }
+  .ov-role { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 14px; }
+  .ov-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .ov-head b { font-family: var(--font-display); font-size: 16px; }
+  .ov-role ul { margin: 0; padding-left: 1.2em; }
+  .ov-role li + li { margin-top: 2px; }
+  .ov-no { margin-top: var(--space-2) !important; font-size: 13px; color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .ov-ideas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+  .ov-idea { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .ov-idea b { font-family: var(--font-display); font-size: 15px; display: block; margin-bottom: var(--space-1); }
+  .ov-idea p { font-size: 13px; color: var(--ink-muted); }
+
+  /* 完成度 */
+  .groups { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .grp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+  .grp-card .g-no { font-family: var(--font-figure); font-weight: 700; color: var(--ink-muted); font-size: 12px; }
+  .grp-card b { font-family: var(--font-display); font-size: 14px; }
+  .grp-card .tag { align-self: flex-start; }
+  .grp-card.done { background: var(--good-soft); border-color: var(--good); }
+  .grp-card.next { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .grp-card.wait { background: var(--warn-soft); border-color: var(--warn); }
+  table.left.nw td:nth-child(2), table.left.nw td:nth-child(4) { white-space: nowrap; }
+
+  /* 用語集 */
+  .gl-group { margin-top: var(--space-6); }
+  .gl-group h3 { font-size: 15px; color: var(--navy-text); margin-bottom: var(--space-3); padding-bottom: var(--space-1); border-bottom: 1px solid var(--line); }
+  .gl { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .gl dl { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); scroll-margin-top: var(--space-6); }
+  .gl dl:target { border: 2px solid var(--navy-band); background: var(--navy-soft); }
+  .gl dt { font-family: var(--font-display); font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+  .gl dt small { font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--ink-muted); }
+  .gl dd { margin: var(--space-1) 0 0; font-size: 14px; }
+  .gl dd.ex { font-size: 13px; color: var(--ink-muted); }
+  .gl dd.ex::before { content: "このアプリでは："; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; }
+  .gl-back { font-size: 12px; color: var(--navy-text); text-decoration: none; }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 22px; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .guide, .two, .gl { grid-template-columns: 1fr; }
+    .musts { grid-template-columns: 1fr 1fr; }
+    .wf-row { grid-template-columns: 1fr; }
+    .wf { grid-template-columns: 84px 1fr; }
+    .phone { margin: 0 auto; }
+    .week, .next { grid-template-columns: 1fr; gap: 14px; }
+    .wk, .nx { margin-right: 0; }
+    .wk::after, .nx::after { right: 50%; top: auto; bottom: -14px; transform: translateX(50%); border-left-color: transparent; border-top-color: var(--ink-muted); }
+    .issues, .groups, .ov-ideas { grid-template-columns: 1fr 1fr; }
+    .road { grid-template-columns: 76px repeat(4, minmax(64px, 1fr)); }
+    .panel.road-wrap { overflow-x: auto; }
+  }
+  @media (max-width: 420px) {
+    .tiles, .musts { grid-template-columns: 1fr; }
+  }
+  /* この資料だけで使う部品 */
+  .steps4 { grid-template-columns: repeat(4, 1fr); }
+  .judge-card { display: grid; gap: var(--space-2); }
+  .judge-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); font-size: 14px; }
+  .judge-row b { font-family: var(--font-display); }
+  .num { font-family: var(--font-figure); font-weight: 700; }
+  @media (max-width: 760px) { .steps4 { grid-template-columns: 1fr; } }
+  /* 週間教育の画面イメージ */
+  .wf2 { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
+  .wf2-head { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: var(--space-2) var(--space-4); }
+  .wf2-head span { font-family: var(--font-body); font-weight: 500; font-size: 12px; opacity: .85; margin-left: var(--space-2); }
+  .frow { display: grid; grid-template-columns: 170px 1fr; gap: var(--space-3); padding: var(--space-2) var(--space-4); border-top: 1px solid var(--line); font-size: 14px; align-items: start; }
+  .frow:first-of-type { border-top: 0; }
+  .frow .fl { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); display: flex; flex-direction: column; gap: 2px; }
+  .frow .fl small { font-family: var(--font-body); font-weight: 500; color: var(--ink-muted); font-size: 11px; }
+  .frow.auto { background: var(--surface-sunken); }
+  .frow.hl { background: var(--navy-soft); }
+  .fake-select { display: inline-block; border: 1px solid var(--navy-band); border-radius: var(--radius-sm); padding: 0 var(--space-3); background: var(--surface); font-family: var(--font-display); font-weight: 700; }
+  .fbtns { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line); }
+  .fbtn { border: 1px solid var(--navy-band); border-radius: var(--radius-sm); padding: 2px var(--space-3); font-size: 13px; font-family: var(--font-display); font-weight: 700; color: var(--navy-text); background: var(--surface); }
+  .fbtn.primary { background: var(--navy-band); color: var(--on-dark); }
+  .wk-log { display: grid; gap: 4px; }
+  .cards6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+  @media (max-width: 760px) { .frow { grid-template-columns: 1fr; gap: var(--space-1); } .cards6 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ah" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <marker id="ahn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ahn" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+</svg>
+
+
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ 一般日報 v2（確認用）</div>
+    <h1>一般日報を「数字を書き写す報告」から「明日の約束を回す道具」に変える</h1>
+    <p class="small" style="margin-top:var(--space-2)">2026年10月9日（金）時点 ／ v2：本人の「週間や月間は必要ないか」を受けて、毎日・毎週・毎月の3つの輪を追加（今週の約束、今月の進み具合、週の最後と月末の日報に増える欄）。v1：今の一般日報（Microsoft Forms の回答 4,339件）の分析と、本人と決めた新しい形を確認するための資料。画面の形は会話の中の画面イメージ（PC）で本人が確認済み。決まったことと、まだ決まっていないことを分けて示す</p>
+    <nav class="toc" aria-label="目次">
+      <span class="grp">今の日報</span>
+      <a href="#s1">1 書いている量</a><a href="#s2">2 良いところと直したいところ</a>
+      <span class="grp">新しい形</span>
+      <a href="#s3">3 目的</a><a href="#s4">4 1日の流れ</a><a href="#s4b">4-2 3つの輪</a><a href="#s5">5 毎日の画面</a><a href="#s5b">5-2 週の最後と月末</a><a href="#s6">6 ほかの記録とのつながり</a><a href="#s7">7 仲間と上席</a>
+      <span class="grp">確認</span>
+      <a href="#s8">8 欄の仕分け</a><a href="#s9">9 決まったことと未決</a><a href="#glossary">用語集</a>
+    </nav>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">結論</div>
+    <p>今の一般日報は、34人が1年以上ほぼ毎日書き続けていますが、1回に483字（中央値）・31分かかり、文章の65%にKPIの数字の書き写しがあります。新しい形では、数字・研修・時間帯ごとの結果はアプリが自動で並べ、本人が書くのは「昨日の約束の結果」「明日の約束と打ち手」などの短い欄だけにします。週と月の約束も、今はフリーの欄に手で書いている進み具合をアプリが自動で出し、週の最後と月末にだけ結果とひとことを書きます。</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="t-label">今、1回に書く量</span><span class="t-value">483<span class="unit">字</span></span><span class="t-note">中央値（平均は526字）</span></div>
+    <div class="tile"><span class="t-label">新しい形で書く量</span><span class="t-value">約150<span class="unit">字</span></span><span class="t-note">短い欄だけ（見込み）</span></div>
+    <div class="tile"><span class="t-label">書く・選ぶ欄の数</span><span class="t-value text">21 → 9</span><span class="t-note">毎日の欄。週1回・月1回だけ欄が増える</span></div>
+    <div class="tile"><span class="t-label">開いてから送るまで</span><span class="t-value">31<span class="unit">分</span></span><span class="t-note">中央値。4回に1回は67分超</span></div>
+  </div>
+
+  <div class="callout callout--point" style="margin-top:var(--space-6)">
+    <div class="kind">この資料で何度も出てくる言葉</div>
+    <p><b>明日の約束</b>：本人が夜に決める、翌日のアポ・訪問・受注などの件数と打ち手（<a class="term" href="#g-yakusoku">用語集</a>）。<b>上席</b>：そのメンバーを担当するリーダーとMGR（<a class="term" href="#g-boss">用語集</a>）。</p>
+  </div>
+
+  <div class="callout callout--point" style="margin-top:var(--space-3)">
+    <div class="kind">この資料の読み方</div>
+    <p>各図の下に「図の見方」と「ポイント（要点）」を置いています。点線の下線がある言葉は、押すと最後の用語集に移動します。<span class="tag tag--good">決定</span>は本人が選んだもの、<span class="tag tag--warn">未決</span>はまだ決まっていないものです。名前と例の数字は架空です。</p>
+  </div>
+
+  <!-- ============ PART 1 ============ -->
+  <div class="part"><span class="p-no">PART 1</span><h2>今の日報</h2></div>
+
+  <section id="s1">
+    <h2><span class="section-num">1</span>書いている量：1回483字・31分。文章の多くはKPIの数字の書き写し</h2>
+    <p class="lead">今の一般日報は <a class="term" href="#g-forms">Microsoft Forms</a> で、業後に1日1回送っています。2025年8月〜2026年10月に34人で4,339件（東京営業部3,495件・大阪営業部843件）。下は、文章の欄ごとに1回に書いている文字の平均です。書く量の目安には、極端な値に引っぱられにくい<a class="term" href="#g-median">中央値</a>も使っています。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 400" role="img" aria-label="文章の欄ごとの平均の文字数。今日のリスト戦略92字、翌日のリスト戦略63字、研修の目的と内容22字は、新しい形では自動または選ぶ形に変わる。翌日の改善策47字、予算達成への取り組み50字、明日へのコミット30字は1つにまとめる。研修の振り返り47字、自分の良かったところ33字、良かった人の理由31字、フリー86字は短くして残す。右に、文章の65%にKPIの数字の書き写しがあること、開いてから送るまで中央値31分、18%が日付をまたいでから送信されていることを示す">
+        <text class="t-title" x="20" y="24">文章の欄ごとの平均の文字数（1回あたり）</text>
+        <text class="t-body" x="20" y="64">今日のリスト戦略</text><rect class="s-bar" x="200" y="48" width="368" height="22"/><text class="t-fig" x="576" y="64">92字</text>
+        <text class="t-body" x="20" y="94">翌日のリスト戦略</text><rect class="s-bar" x="200" y="78" width="252" height="22"/><text class="t-fig" x="460" y="94">63字</text>
+        <text class="t-body" x="20" y="124">研修の目的と内容</text><rect class="s-bar" x="200" y="108" width="88" height="22"/><text class="t-fig" x="296" y="124">22字</text>
+        <text class="t-body" x="20" y="164">予算達成への取り組み</text><rect class="s-warn" x="200" y="148" width="200" height="22"/><text class="t-fig" x="408" y="164">50字</text>
+        <text class="t-body" x="20" y="194">翌日の改善策</text><rect class="s-warn" x="200" y="178" width="188" height="22"/><text class="t-fig" x="396" y="194">47字</text>
+        <text class="t-body" x="20" y="224">明日へのコミット</text><rect class="s-warn" x="200" y="208" width="120" height="22"/><text class="t-fig" x="328" y="224">30字</text>
+        <text class="t-body" x="20" y="264">フリー（61%が記入）</text><rect class="s-box" x="200" y="248" width="344" height="22"/><text class="t-fig" x="552" y="264">86字</text>
+        <text class="t-body" x="20" y="294">研修の振り返り</text><rect class="s-box" x="200" y="278" width="188" height="22"/><text class="t-fig" x="396" y="294">47字</text>
+        <text class="t-body" x="20" y="324">自分の良かったところ</text><rect class="s-box" x="200" y="308" width="132" height="22"/><text class="t-fig" x="340" y="324">33字</text>
+        <text class="t-body" x="20" y="354">良かった人の理由</text><rect class="s-box" x="200" y="338" width="124" height="22"/><text class="t-fig" x="332" y="354">31字</text>
+        <rect class="s-bar" x="20" y="374" width="14" height="12"/><text class="t-muted" x="40" y="385">自動・選ぶ形に変わる</text>
+        <rect class="s-warn" x="200" y="374" width="14" height="12"/><text class="t-muted" x="220" y="385">1つにまとめる</text>
+        <rect class="s-box" x="340" y="374" width="14" height="12"/><text class="t-muted" x="360" y="385">短くして残す</text>
+        <rect class="s-core" x="640" y="48" width="225" height="312" rx="8"/>
+        <text class="t-big" x="656" y="80">65%</text>
+        <text class="t-muted" x="656" y="102">リスト戦略・改善策など</text>
+        <text class="t-muted" x="656" y="120">の文章に「架電・接触・</text>
+        <text class="t-muted" x="656" y="138">見込・アポ＋数字」</text>
+        <text class="t-big" x="656" y="188">31分</text>
+        <text class="t-muted" x="656" y="210">Formsを開いてから</text>
+        <text class="t-muted" x="656" y="228">送るまで（中央値）</text>
+        <text class="t-big" x="656" y="278">18%</text>
+        <text class="t-muted" x="656" y="300">日付をまたいでから</text>
+        <text class="t-muted" x="656" y="318">送信（802件）</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>棒の長さは1回あたりの平均の文字数。色は新しい形での扱い</li><li>右の濃紺の枠は、書き写し・かかる時間・送る時刻の数字</li><li>数の欄（アポ・採用・見込み・訪問・受注など8つ）は、この図に入れていない</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>いちばん長いリスト戦略は、多くが「架電222・接触45・見込み6」のようなKPIの書き写し。KPIは電話システムから取り込めるので、書かなくてよくなる</li><li>改善策・予算達成への取り組み・明日へのコミットの3つは中身が重なっている</li><li>送信は20時台が最も多い（1,030件）。一方で802件は0時〜9時に送られている</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="section-num">2</span>良いところと直したいところ：書く習慣は根づいているが、手間の多くが書き写しに使われている</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th style="width:44%">良いところ</th><th>直したいところ</th></tr></thead>
+        <tbody>
+          <tr><td>毎日続いている。1人1か月15〜24件が大半（「人×月」248のうち207）</td><td><b>数字の書き写し</b>：アポ・新規見込みの欄は電話システムの「ア」「見」と同じもの。文章の65%にKPIの数字、44%に％の数字</td></tr>
+          <tr><td>数字 → 原因 → 翌日の手、の流れで考えている</td><td><b>入力の負担</b>：開いてから送るまで中央値31分。1回の中央値483字</td></tr>
+          <tr><td>リストを時間帯・業種で考えている（リスト戦略の37%が時間帯に触れる）</td><td><b>数の欄がそろっていない</b>：全角数字や「件」つきが約6%。受注285のようなあり得ない値もある</td></tr>
+          <tr><td>自分で測った数字（アウト返しの使用率・日程の打診率など）を使う人がいる（156件）</td><td><b>提出の遅れと重なり</b>：18%が日付をまたいでから送信。同じ人・同じ日に2件が141組</td></tr>
+          <tr><td>仲間の良かった点を毎日書く。ほぼ全件に同僚の名前があり、「なし」は33件だけ</td><td><b>ほかの記録と重なる</b>：朝研修のうちロープレ1,249件は、教えた側の記録と同じ出来事。「研修なし」の書き方が127通り</td></tr>
+          <tr><td>明日の約束を件数で書く（明日へのコミットの66%が件数つき）</td><td><b>前回と同じ文の使い回し</b>：明日へのコミット635件・改善策145件・リスト戦略109件</td></tr>
+          <tr><td>研修の振り返りを本人の言葉で書いている</td><td><b>チェックが形だけ</b>（2026年6月に廃止済み）：〇×チェック4つは98〜99%が〇。「30コール切ったタームがない」だけ×が42%</td></tr>
+          <tr><td>欄がないのに、週と月の約束を自分で回している（「週間コミット①②③」と結果・現状が304件、「今週＋件数」962件、「今月＋件数・粗利」554件）</td><td><b>進み具合の手書き</b>：「残り9件」「現状2件」のような数字が458件。KPIから自動で出せるものを毎回書いている</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左が良いところ、右が直したいところ。右は数字つき。行どうしは対応していない</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>考える習慣はできている。問題は、手間の多くが書き写しと重なりに使われていること</li><li>週の約束は、会社の欄がなくても続いている習慣。v2で日報の欄にした（4-2章）</li><li>2026年6月2日に、〇×チェックと「気になった人」の欄はすでに廃止されている</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 2 ============ -->
+  <div class="part"><span class="p-no">PART 2</span><h2>新しい形</h2></div>
+
+  <section id="s3">
+    <h2><span class="section-num">3</span>目的：本人が翌日を良くし、上席が手を打ち、仲間と高め合うため</h2>
+    <div class="two">
+      <div class="panel"><h3 style="margin-bottom:var(--space-2)">目的にすること <span class="tag tag--good">決定</span></h3><ol style="margin:0;padding-left:1.4em;font-size:14px"><li>本人が翌日の稼働を良くする（数字を見て、<a class="term" href="#g-yakusoku">明日の約束</a>と打ち手を決める）</li><li>上席が状態をつかんで手を打つ</li><li>仲間と高め合う（良かった点を伝え合う）</li></ol></div>
+      <div class="panel"><h3 style="margin-bottom:var(--space-2)">目的にしないこと</h3><ul style="margin:0;padding-left:1.2em;font-size:14px"><li>上への報告・記録を残すこと（数字はアプリが自動で残す）</li><li>数字の報告（KPIは電話システムから取り込む）</li></ul></div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左が目的（本人が3つを選んだ）、右が目的にしないこと</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>欄を残すか削るかは、この3つの目的に役立つかで決めた（8章）</li><li>責任者日報と同じく「報告のための日報」をやめる</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="section-num">4</span>1日の流れ：夜に決めた約束が、翌日の夜に結果と並ぶ</h2>
+    <p class="lead">夜に書いた「明日の約束」は、翌日の業後に数字がそろうと「約束 → 結果」として自動で並びます。届かなかったときだけ要因を書きます <span class="tag tag--good">決定</span>。責任者日報の<a class="term" href="#g-uchite">打ち手</a>と同じ型です。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 330" role="img" aria-label="メンバーの1日の流れの循環図。夜に日報で約束の結果と明日の約束を書く。翌朝は約束と明日のリストが表示される。日中は時間帯ごとに選んだリストでかける。業後に数字が取り込まれ、約束から結果が自動で並び、また夜の日報につながる">
+        <rect class="s-core" x="320" y="20" width="240" height="70" rx="10"/><text class="t-title" x="440" y="46" text-anchor="middle">夜：日報を書く</text><text class="t-body" x="440" y="70" text-anchor="middle">約束の結果・明日の約束</text>
+        <rect class="s-box" x="620" y="130" width="240" height="70" rx="10"/><text class="t-title" x="740" y="156" text-anchor="middle">翌朝：約束を見る</text><text class="t-body" x="740" y="180" text-anchor="middle">明日の約束とリストが出る</text>
+        <rect class="s-box" x="320" y="240" width="240" height="70" rx="10"/><text class="t-title" x="440" y="266" text-anchor="middle">日中：稼働</text><text class="t-body" x="440" y="290" text-anchor="middle">時間帯ごとに選んだリスト</text>
+        <rect class="s-box" x="20" y="130" width="240" height="70" rx="10"/><text class="t-title" x="140" y="156" text-anchor="middle">業後：数字がそろう</text><text class="t-body" x="140" y="180" text-anchor="middle">取り込み・承認のあと</text>
+        <path class="s-navy" d="M560,70 L640,128" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M640,202 L562,262" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M320,262 L242,202" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M242,128 L318,72" marker-end="url(#ahn)"/>
+        <text class="t-muted" x="440" y="160" text-anchor="middle">毎日1周する</text>
+        <text class="t-muted" x="440" y="180" text-anchor="middle">約束 → 結果が自動で並ぶ</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>右回りに進む。上の濃紺が、本人が書く場面</li><li>業後の<a class="term" href="#g-import">取り込みと承認</a>（まとまり4で決定）が済んでから日報を書くので、その日の数字で振り返れる</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>今の「翌日の改善策」「予算達成への取り組み」「明日へのコミット」を、明日の約束（件数）＋打ち手と狙い（1行）にまとめた <span class="tag tag--good">決定</span></li><li>約束の結果が翌日に自動で並ぶので、前回と同じ文を書き写す意味がなくなる</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s4b">
+    <h2><span class="section-num" style="width:auto;padding:0 8px">4-2</span>3つの輪：毎日の約束に、週の約束と月の進み具合を重ねる</h2>
+    <p class="lead"><span class="tag tag--warn">変更</span> v2で追加。今はフリーの欄に手で書いている週間コミットと月の残りを、アプリの欄にします <span class="tag tag--good">決定</span>。責任者日報の3つの輪と同じ考え方です。</p>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>長さ</th><th>本人がすること</th><th>アプリがすること</th></tr></thead>
+        <tbody>
+          <tr><td>毎日</td><td>明日の約束（件数）と打ち手・狙い。届かなかったら要因</td><td>翌日に約束 → 結果を並べる</td></tr>
+          <tr><td>毎週</td><td>週の最後の日報（金曜の夜）で、今週の約束の結果とひとこと、<a class="term" href="#g-shuyaku">来週の約束</a>（3つまで）を書く</td><td>毎日の日報に、今週の約束の現状・残りを並べる。件数の結果は自動で出す</td></tr>
+          <tr><td>毎月</td><td>月末の日報で、わかったことをひとこと書く</td><td>毎日の日報に、月初に立てたKPIの目標に対する進み具合（<a class="term" href="#g-arubeki">あるべき</a>との差・残り）を並べる。月末に結果を並べる</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="week">
+      <div class="wk"><span class="when">月</span><b>日報</b>明日の約束。今週の約束の現状が並ぶ</div>
+      <div class="wk"><span class="when">火</span><b>日報</b>同じ</div>
+      <div class="wk"><span class="when">水</span><b>日報</b>同じ</div>
+      <div class="wk"><span class="when">木</span><b>日報</b>同じ。「残り○件・あと1日」</div>
+      <div class="wk human"><span class="when">金（週の最後）</span><b>日報＋2つ</b>今週の結果とひとこと・来週の約束</div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>上の表は3つの輪ごとの役割。下は1週間の日報の並びで、濃紺の枠が書く欄の増える日</li><li>月末の日報には、さらに「わかったこと」の欄が1つ増える</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>日報は夜に書くので、来週の約束は週の最後の日報で決める。月曜の夜に決めると、その週の1日目が終わっている（毎日の「明日の約束」と同じ考え方）</li><li>週の約束は、KPIの項目（アポ・訪問・受注・ア率など）と件数を選ぶと進み具合が自動で出る。KPIにない約束（「受注に絡む」など）も1つまで書け、結果は本人が○△×でつける <span class="tag tag--good">決定</span></li><li>月の目標は、これまでどおり月初のKPIの目標の画面で立てる（日報では立てない）</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="section-num">5</span>毎日の画面：左はアプリが並べる材料、右は本人が書く・選ぶ9つ</h2>
+    <p class="lead">PCの画面のイメージです <span class="tag tag--good">決定</span>（本人が会話の中の画面イメージで確認）。ここでは上から順に並べています。名前と数字は架空です。</p>
+    <div class="wf2">
+      <div class="wf2-head">一般日報<span>10/9（木） ／ メンバーA ／ KPIは取り込み済み</span></div>
+      <div class="frow auto"><div class="fl">今日のKPI<small>自動</small></div><div>総 182（目標180 ▲2）／<a class="term" href="#g-jitsu">実率</a> 38%（目標40% ▼2 未達）／見 9（目標8 ▲1）／ア 2（目標3 ▼1 未達）</div></div>
+      <div class="frow auto"><div class="fl">昨日の約束 → 結果<small>自動</small></div><div>アポ 3 → 2 ▼ 未達 ／ 訪問 1 → 1 達成 ／ 打ち手：見込みに日程まで打診する</div></div>
+      <div class="frow auto"><div class="fl">今週の約束<small>自動・v2で追加</small></div><div>アポ 12件 → 現在7件（残り5件・あと1日）／ア率 1.0% → 現在0.8% ▼0.2／自由：受注に絡む1件（結果は週の最後に本人がつける）</div></div>
+      <div class="frow auto"><div class="fl">今月の進み具合<small>自動・v2で追加</small></div><div>アポ 32件／目標60件（あるべき39件 ▼7・残り28件・稼働あと7日）／訪問 9件／目標16件（あるべき10件 ▼1）／受注 2件／目標4件（あるべき3件 ▼1）</div></div>
+      <div class="frow auto"><div class="fl">時間帯ごとのリストと結果<small>自動</small></div><div>9時 美容・過去見込 実率45% ア1 ／ 10時 スクール・差分 実率31% ア0 ／ 11時 飲食・新設法人 実率40% ア1 …<br><span class="small">30コールに届かなかった時間帯：2つ</span></div></div>
+      <div class="frow auto"><div class="fl">今日のロープレ・研修<small>自動</small></div><div>アウト返し（時間切りの前） △ ／ 実行者：リーダーB</div></div>
+      <div class="frow auto"><div class="fl">届いた「良かった」<small>自動</small></div><div>メンバーCより：「午前のテンションが周りを引っぱっていた」</div></div>
+      <div class="frow"><div class="fl">① 昨日の約束の結果<small>未達のとき要因は必須</small></div><div>アポ 3 → 2。要因：見込みは作れたが、日程の打診が2件だけだった</div></div>
+      <div class="frow hl"><div class="fl">② 採用・訪問・受注<small>数字だけ</small></div><div><span class="fake-select">1</span> ／ <span class="fake-select">1</span> ／ <span class="fake-select">0</span></div></div>
+      <div class="frow"><div class="fl">③ 見込みの数<small>未決</small></div><div><span class="tag tag--warn">未決</span> 見込み管理の表を見てから決める</div></div>
+      <div class="frow"><div class="fl">④ 研修で学んだこと<small>研修のあった日だけ・1つ</small></div><div>1回目のアウトで時間切りまで進める</div></div>
+      <div class="frow hl"><div class="fl">⑤ 明日のリスト<small>時間帯ごとに選ぶ・週の狙うリストが入っている</small></div><div>9時 美容・過去見込 ／ 10時 <span class="fake-select">飲食・差分 ▼</span>（変更） ／ 11時 飲食・新設法人 …<br>理由：10時の差分は飲食のほうが実率が高かった</div></div>
+      <div class="frow hl"><div class="fl">⑥ 明日の約束と打ち手<small>件数を選ぶ＋1行</small></div><div>アポ <span class="fake-select">3</span>　訪問 <span class="fake-select">1</span>　受注 <span class="fake-select">0</span><br>打ち手と狙い：見込みに必ず日程を打診 → 見込みからのアポが増えるはず</div></div>
+      <div class="frow"><div class="fl">⑦ 自分の良かったところ<small>短く</small></div><div>11時台に2件続けて時間切りできた</div></div>
+      <div class="frow hl"><div class="fl">⑧ 良かった人<small>選ぶ・本人に届く</small></div><div><span class="fake-select">メンバーC ▼</span>　ひとこと：断られても声の明るさが変わらなかった</div></div>
+      <div class="frow"><div class="fl">⑨ フリー<small>任意</small></div><div>来週の訪問の段取りを相談したい　□ 返事がほしい</div></div>
+      <div class="frow auto"><div class="fl">上席の欄<small>上席が書く</small></div><div>読んだ：リーダーB 21:40 ／ ひとこと（任意）：「日程の打診、明日は数えてみよう」</div></div>
+      <div class="fbtns"><span class="fbtn primary">日報を送る</span></div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>灰色の行はアプリが自動で出す。濃紺の行は選ぶ。白い行だけを書く</li><li>PCでは、左に自動の材料、右に書く・選ぶ欄を並べる。スマホでは同じ行を縦に並べる</li><li>「30コールに届かなかった時間帯」は、1時間（<a class="term" href="#g-term">ターム</a>）の総が30件に届かなかった数。電話システムの数字から自動で数える</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>書く量は、今の483字（中央値）から約150字の見込み</li><li>文章の欄は①④⑤⑥⑦⑧の短い欄と、任意の⑨だけ</li><li>今週の約束と今月の進み具合は、フリーの欄に手で書いていたもの。自動で並ぶので書かなくてよい</li><li>増減は▲▼で示し、未達も赤にしない</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s5b">
+    <h2><span class="section-num" style="width:auto;padding:0 8px">5-2</span>週の最後と月末の画面：結果は自動で並び、書くのはひとことと来週の約束</h2>
+    <p class="lead"><span class="tag tag--warn">変更</span> v2で追加。毎日の画面（5章）の下に、週の最後の日報では2つ、月末の日報では1つの欄が増えます <span class="tag tag--good">決定</span>（本人が会話の中の画面イメージで確認）。名前と数字は架空です。</p>
+    <div class="two">
+      <div class="wf2">
+        <div class="wf2-head">週の最後の日報（金曜の夜）<span>増える欄</span></div>
+        <div class="frow auto"><div class="fl">今週の約束の結果<small>件数は自動</small></div><div>アポ 12件 → 11件 ▼1 未達<br>ア率 1.0% → 0.9% ▼0.1 未達</div></div>
+        <div class="frow hl"><div class="fl">自由の約束<small>選ぶ</small></div><div>受注に絡む1件　<span class="fake-select">○</span> <span class="fake-select">△</span> <span class="fake-select">×</span></div></div>
+        <div class="frow"><div class="fl">ひとこと<small>書く</small></div><div>週の前半にアウト返しが長くなった。水曜からロープレで直して巻き返せた</div></div>
+        <div class="frow hl"><div class="fl">来週の約束<small>3つまで選ぶ</small></div><div><span class="fake-select">アポ 12件</span> <span class="fake-select">ア率 1.0%</span> <span class="fake-select">自由</span> 訪問のバッジを取る</div></div>
+      </div>
+      <div class="wf2">
+        <div class="wf2-head">月末の日報<span>増える欄</span></div>
+        <div class="frow auto"><div class="fl">今月の結果<small>自動</small></div><div>アポ 58件／目標60件 ▼2 未達<br>訪問 16件／目標16件 達成<br>受注 4件／目標4件 達成</div></div>
+        <div class="frow"><div class="fl">わかったこと<small>書く</small></div><div>月の前半に週の約束を落とすと、後半で取り戻すのが重い。第1週から約束を守る</div></div>
+        <div class="frow auto"><div class="fl">来月の目標<small>別の画面</small></div><div>これまでどおり、月初のKPIの目標の画面で立てる</div></div>
+      </div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左が週の最後の日報、右が月末の日報に増える欄。灰色は自動、濃紺は選ぶ、白は書く</li><li>月末が金曜にあたる日は、両方の欄が出る</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>書く量が増えるのは週1回（ひとことと来週の約束）と月1回（わかったこと）だけ</li><li>週の結果と月の結果は、上席が日報を開いたときにも並ぶ。カルテとAIの本人版にも残る</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="section-num">6</span>ほかの記録とのつながり：日報に二度書かせない</h2>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 450" role="img" aria-label="一般日報とほかの記録のつながり図。左のロープレと研修の記録、電話システムのCSV、狙うリスト、前の日報、月初のKPIの目標から、一般日報へ自動で並ぶ。見込み管理の表は未決。一般日報から右へ、選ばれた本人、上席、責任者日報、カルテとAIの本人版へつながる">
+        <rect class="s-box" x="10" y="20" width="230" height="56" rx="8"/><text class="t-title" x="24" y="44">ロープレ・研修の記録</text><text class="t-muted" x="24" y="64">今日のロープレ・研修</text>
+        <rect class="s-box" x="10" y="90" width="230" height="56" rx="8"/><text class="t-title" x="24" y="114">電話システムのCSV</text><text class="t-muted" x="24" y="134">今日のKPI・時間帯ごとの結果</text>
+        <rect class="s-box" x="10" y="160" width="230" height="56" rx="8"/><text class="t-title" x="24" y="184">狙うリスト</text><text class="t-muted" x="24" y="204">明日のリストの最初の値</text>
+        <rect class="s-box" x="10" y="230" width="230" height="56" rx="8"/><text class="t-title" x="24" y="254">前の日報</text><text class="t-muted" x="24" y="274">昨日の約束・今週の約束</text>
+        <rect class="s-box" x="10" y="300" width="230" height="56" rx="8"/><text class="t-title" x="24" y="324">月初のKPIの目標</text><text class="t-muted" x="24" y="344">今月の進み具合・月末の結果</text>
+        <rect class="s-muted" x="10" y="370" width="230" height="56" rx="8"/><text class="t-warn" x="24" y="394">見込み管理の表（未決）</text><text class="t-muted" x="24" y="414">③ 見込みの数</text>
+        <rect class="s-core" x="300" y="20" width="270" height="406" rx="10"/>
+        <text class="t-title" x="316" y="48">一般日報（業後）</text>
+        <text class="t-navy" x="316" y="84">自動で並ぶ</text>
+        <text class="t-body" x="316" y="106">KPI・約束 → 結果</text>
+        <text class="t-body" x="316" y="128">今週の約束・今月の進み具合</text>
+        <text class="t-body" x="316" y="150">時間帯ごとの結果</text>
+        <text class="t-body" x="316" y="172">ロープレ・研修</text>
+        <text class="t-navy" x="316" y="212">選ぶ</text>
+        <text class="t-body" x="316" y="234">明日のリスト・約束の件数</text>
+        <text class="t-body" x="316" y="256">良かった人・来週の約束</text>
+        <text class="t-navy" x="316" y="296">書く（短く）</text>
+        <text class="t-body" x="316" y="318">要因・学んだこと・打ち手</text>
+        <text class="t-body" x="316" y="340">良かったところ・フリー</text>
+        <text class="t-muted" x="316" y="380">週の最後：結果のひとこと</text>
+        <text class="t-muted" x="316" y="400">月末：わかったこと</text>
+        <rect class="s-box" x="630" y="20" width="240" height="56" rx="8"/><text class="t-title" x="644" y="44">選ばれた本人</text><text class="t-muted" x="644" y="64">良かった点が名前つきで届く</text>
+        <rect class="s-box" x="630" y="100" width="240" height="56" rx="8"/><text class="t-title" x="644" y="124">上席（リーダー・MGR）</text><text class="t-muted" x="644" y="144">読んだ印・ひとこと・返事</text>
+        <rect class="s-box" x="630" y="180" width="240" height="56" rx="8"/><text class="t-title" x="644" y="204">責任者日報</text><text class="t-muted" x="644" y="224">日々のMVPを選ぶ材料</text>
+        <rect class="s-box" x="630" y="260" width="240" height="56" rx="8"/><text class="t-title" x="644" y="284">カルテ・AIの本人版</text><text class="t-muted" x="644" y="304">約束と振り返りの記録</text>
+        <path class="s-navy" d="M240,48 L298,90" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M240,118 L298,128" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M240,188 L298,200" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M240,258 L298,250" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M240,328 L298,320" marker-end="url(#ahn)"/>
+        <path class="s-line s-dash" d="M240,398 L298,392" marker-end="url(#ah)"/>
+        <path class="s-navy" d="M570,120 L628,50" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M570,160 L628,128" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M570,210 L628,208" marker-end="url(#ahn)"/>
+        <path class="s-navy" d="M570,260 L628,288" marker-end="url(#ahn)"/>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左がアプリの中のほかの記録、中央が一般日報、右がその先</li><li>点線は、まだ決まっていないつながり</li><li>研修は「<a class="term" href="#g-seminar">研修の記録</a>」、ロープレは「<a class="term" href="#g-rp">ロープレの記録</a>」に、教える側が書いたもの</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>朝研修の種類・目的・実施者は書かない。本人が書くのは「学んだこと」1つだけ</li><li>KPIは<a class="term" href="#g-csv">電話システムのCSV</a>から取り込むので、アポ・新規見込みの数は書かない</li><li>明日のリストの最初の値は、その週の<a class="term" href="#g-calllist">狙うリスト</a>。違うときだけ直す</li><li>一般日報は、まとまり3で決めたとおり<a class="term" href="#g-ai">AIの本人版</a>にも渡す</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s7">
+    <h2><span class="section-num">7</span>仲間と上席：良かった点は本人に届き、上席は読んだ印とひとことで返す</h2>
+    <div class="two">
+      <div class="panel">
+        <h3 style="margin-bottom:var(--space-2)">仲間の良かった点 <span class="tag tag--good">決定</span></h3>
+        <ul style="margin:0;padding-left:1.2em;font-size:14px">
+          <li>名簿から1人を選び、ひとこと理由を書く</li>
+          <li>選ばれた本人に、書いた人の名前つきで届く（日報の「届いた『良かった』」に出る）</li>
+          <li>上席も見られる。責任者が<a class="term" href="#g-mvp">日々のMVP</a>を選ぶときの材料として横に並ぶ</li>
+          <li>「気になった人＋アドバイス」の欄は戻さない。仲間への指摘は、上席の<a class="term" href="#g-memo">部下メモ</a>に任せる</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3 style="margin-bottom:var(--space-2)">上席の関わり方 <span class="tag tag--good">決定</span></h3>
+        <ul style="margin:0;padding-left:1.2em;font-size:14px">
+          <li>上席が日報を開くと「読んだ」が本人に見える</li>
+          <li>書きたいときだけ、ひとこと返す（毎日全員に返す決まりにはしない）</li>
+          <li>「返事がほしい」の印がある日報は、返事が済むまで上席の一覧に残る（責任者日報と同じ）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左が仲間どうしの良かった点、右が上席の関わり方</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>今は良かった点をほぼ全員が毎日書いているが、本人には届いていない。届くようにして、高め合う目的に直接つなげる</li><li>名前つきにしたのは、順位・勝ちパターンを名前つきにした方針とそろえるため</li><li>廃止前の「気になった人」は、記入の20%が「なし」だった</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 3 ============ -->
+  <div class="part"><span class="p-no">PART 3</span><h2>確認</h2></div>
+
+  <section id="s8">
+    <h2><span class="section-num">8</span>欄の仕分け：目的に役立つ欄だけを、短い形で残す</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>今の欄</th><th>新しい形</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td>朝研修の種類・目的と内容・実施者</td><td><span class="tag tag--navy">自動</span> ロープレ・研修の記録から並ぶ</td><td>ロープレ1,249件は教えた側の記録と同じ出来事</td></tr>
+          <tr><td>研修の振り返り</td><td><span class="tag tag--plain">書く</span> 研修のあった日だけ、学んだこと1つ</td><td>本人の言葉で残す価値がある</td></tr>
+          <tr><td>アポ件数・新規見込み件数</td><td><span class="tag tag--navy">自動</span> 電話システムから</td><td>電話システムの「ア」「見」と同じもの</td></tr>
+          <tr><td>採用・訪問・受注</td><td><span class="tag tag--plain">書く</span> 数字だけ（まとまり4で決定）</td><td>電話システムにない。数字以外は入らないようにする</td></tr>
+          <tr><td>新規見込みS・翌見込みS・1か月内の保有見込み</td><td><span class="tag tag--warn">未決</span></td><td>見込み管理の表を見てから決める。保有見込みは人ごとの中央値が0〜246とばらつき、数え方が違う可能性</td></tr>
+          <tr><td>今日のリスト戦略・翌日のリスト戦略</td><td><span class="tag tag--navy">選ぶ</span> 時間帯ごとに業種・エリア・リストの種類。結果は自動。書くのは理由のひとこと</td><td>今日の分の多くは数字の書き写し。前回と同じ文が109件</td></tr>
+          <tr><td>翌日の改善策・予算達成への取り組み・明日へのコミット</td><td><span class="tag tag--plain">書く</span> 1つにまとめて「明日の約束（件数）＋打ち手と狙い（1行）」</td><td>3つの中身が重なる。明日へのコミットの635件が前回と同じ文</td></tr>
+          <tr><td>自分の良かったところ</td><td><span class="tag tag--plain">書く</span> 短く</td><td>自分を認める振り返り（目的1）</td></tr>
+          <tr><td>良かった人・その理由</td><td><span class="tag tag--navy">選ぶ</span>＋ひとこと。本人に届く</td><td>ほぼ全件記入されていて定着している（目的3）</td></tr>
+          <tr><td>気になった人・アドバイス</td><td><span class="tag chip-x">戻さない</span></td><td>2026年6月に廃止済み。記入の20%が「なし」だった</td></tr>
+          <tr><td>〇×チェック5つと×の理由</td><td><span class="tag chip-x">戻さない</span> 30コールに届かなかった時間帯は自動で表示</td><td>2026年6月に廃止済み。4つは98〜99%が〇だった</td></tr>
+          <tr><td>フリースペース</td><td><span class="tag tag--plain">書く</span> 任意。「返事がほしい」の印</td><td>上席に相談できる道をつくる（目的2）</td></tr>
+          <tr><td>（フリーに書いていた）週間コミット①②③と結果</td><td><span class="tag tag--navy">選ぶ</span> 今週の約束（3つまで、KPIから選ぶ＋自由1つ）。現状・残り・件数の結果は自動。週の最後にひとこと</td><td>欄がなくても304件書かれていた習慣。進み具合の手書き（458件）をなくす</td></tr>
+          <tr><td>（フリーに書いていた）今月の残り・現状</td><td><span class="tag tag--navy">自動</span> 今月の進み具合。月末にわかったことをひとこと</td><td>月初のKPIの目標から計算できる（554件が今月の数字を書いていた）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>1行が今の1つの欄（または中身が重なる欄のまとまり）。真ん中が新しい形、右が理由</li><li>「自動」はアプリが出す、「選ぶ」は一覧から選ぶ、「書く」は本人が書く</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>なくすのは「考えなくてよい部分」（書き写し・形だけのチェック）。考える部分（要因・約束・打ち手・学び）は残す</li><li>数の欄は数字だけを受けつけるので、全角数字や「件」つきでそろわない問題もなくなる</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s9">
+    <h2><span class="section-num">9</span>決まったことと未決：形は決まり、見込みの数が残る</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>項目</th><th>内容</th><th>状態</th></tr></thead>
+        <tbody>
+          <tr><td>目的</td><td>本人が翌日の稼働を良くする／上席が状態をつかんで手を打つ／仲間と高め合う</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>明日の約束</td><td>改善策・予算達成への取り組み・明日へのコミットを1つにまとめ、件数＋打ち手と狙い。翌日に結果が並び、未達なら要因を書く</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>リスト戦略</td><td>時間帯ごとに選ぶ。最初は週の狙うリスト。結果は自動、理由はひとこと</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>良かった人</td><td>名簿から選ぶ＋ひとこと。本人に名前つきで届き、上席も見る。日々のMVPの材料</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>気になった人</td><td>戻さない</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>上席の関わり方</td><td>読んだ印＋任意のひとこと。「返事がほしい」は返事が済むまで一覧に残る</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>画面の形</td><td>5章・5-2章のとおり（会話の中の画面イメージで本人が確認）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>週の約束</td><td>日報に組み込む。週の最後の日報（金曜の夜）で今週の結果とひとこと・来週の約束（3つまで、KPIから選ぶ＋自由1つ）。毎日の日報に現状・残りが並ぶ</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>月</td><td>毎日の日報に月の進み具合（あるべきとの差・残り）。月末の日報で結果が並び、わかったことをひとこと。目標は月初のKPIの目標の画面で立てる</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>見込みの数</td><td>新規見込みS・翌見込みS・保有見込みと、<a class="term" href="#g-rank">見込みのランク</a>・読込アポの扱い。メンバーの見込み管理の表を見てから決める（責任者日報と共通）</td><td><span class="tag tag--warn">未決</span></td></tr>
+          <tr><td>過去の一般日報</td><td>4,339件をアプリに移すか（移す時期はまとまり8）</td><td><span class="tag tag--warn">未決</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>「決定」は2026年10月9日に本人が選んだもの、「未決」はこれから決めるもの</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>確認が済んだら、設計書を v17 にして一般日報の表・画面・完成度の表を直す</li><li>見込みの扱いが決まれば、まとまり5（データの項目）がすべて確定する</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ 用語集 ============ -->
+  <section id="glossary">
+    <div class="part" style="margin-top:0"><span class="p-no">用語集</span><h2>この資料で使った言葉</h2></div>
+    <p class="lead" style="margin-top:var(--space-3)">本文の点線の下線から移動してきた場合、その言葉の枠が濃紺で囲まれます。「このアプリでは」は、SALES +1 での具体例です。</p>
+
+    <div class="gl-group">
+      <h3>一般日報のしくみ</h3>
+      <div class="gl">
+        <dl id="g-yakusoku"><dt>明日の約束</dt><dd>本人が夜に決める、翌日のアポ・訪問・受注などの件数と、そのための打ち手。</dd><dd class="ex">翌日の業後に「約束 → 結果」として自動で並び、届かなければ要因を書く。</dd></dl>
+        <dl id="g-shuyaku"><dt>今週の約束・来週の約束</dt><dd>1週間で達成すると決めた約束。3つまで。今の「週間コミット」にあたる。</dd><dd class="ex">KPIの項目と件数を選ぶと、毎日の日報に現状・残りが出る。来週の分は週の最後の日報で決める。</dd></dl>
+        <dl id="g-uchite"><dt>打ち手と狙い</dt><dd>打ち手は、目標に向けて具体的に何をするかを決めた行動。狙いは「こうすれば、こう変わるはず」という見込み。</dd><dd class="ex">「見込みに必ず日程を打診 → 見込みからのアポが増えるはず」のように1行で書く。責任者日報と同じ型。</dd></dl>
+        <dl id="g-boss"><dt>上席</dt><dd>そのメンバーを担当する、上の立場の人。</dd><dd class="ex">メンバーにとってはリーダーと担当のMGR。日報を開くと「読んだ」が本人に見える。</dd></dl>
+        <dl id="g-mvp"><dt>日々のMVP</dt><dd>その日に最も良い稼働をしたメンバーを、責任者が1人選んだもの。数字だけでなく、稼働姿勢や周りへの良い影響も理由にする。</dd><dd class="ex">メンバーの日報の「良かった人」が、選ぶときの材料として並ぶ。</dd></dl>
+        <dl id="g-memo"><dt>部下メモ</dt><dd>上席が部下に気づいたこと・指導したことの記録。本人には見せない。</dd><dd class="ex">仲間への指摘は日報ではなく、上席がここに書く。</dd></dl>
+        <dl id="g-forms"><dt>Microsoft Forms</dt><dd>Microsoft 365 のアンケート作成の道具。回答はExcelに書き出せる。</dd><dd class="ex">今の一般日報はFormsで業後に送っている。</dd></dl>
+        <dl id="g-ai"><dt>AIの本人版</dt><dd>メンバー本人に向けてAIが出す振り返りと提案。部下メモと責任者日報は渡さない。</dd><dd class="ex">一般日報・KPI・ロープレ・週間教育をもとに作る（まとまり3で決定）。</dd></dl>
+      </div>
+    </div>
+
+    <div class="gl-group">
+      <h3>数字とほかの記録</h3>
+      <div class="gl">
+        <dl id="g-csv"><dt>電話システムのCSV</dt><dd>電話システムから書き出す、表の形の数字のファイル。</dd><dd class="ex">時間帯ごとの総・実・再・オ・見・アが入っている。業後に取り込む。</dd></dl>
+        <dl id="g-import"><dt>取り込みと承認</dt><dd>CSVの数字をアプリに入れ、管理者が件数やエラーを確かめて確定させること。</dd><dd class="ex">終業直後に1回行い、日報はそのあとに書く（まとまり4で決定）。</dd></dl>
+        <dl id="g-jitsu"><dt>実率</dt><dd>かけた数（総）のうち、相手が出た数（実）の割合。</dd><dd class="ex">「実率 38%」は、100件かけて38件つながったということ。</dd></dl>
+        <dl id="g-term"><dt>ターム</dt><dd>1時間ごとの区切り。1タームに30コールが目安。</dd><dd class="ex">総が30件に届かなかった時間帯の数を、日報に自動で出す。</dd></dl>
+        <dl id="g-arubeki"><dt>あるべき</dt><dd>月の経過に合わせて、今日までに本来届いているべき量。</dd><dd class="ex">月の目標60件で、稼働日20日のうち13日が過ぎたなら、あるべきは39件（60×13÷20）。実績32件なら「あるべき39件 ▼7」と出す。</dd></dl>
+        <dl id="g-calllist"><dt>狙うリスト</dt><dd>週ごと・時間帯ごとに、どの業種・エリアのリストにかけるかを決めたもの。</dd><dd class="ex">日報の「明日のリスト」の最初の値になる。</dd></dl>
+        <dl id="g-rank"><dt>見込みのランク</dt><dd>見込み（またかけるべき相手）を、確度でS・A・B・C・ランク無しに分けたもの。</dd><dd class="ex">今はメンバーが業後に別のExcelに入力している。アプリでの扱いは未決。</dd></dl>
+        <dl id="g-rp"><dt>ロープレの記録</dt><dd>ロープレを行った側（実行者）が、1回1テーマで残す記録。合格ラインの○△×をつける。</dd><dd class="ex">受けたメンバーの日報の「今日のロープレ・研修」に自動で並ぶ。</dd></dl>
+        <dl id="g-seminar"><dt>研修の記録</dt><dd>複数人が参加する研修の記録。参加した本人も見られる。</dd><dd class="ex">参加した日の日報に自動で並び、本人は学んだことを1つ書く。</dd></dl>
+        <dl id="g-median"><dt>中央値</dt><dd>値を小さい順に並べたとき、ちょうど真ん中にくる値。極端に大きい値に引っぱられにくい。</dd><dd class="ex">書く量の中央値は483字、平均は526字（とても長い日があると平均が上がる）。</dd></dl>
+      </div>
+    </div>
+  </section>
+
+  <p class="small source">出典：一般日報の見本（samples\ の一般日報の xlsx：Microsoft Forms の回答 4,339件、2025年8月〜2026年10月）と、この会話で本人が選んだこと。名前と例の数字は架空。2026年10月9日時点。</p>
+
+</main>
+</body>
+</html>
