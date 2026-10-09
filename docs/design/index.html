@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALES +1 資料の一覧</title>
+<style>
+  :root {
+    --paper: #F7F7F8; --surface: #FFFFFF; --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A; --ink-muted: #555555; --line: #DDDDDD;
+    --brand: #FF0642; --brand-soft: #FFE4EA;
+    --navy-text: #002459; --navy-band: #002459; --navy-soft: #E6EBF4;
+    --good: #047857; --good-soft: #E3F4EC; --warn: #B45309; --warn-soft: #FEF3E2;
+    --on-dark: #FFFFFF;
+    --radius-sm: 4px; --radius-md: 8px;
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A; --warn: #E0A04A; --warn-soft: #3A2A14;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A; --warn: #E0A04A; --warn-soft: #3A2A14;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.6; }
+  .top { background: var(--navy-band); color: var(--on-dark); padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+  .top h1 { margin: 0; font-family: var(--font-display); font-size: 17px; }
+  .top .meta { font-size: 12px; opacity: .85; }
+  .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); height: calc(100% - 46px); }
+  .side { overflow-y: auto; border-right: 1px solid var(--line); background: var(--surface); padding: 12px; }
+  .note { background: var(--navy-soft); border-left: 4px solid var(--navy-band); border-radius: var(--radius-md); padding: 8px 10px; font-size: 12.5px; margin-bottom: 12px; }
+  .note b { font-family: var(--font-display); color: var(--navy-text); }
+  .grp { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--ink-muted); margin: 14px 0 6px; }
+  .item { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--radius-md); padding: 8px 10px; margin-bottom: 8px; cursor: pointer; font: inherit; }
+  .item:hover { background: var(--navy-soft); }
+  .item:focus-visible { outline: 2px solid var(--navy-band); outline-offset: 2px; }
+  .item.on { border: 2px solid var(--navy-band); background: var(--navy-soft); padding: 7px 9px; }
+  .item .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .item b { font-family: var(--font-display); font-size: 14px; }
+  .item .date { font-family: var(--font-figure); font-size: 11.5px; color: var(--ink-muted); white-space: nowrap; }
+  .item .sum { display: block; font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+  .item .warn { display: block; font-size: 12px; color: var(--warn); margin-top: 2px; }
+  .tag { display: inline-block; font-size: 11px; font-family: var(--font-display); font-weight: 700; border-radius: var(--radius-sm); padding: 0 6px; line-height: 19px; margin-right: 4px; white-space: nowrap; }
+  .tag--main { background: var(--navy-band); color: var(--on-dark); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; font-size: 12.5px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; }
+  .old { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .old button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--radius-sm); font: inherit; font-size: 12px; padding: 1px 8px; cursor: pointer; }
+  .old button.on { border-color: var(--navy-band); background: var(--navy-soft); }
+  .viewer { display: flex; flex-direction: column; min-width: 0; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .bar b { font-family: var(--font-display); font-size: 15px; }
+  .bar .path { font-family: var(--font-figure); font-size: 12px; color: var(--ink-muted); margin-left: 8px; }
+  .bar a { font-size: 12.5px; color: var(--navy-text); }
+  iframe { flex: 1; width: 100%; border: 0; background: var(--paper); }
+  @media (max-width: 860px) {
+    .layout { display: block; height: auto; }
+    .side { border-right: 0; border-bottom: 1px solid var(--line); max-height: none; }
+    iframe { height: 85vh; flex: none; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>SALES +1 資料の一覧</h1>
+  <span class="meta" id="meta"></span>
+</header>
+<div class="layout">
+  <nav class="side" aria-label="資料の一覧">
+    <div class="note"><b>使い方</b>：左の資料を押すと、右にそのまま表示されます。ファイルを1つずつ開く必要はありません。正式な内容はいちばん上の「設計書」です。確認用の図解は、決めた理由を確かめるために作ったもので、作ったときの内容のままです。</div>
+    <div id="list"></div>
+  </nav>
+  <main class="viewer">
+    <div class="bar"><span><b id="vtitle"></b><span class="path" id="vpath"></span></span><a id="vopen" href="#" target="_blank" rel="noopener">新しいタブで開く</a></div>
+    <iframe id="frame" title="選んだ資料"></iframe>
+  </main>
+</div>
+<script>
+  // 資料を足したり版を上げたりしたら、ここを書き換える（新しい版の file と date、以前の版は old に足す）
+  const UPDATED = '2026-10-09';
+  const PROGRESS = '設計：8つのまとまりのうち5つが確定（次はまとまり6「画面」）';
+  const DOCS = [
+    { group: '設計書（正式な内容）', items: [
+      { title: '企画ダッシュボード（設計書）', file: 'project-dashboard_v19.html', date: '2026-10-09', tag: ['main', '正'],
+        sum: '全体の設計。概要・完成度の表・データの設計図（35表）・6業務・画面と権限・AIサイクル・用語集',
+        old: ['v18','v17','v16','v15','v14','v13','v12','v11','v10','v9','v8','v7','v6','v5','v4','v3','v2','v1'].map(v => ({ label: v, file: 'old/project-dashboard_' + v + '.html' })) }
+    ]},
+    { group: '確認用の図解（業務ごと）', items: [
+      { title: '一般日報の見直し', file: 'daily-report_v2.html', date: '2026-10-09', tag: ['good', '確定'],
+        sum: '今の日報4,339件の分析と新しい形。明日の約束、週と月の3つの輪、良かった人、上席の関わり方',
+        warn: '見込みは「未決」のまま（v18で決定）。受注の3つの形（v19）は入っていない。正は設計書',
+        old: [{ label: 'v1', file: 'old/daily-report_v1.html' }] },
+      { title: '責任者日報の見直し', file: 'manager-report_v3.html', date: '2026-10-09', tag: ['good', '確定'],
+        sum: '今の日報1,862件の分析と新しい形。打ち手、3つの輪、今月のテーマ、日々のMVP、週の要約と返事',
+        warn: '見込み・商材は「未決」のまま（v18で決定）。正は設計書',
+        old: [{ label: 'v2', file: 'old/manager-report_v2.html' }, { label: 'v1', file: 'old/manager-report_v1.html' }] },
+      { title: 'ロープレの仕様', file: 'roleplay_v1.html', date: '2026-10-09', tag: ['good', '確定'],
+        sum: '1回1テーマ、合格ラインの○△×、卒業の流れ、トーク一覧の2段階の確認、ほかの記録とのつながり' },
+      { title: '週間教育の見直し', file: 'weekly-education_v1.html', date: '2026-10-07', tag: ['good', '確定'],
+        sum: '今の週間教育の分析と新しい形。毎週ふり返り＋2週間で判定、勝ちパターンの共有',
+        warn: '確認したときの案のまま。問題・原因は後で「複数書ける」に変わった。正は設計書' },
+      { title: '効果の判定のしくみ', file: 'effect-judgment_v2.html', date: '2026-10-07', tag: ['good', '確定'],
+        sum: '偶然の幅と、前後2週間で比べる理由。線95%、狙うKPIは1日全体だけ',
+        old: [{ label: 'v1', file: 'old/effect-judgment_v1.html' }] }
+    ]},
+    { group: '作り方（開発の進め方）', items: [
+      { title: 'ルールの3層と2ツール', file: 'rule-layers_v2.html', date: '2026-10-06', tag: ['plain', '検討中'],
+        sum: 'Claude Code と Antigravity にルールをどう伝えるか（AGENTS.md は未決）',
+        old: [{ label: 'v1', file: 'old/rule-layers_v1.html' }] }
+    ]}
+  ];
+
+  const list = document.getElementById('list');
+  const frame = document.getElementById('frame');
+  document.getElementById('meta').textContent = '最終更新 ' + UPDATED + ' ／ ' + PROGRESS;
+  const buttons = [];
+
+  function show(file, title) {
+    frame.src = file;
+    document.getElementById('vtitle').textContent = title;
+    document.getElementById('vpath').textContent = file;
+    document.getElementById('vopen').href = file;
+    buttons.forEach(b => b.el.classList.toggle('on', b.file === file));
+    try { history.replaceState(null, '', '#' + encodeURIComponent(file)); } catch (e) {}
+    try { localStorage.setItem('sp1-index-last', file); } catch (e) {}
+  }
+
+  DOCS.forEach(g => {
+    const h = document.createElement('div');
+    h.className = 'grp'; h.textContent = g.group; list.appendChild(h);
+    g.items.forEach(it => {
+      const wrap = document.createElement('div');
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'item';
+      btn.innerHTML = '<span class="row"><b></b><span class="date"></span></span><span class="sum"></span>';
+      btn.querySelector('b').textContent = it.title;
+      btn.querySelector('.date').textContent = it.date;
+      const tag = document.createElement('span');
+      tag.className = 'tag tag--' + it.tag[0]; tag.textContent = it.tag[1];
+      btn.querySelector('.sum').append(tag, document.createTextNode(it.sum));
+      if (it.warn) { const w = document.createElement('span'); w.className = 'warn'; w.textContent = '注意：' + it.warn; btn.appendChild(w); }
+      btn.addEventListener('click', () => show(it.file, it.title));
+      buttons.push({ el: btn, file: it.file });
+      wrap.appendChild(btn);
+      if (it.old && it.old.length) {
+        const d = document.createElement('details');
+        const s = document.createElement('summary'); s.textContent = '以前の版（' + it.old.length + '）';
+        const box = document.createElement('div'); box.className = 'old';
+        it.old.forEach(o => {
+          const b = document.createElement('button'); b.type = 'button'; b.textContent = o.label;
+          b.addEventListener('click', () => show(o.file, it.title + '（以前の版 ' + o.label + '）'));
+          buttons.push({ el: b, file: o.file });
+          box.appendChild(b);
+        });
+        d.append(s, box); wrap.appendChild(d);
+      }
+      list.appendChild(wrap);
+    });
+  });
+
+  let first = DOCS[0].items[0];
+  let start = first.file, startTitle = first.title;
+  const all = DOCS.flatMap(g => g.items.flatMap(it => [{ file: it.file, title: it.title }].concat((it.old || []).map(o => ({ file: o.file, title: it.title + '（以前の版 ' + o.label + '）' })))));
+  let want = '';
+  try { want = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+  if (!want) { try { want = localStorage.getItem('sp1-index-last') || ''; } catch (e) {} }
+  const hit = all.find(a => a.file === want);
+  if (hit) { start = hit.file; startTitle = hit.title; }
+  show(start, startTitle);
+</script>
+</body>
+</html>

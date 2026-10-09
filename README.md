@@ -40,6 +40,7 @@ KPIはプログラムが集計し、AIが原因の仮説と「今週の+1」（�
 | 資料 | 場所 |
 |---|---|
 | 設計書（企画ダッシュボード） | docs/design/project-dashboard_v19.html（ブラウザで開く。以前の版は docs/design/old/） |
+| 資料の一覧 | docs/design/index.html（ブラウザで開く。設計書と確認用の図解を1画面で切り替えて読める） |
 | 作業メモ（現在の状況・決定事項） | NOTES.md |
 | 開発のルール | CLAUDE.md |
 | 企画・設計の引き継ぎ資料 | docs/sales-plus1_handoff_v1.md |
