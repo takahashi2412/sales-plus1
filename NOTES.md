@@ -25,7 +25,7 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 
 ### 作業のこつ（圧縮で失われやすい手順）
 - 見本のExcelを読むとき：Excel を裏で動かす方法（COM）は、広い範囲の読み込みやシートのコピーで止まることがある（止まったら、画面のない EXCEL を開始時刻で確かめて終了させる）。xlsx の中身（XML）を PowerShell で直接読む方法がよい。スクリプトは BOM つき UTF-8 で保存する（BOMなしだと PowerShell 5.1 が日本語を読み違える）。セルのふりがな（rPh）は除く。集計の awk は `LC_ALL=C.UTF-8` で動かす（文字数・〇×の判定がずれないように）
-- 図解の点検：docs\design を根にしたローカルの簡易サーバー（PowerShell の HttpListener、localhost:8766）で開き、ブラウザで JavaScript の点検（図の文字のはみ出し・重なり・枠からのはみ出し、リンク切れ、未リンクの用語、ページの横はみ出し、表の幅）。ブラウザの画面が隠れていると幅が0になるので、resize_window で幅を指定してから測る（PC 1100px・スマホ 375px）。新しい図はスクリーンショットでも確かめる
+- 図解の点検：アプリのペインで開き（簡易サーバーは使わない。C:\Workspace\CLAUDE.md の品質基準に合わせる。2026-10-20 本人の選択）、ブラウザで JavaScript の点検（図の文字のはみ出し・重なり・枠からのはみ出し、リンク切れ、未リンクの用語、ページの横はみ出し、表の幅）。ブラウザの画面が隠れていると幅が0になるので、resize_window で幅を指定してから測る（PC 1100px・スマホ 375px）。ペインが固定表示でスクロールできないときは、確かめたい図を一時的にページの先頭へ移して見る。新しい図はスクリーンショットでも確かめる
 - 資料の一覧 `docs/design/index.html`：全資料を1画面で切り替えて読むページ（2026-10-09 本人の指示「確認だけのときにファイルを1つずつ開かなくてよいように、定期的にまとめる」）。図解・設計書を作ったり版を上げたりしたら、ページ内の DOCS（JavaScript の表）を書き換える：新しい版の file・date・sum、前の版を old に足す、warn（図解が設計書より古くなった点）を見直す、UPDATED と PROGRESS を更新。点検は全ファイルが読めるか（fetch）と、クリックで右に出るか
 - 図解のひな形：新しい図解は、docs/design/manager-report_v3.html か weekly-education_v1.html の head（CSS）を流用する。表の「2列目を折り返さない」設定は完成度の表（class="left nw"）だけに効く
 - 実名の確認：コミットの前に、見本データに出てくる名字・メールアドレスで、NOTES.md と新しい図解を検索して0件を確かめる（名字そのものはこのファイルに書かない）
@@ -47,7 +47,6 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 | 4 | まとまり8：段階導入の日付 | 未着手 |
 | 5 | 技術構成の前の確認ごと（2026-10-19 本人の選択で、画面と並行して今から進める。下の「技術構成の前の確認ごと」） | 本人に確認 |
 | 6 | ルールの共有方法（AGENTS.md・GEMINI.md）を決める。Antigravity が実際に読むかは実機で未確認 | 検討中 |
-| 7 | 2台目の準備（下の「2台目の準備」。Claude Code のメモのコピーも含む） | 未着手 |
 
 ### 技術構成の前の確認ごと（2026-10-19 から並行して進める）
 本人から「サーバー設計は最後で問題ないか」。順番（画面の残り → 技術構成 → 段階導入）は変えず、返事に時間がかかる確認ごとを今から並行して進める（本人の選択）。画面と35表は技術を選んでも変わらないが、下の答えで選べる技術が絞られる。
@@ -63,12 +62,12 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 | 決めたこと | 理由 |
 |---|---|
 | 考える係＝Claude Code、作る係＝Antigravity | 本人の方針。設計とレビューを分け、作る係の誤りを確かめられるようにする |
-| Git＋GitHub（非公開、takahashi2412）。Workspaceではこのアプリだけ | 差分のレビューと巻き戻しのため。2台の受け渡しを手のコピーからなくすため |
+| Git＋GitHub（非公開、takahashi2412）。Workspaceではこのアプリだけ | 差分のレビューと巻き戻しのため |
 | Antigravity は作業用ブランチでコミットまで。取り込みと push は本人のOK後に Claude Code | レビューの前に本線（main）を変えないため |
 | Antigravity は Local で、Claude Code と順番に使う | 過去のガイドの原則のまま。New Worktree はまだわからないことが多い |
 | 計画ファイルは docs/tasks/ のひな形から作る | Antigravity は CLAUDE.md を読まないので、守らせたいことを毎回確実に伝えるため |
 | 設計書＝企画ダッシュボード。8つのまとまりを確定させてから開発 | 本人の方針。見本データを見ずに作ると手戻りが出るため |
-| 図解はアプリの docs/design/ に置く | アプリの画面で開け、2台目にもGitHubでそろうため（本人の指摘） |
+| 図解はアプリの docs/design/ に置く | アプリの画面で開けるため（本人の指摘） |
 | 異動は所属の履歴を残す | 過去のチーム平均が変わらず、効果の判定の比較が狂わないため |
 | ログインは Microsoft 365 | 全員が持っている。退職時に止め忘れがなく、私物スマホでも会社の2段階認証が効く |
 | MGRは担当チームだけ。代表はすべて。管理者は権限で与え、監査ログに残す | 本人の判断。権限が広がりやすいので、記録で補う |
@@ -168,8 +167,7 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 - コミットの記録名：takahashi2412 ／ k.takahashi@rush-up.co.jp（各PCで git config --global に設定）
 - Workspaceの「Gitは使わない」の例外として、このアプリだけGitを使う（C:\Workspace\CLAUDE.md に一覧あり）
 - 流れ：① Claude Codeが計画ファイルを書く → ② Antigravityが作業用ブランチで実装・コミット → ③ Claude Codeが差分をレビュー → ④ 本人がOK → ⑤ Claude Codeが本線に取り込み、確認を取ってからpush
-- 2台の受け渡しは、このアプリについては push／pull で行う
-- メイン機：Git for Windows 2.55.0.5 をインストール済み（2026-10-06、winget）。2台目は未インストール
+- Git for Windows 2.55.0.5 をインストール済み（2026-10-06、winget）
 
 ### Antigravityの作業のしかた（2026-10-06）
 - Local＋作業用ブランチ。Claude Codeとは順番に使う（ガイドの「順番に使う」原則はそのまま）
@@ -454,7 +452,6 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 - 守りのテスト（本人版に部下メモを渡さない等）は頭脳側が持ち、Antigravityは変更しない
 - Antigravityの報告は docs\reports\ にファイルで残させる
 - ファイルごとに担当ツールを決める（同時編集を防ぐ）→ CLAUDE.md の「開発体制」に記載
-- 2台目に渡すものに、ホームフォルダのルールファイルとAntigravityの設定も含める
 
 ## 決定を変えたときに直すファイル（影響表）
 
@@ -466,23 +463,12 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 | Antigravityとの作業のしかた | Antigravityガイド（visuals\antigravity_usage-guide、training\antigravity\NOTES.md） |
 | 守ること（機密・本人版など） | apps\sales-plus1\CLAUDE.md、docs\tasks\plan_template.md（7章）、.gitignore、（将来）AGENTS.md |
 | ルールの共有方法 | 各CLAUDE.md、（将来）AGENTS.md・GEMINI.md、図解 docs\design\rule-layers |
-| 個人ルール | ~\.claude\CLAUDE.md（2台とも）、（将来）~\.gemini\GEMINI.md |
-| 2台目の手順 | NOTES.md「2台目の準備」 |
+| 個人ルール | ~\.claude\CLAUDE.md、（将来）~\.gemini\GEMINI.md |
 | **設計の決定（まとまり1〜8、見本データでわかったこと）** | **企画ダッシュボード docs\design\（版を上げて反映：概要の章・完成度の表・該当の図・用語集。前の版は docs\design\old\ へ）**、README.md（概要・使う人・やらないこと）、NOTES.md（決定事項・未決事項の進み具合）、必要なら CLAUDE.md・plan_template.md、資料の一覧 docs\design\index.html（DOCS の表） |
 | 見本データの置き場所・扱い | C:\Workspace\CLAUDE.md（機密ファイルの例外）、apps\sales-plus1\CLAUDE.md（守ること）、.gitignore（samples/）、plan_template.md（7章） |
 | KPIの項目・時間帯・目標の立て方 | 企画ダッシュボード（3-2・5・8・10・11）、NOTES.md（見本データ1・2） |
 | 図解・ダッシュボードの作り方 | C:\Workspace\CLAUDE.md（品質基準）。基準の見本ファイルの版も更新する |
 | 図解・設計書を新しく作る・版を上げる | docs\design\index.html（資料の一覧の DOCS の表）、NOTES.md「最初に読むファイル」 |
-
-## 2台目の準備
-
-1. Gitをインストールする（winget install --id Git.Git --exact --source winget）
-2. 名前などを設定する（user.name＝takahashi2412、user.email＝k.takahashi@rush-up.co.jp、init.defaultBranch＝main）
-3. 2台目に apps\sales-plus1 がすでにあるか確かめる。あれば上書きせず、名前を変えて残す（削除しない）
-4. 本人のターミナルで C:\Workspace\apps に移動し、git clone https://github.com/takahashi2412/sales-plus1.git（初回はサインイン画面が出る）
-5. ~\.claude\CLAUDE.md と C:\Workspace\CLAUDE.md を、更新日時を確かめてからメイン機からコピーする
-6. Claude Code のメモ（~\.claude\projects\C--Workspace-apps-sales-plus1\memory\ の中身。MEMORY.md と4つのメモ）をコピーする。メモは2台で共有されず、GitHubにも入らない。中身の多くは3つの CLAUDE.md にも書いてあるが、「選択式の質問が閉じられたときは待つ」「pt などの単位は元の数字とたとえで示す」はメモにしかない
-7. 以降は作業前に必ず git pull
 
 ---
 
@@ -539,17 +525,6 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 5. 2台目の準備（上の「2台目の準備」）、ルールの共有方法（AGENTS.md）
 - 未確認：電話システムの利用規約（自動操作の可否）と製品名、既存アプリ（rushup-weekly-report）との関係、保守する人と予算
 
-### もう1台に渡すもの
-- apps\sales-plus1 の中身：GitHubから取得する（手でコピーしない）
-- C:\Users\髙橋圭ktakahashi\.claude\CLAUDE.md（個人ルール。2台目では「このPCの役割」だけ書き換える）
-- C:\Users\髙橋圭ktakahashi\.claude\projects\C--Workspace-apps-sales-plus1\memory\ の中身（Claude Code のメモ。MEMORY.md と3つのメモ）
-- C:\Workspace\CLAUDE.md（Gitで管理するアプリの一覧、機密ファイルの例外、図解HTML・ダッシュボードの品質基準を追加、同期の見出しを修正）
-- C:\Workspace\training\antigravity\NOTES.md（ガイドv3の作成を記録）
-- C:\Workspace\visuals\claude-setup_claudemd-cheatsheet_v2.html、claude-setup_workspace-guide_v2.html、antigravity_usage-guide_v3.html（新規）
-- C:\Workspace\visuals\README.md（GitHubで管理するアプリの例外を追記）
-- sales-plus1 の図解（ダッシュボード v1〜v9、rule-layers v1〜v2）は docs\design\ に移したので、GitHubから取得する（手でコピーしない）。メイン機の visuals\ からはなくなった
-- samples\ の見本データは渡さない（Gitに入らず、実名を含むため。必要なら本人が判断）
-
 ## 2026-10-08（木）メイン機
 - 本人のターミナルで push 済み（GitHubの main＝9fde3dc）
 - 過去の記録（上席ごとの指導進捗管理 4ファイル）を受領。本人の指示で、まず届いたことだけを確認（開ける、シート5枚、記録の量）
@@ -582,3 +557,8 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 - 本人から「サーバー設計は最後で問題はないか」。順番はそのままでよいが、技術構成の前提になる確認ごと（電話システムの製品名と規約、保守と予算、Microsoft 365 の管理者、既存アプリとの関係、個人情報の置き場所）は今から並行して進めることに決定。引き継ぎ書に「技術構成の前の確認ごと」の表を作った
 - 書く画面の行き来の1問目（入口）を聞いたところで中断（本人が質問を止め、上の確認をした）。再開時は書く画面の入口から聞き直す
 - 確認ごと5つに本人が回答：自動操作で取得する／決裁は本人／Microsoft 365 の登録は本人ができる／既存アプリ rushup-weekly-report は SALES +1 に置きかえる（引き継ぐ機能なし）／クラウドに置いてよい。残り＝電話システムの製品名、費用の上限と保守する人（まとまり7で）
+
+## 2026-10-20（火）
+- 前回のあとに、CLAUDE.md・NOTES.md・C:\Workspace\CLAUDE.md から「2台目のPC」の記述（2台目の準備・もう1台に渡すもの・2台の受け渡し）が削られていた。本人の選択で、PCを1台で使う方針としてそのままコミット
+- 図解の点検は、Workspace の CLAUDE.md（アプリのペインで開く・簡易サーバーは使わない）にそろえ、作業のこつを直した（本人の選択）
+- 次は、まとまり6の「書く画面の行き来」を入口の質問から再開（本人の選択）

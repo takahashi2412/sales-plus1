@@ -54,7 +54,7 @@
 ## Git（Workspaceの「Gitは使わない」の例外。このアプリはここに従う）
 
 - リポジトリ：https://github.com/takahashi2412/sales-plus1（非公開）／本線：main
-- 2台の受け渡しは pull／push で行い、手でコピーしない。作業を始める前に必ず `git pull` する
+- 作業を始める前に必ず `git pull` する
 - Antigravity は作業用ブランチ（例：`task/内容`）で作業し、コミットまで行う。本線への取り込みとpushはしない
 - Claude Code は本線との差分をレビューする。守りのテストが変わっていないかを必ず見る
 - 本人のOKのあと、Claude Code が本線に取り込む。push は毎回確認を取ってから行う。`--force` は使わない
