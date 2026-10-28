@@ -10,8 +10,9 @@
 
 - [ ] このPCに Node.js（LTS 版）を入れる
 - [ ] Supabase のアカウントと、開発用のプロジェクトを作る（無料枠）。メールとパスワードのログインは有効のままにする（守りのテストが使う）
-  - 作るときの Security の設定：「データAPIを有効にする」＝オン、「新しいテーブルを自動的に公開する」＝オフ、「自動RLSを有効にする」＝オン
-- [ ] Microsoft 365（Entra ID）にアプリを登録し、Supabase の Azure ログインの設定に、発行された値を入れる
+  - 作るときの Security の設定：「データAPIを有効にする」＝オン、「新しいテーブルを自動的に公開する」＝オフ、「自動RLSを有効にする」＝オン。地域は東京（ap-northeast-1）
+  - 「新しい利用者の登録を許す（Allow new users to sign up）」＝オン（Microsoft で初めてログインした人が利用者として作られるため。名簿にない人は RLS で何も読めない）
+- [ ] Microsoft 365（Entra ID）にアプリを登録し（会社のアカウントだけ＝シングルテナント）、Supabase の Azure ログインの設定に、発行された値と会社のテナントの URL を入れる
 - [ ] `.env` に次の値を入れる（中身はだれにも見せない。Antigravity にも表示させない）
   - `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`（画面が使う）
   - `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`（守りのテストが使う。架空のデータを作って消すため）
