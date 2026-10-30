@@ -519,7 +519,7 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 | 作り方（土台は1つ、業務ごとに分ける） | apps\sales-plus1\CLAUDE.md（守ること）、docs\tasks\plan_template.md と各計画ファイル（7章「業務ごとに分ける」）、企画ダッシュボード（1-2・概要のやらないこと・用語集）、README.md、NOTES.md（決めたことの表） |
 | 作る順番と区切りの呼び方（中身の名前で呼ぶ。周は使わない） | 企画ダッシュボード（13・15・完成度の表）、NOTES.md（引き継ぎ書の次にやること・全体の作る順番の表）、CLAUDE.md、計画ファイルの名前と作業用ブランチ名、README.md、資料の一覧 index.html、Claude Code のメモ |
 | ログインと安全の決まり | docs\tasks\plan_template.md（7章「安全の決まり」・報告書の書式）と各計画ファイル（本人が済ませること・4章「安全の決まり」・完了条件・報告書の書式）、apps\sales-plus1\CLAUDE.md（守ること）、企画ダッシュボード（9章・完成度の表・用語集）、NOTES.md（まとまり2・決めたことの表）、README.md |
-| 決め方・直し方（記録・直す場所の一覧・点検・版の上げ方） | appssales-plus1CLAUDE.md（決め方・直し方、設計書の段落）、NOTES.md（本人との進め方の型・決めたことの表）、Claude Code のメモ（project-chat-workflow） |
+| 決め方・直し方（記録・直す場所の一覧・点検・版の上げ方） | apps\sales-plus1\CLAUDE.md（決め方・直し方、設計書の段落）、NOTES.md（本人との進め方の型・決めたことの表）、Claude Code のメモ（project-chat-workflow） |
 
 ---
 
