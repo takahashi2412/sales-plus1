@@ -11,7 +11,7 @@ GitHub：3d1012b（目標の画面と変えやすくする方針）まで送信�
 ### 次に始めるとき最初に読むファイル
 1. `CLAUDE.md`（自動で読まれる）：守ること・開発体制・Git・会話の進め方
 2. この「引き継ぎ書」の節
-3. 設計書 `docs/design/project-dashboard_v23.html`：冒頭の「概要」と「0 完成度の表」（資料の一覧 `docs/design/index.html` から、全部の資料を1画面で切り替えて読める）
+3. 設計書 `docs/design/project-dashboard_v24.html`：冒頭の「概要」と「0 完成度の表」（資料の一覧 `docs/design/index.html` から、全部の資料を1画面で切り替えて読める）
 4. `docs/sales-plus1_handoff_v1.md`（元の企画。CLAUDE.md の読む順に入っている）：2026-10-06 時点のもので、多くは後の決定で変わった。食い違うときは下の「決定事項」を優先する
 5. 必要に応じて：下の「決定事項」（詳しい中身。特に「見本データ1〜7」「効果の判定」「ロープレの前提」）、`README.md`（概要）
 6. 確認用の図解（決めた理由を本人に見せたもの。正は設計書 v23。一般日報の図解 v2 は見込みが「未決」のままで、後で決まった）：`docs/design/effect-judgment_v2.html`（効果の判定）、`docs/design/weekly-education_v1.html`（週間教育。確認したときの案のままで、問題・原因は後で「複数書ける」に変わった）、`docs/design/manager-report_v3.html`（責任者日報）、`docs/design/daily-report_v2.html`（一般日報。v1 は old/）、`docs/design/roleplay_v1.html`（ロープレの仕様のまとめ。2026-10-09 に本人の依頼で作成、新しい決定はなし）、`docs/design/screens_v1.html`（画面の構成。まとまり6の前半を図解、新しい決定はなし）、`docs/design/rule-layers_v2.html`（ルールの3層）
