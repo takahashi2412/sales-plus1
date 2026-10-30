@@ -1,7 +1,7 @@
-# 計画：周1 土台（plan_cycle1-foundation_v1）
+# 計画：土台（plan_foundation_v1）
 
 作成日：2026-10-27 ／ 作成：Claude Code ／ 作業：Antigravity
-作業用ブランチ：task/cycle1-foundation
+作業用ブランチ：task/foundation
 並列：なし ／ 作業するフォルダ：C:\Workspace\apps\sales-plus1
 
 > この計画に書いていないことは、進めずに質問してください。
@@ -20,7 +20,7 @@
 ## 0. 最初に必ずやること
 1. `git status` で、本線（main）にいること、変更が残っていないことを確かめる。違っていたら、作業を始めずに報告する
 2. `git pull` で最新にする
-3. 作業用ブランチを作って切り替える：`git switch -c task/cycle1-foundation`
+3. 作業用ブランチを作って切り替える：`git switch -c task/foundation`
 4. 今読み込んでいるルールファイル（AGENTS.md・GEMINI.md など）をすべて挙げて報告する。なければ「なし」と報告する
 5. `node -v` と `npm -v` を実行し、Node.js が入っていることを確かめる。入っていなければ止めて報告する。`.env` があるかどうかだけを確かめる（中身は開かない・表示しない）。なければ止めて報告する
 
@@ -29,20 +29,20 @@
 
 ## 2. やること
 1. プロジェクトの土台を作る：React＋Vite（TypeScript）。テストの道具は Vitest。Supabase とつなぐ部品は `@supabase/supabase-js`。Supabase の道具（CLI）は `npx supabase` で使う（グローバルに入れない）
-   - `src/` は、土台（ログイン・名簿・権限。例：`src/foundation/`）と、業務ごとのフォルダ（`src/features/〈業務〉/`。周2以降に足す）に分けられる形にする（7章「業務ごとに分ける」）。今回作るのは土台だけ
+   - `src/` は、土台（ログイン・名簿・権限。例：`src/foundation/`）と、業務ごとのフォルダ（`src/features/〈業務〉/`。ロープレ以降に足す）に分けられる形にする（7章「業務ごとに分ける」）。今回作るのは土台だけ
 2. 表と権限を、SQL のファイル（マイグレーション）で `supabase/migrations/` に書き、開発用のプロジェクトに流し込む（4章の表と権限）
 3. 画面：Microsoft 365 でログインする画面と、ログインしたあとに「自分の名前・役割・今のチーム」と「自分が見られる名簿の一覧」を出す画面だけを作る
    - ログインに使ったメールアドレスが名簿（members）にないときは、「名簿に登録されていません。管理者に連絡してください」と出して、何も見せない
 4. 守りのテスト `tests/guard/permissions.test.ts`（Claude Code が書いて本線に置いたもの）が通るようにする。テストは変えない
    - このテストは `process.env` から `SUPABASE_URL`・`SUPABASE_ANON_KEY`・`SUPABASE_SERVICE_ROLE_KEY` を読む。Vitest の設定（`vitest.config.ts` など）で `.env` を読み込ませる（例：Vite の `loadEnv` を使い `test.env` に渡す）
    - テスト自体の書き間違い（読み込みの書き方・型など）で動かないときは、テストを直さずに止めて、どこがどう動かないかを報告する。Claude Code が直す
-5. 画面で確かめるための架空の名簿を `fixtures/cycle1/` に置き、開発用のプロジェクトに入れる手順（またはプログラム）を用意する。名前は「メンバーA」のような架空のものだけ
+5. 画面で確かめるための架空の名簿を `fixtures/foundation/` に置き、開発用のプロジェクトに入れる手順（またはプログラム）を用意する。名前は「メンバーA」のような架空のものだけ
 6. `.env.example` に、要る値の名前だけを書く（値は書かない）
 
 ## 3. やらないこと
-- 監査ログ・一覧（マスタ）・設定値の表（周2で作る）
-- ロープレなど、業務の表と画面（周2以降）
-- 左メニュー・画面の枠などの共通の部品のつくり込み（周2の先頭で作る）。今回は最小の2画面だけ
+- 監査ログ・一覧（マスタ）・設定値の表（次のロープレで作る）
+- ロープレなど、業務の表と画面（ロープレ以降）
+- 左メニュー・画面の枠などの共通の部品のつくり込み（ロープレの先頭で作る）。今回は最小の2画面だけ
 - 画面を置く場所（ホスティング）への公開
 - 本物のデータ・本物の社員の名前を入れること
 
@@ -78,7 +78,7 @@
 
 - `permissions` の追加と取り消しは、代表と、管理者の権限がある人だけ
 - `member_affiliations`・`mgr_assignments`・`teams` も、上の `members` と同じ範囲で読める（自分が読める人の所属・担当だけ）。迷ったら止めて質問する
-- 削除はしない（このあとの周で論理削除を入れる）
+- 削除はしない（このあとの区切りで論理削除を入れる）
 
 ### 安全の決まり（2026-10-28 追加）
 開発用のプロジェクトは「新しいテーブルを自動的に公開する」をオフ、「自動RLSを有効にする」をオンにしてある。そのため、次のとおりにする。
@@ -92,7 +92,7 @@
 
 守りのテスト（変更禁止）：`tests/guard/permissions.test.ts`
 
-触ってよいファイル・フォルダ：`package.json`、`package-lock.json`、`vite.config.ts`、`vitest.config.ts`（要るなら）、`tsconfig*.json`、`index.html`、`src/`、`supabase/`、`fixtures/cycle1/`、`tests/` の中で `tests/guard/` 以外、`.env.example`、`docs/reports/report_cycle1-foundation_v1.md`
+触ってよいファイル・フォルダ：`package.json`、`package-lock.json`、`vite.config.ts`、`vitest.config.ts`（要るなら）、`tsconfig*.json`、`index.html`、`src/`、`supabase/`、`fixtures/foundation/`、`tests/` の中で `tests/guard/` 以外、`.env.example`、`docs/reports/report_foundation_v1.md`
 触ってはいけないもの：`tests/guard/`、`docs/`（報告書を除く）、`CLAUDE.md`、`NOTES.md`、`README.md`、`.gitignore`、`samples/`
 
 ## 5. 決めてよいこと／決めてはいけないこと
@@ -153,13 +153,13 @@
 - ファイルやフォルダを削除する前、新しいフォルダを作る前は確認を取る（docs/reports/ は作ってよい。4章の「触ってよい」に挙げたフォルダも作ってよい）
 
 ## 8. 終わったら
-1. 作業結果を `docs/reports/report_cycle1-foundation_v1.md` に、下の書式で書く
+1. 作業結果を `docs/reports/report_foundation_v1.md` に、下の書式で書く
 2. 報告書もコミットする
 3. `git switch main` で本線に戻る（作業用ブランチは消さない。Claude Codeがレビューする）
 
 ### 報告書の書式
 - 作業用ブランチ名（並列のときは作業したワークツリーのフォルダも）
-- 計画ファイルを受け取った日と、作業を終えた日（1周の日数を測るため）
+- 計画ファイルを受け取った日と、作業を終えた日（1つ作るごとの日数を測るため）
 - 変更したファイルの一覧（4章の「触ってよい」範囲の外がないこと）
 - 本人が画面で確かめる手順（3〜5行。だれでログインし、どこを押して、何が見えればOKか）
 - やったこと

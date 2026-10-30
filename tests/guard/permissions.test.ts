@@ -1,6 +1,6 @@
 // 守りのテスト：権限（役割ごとに見える範囲・書ける範囲が設計どおりか）
 // 担当：Claude Code。Antigravity はこのファイルを変更・削除・スキップしない（CLAUDE.md・計画ファイル 7章）。
-// 根拠：docs/tasks/plan_cycle1-foundation_v1.md の 4章（表と権限）、NOTES.md「まとまり2：権限」。
+// 根拠：docs/tasks/plan_foundation_v1.md の 4章（表と権限）、NOTES.md「まとまり2：権限」。
 //
 // 動かし方：.env に SUPABASE_URL・SUPABASE_ANON_KEY・SUPABASE_SERVICE_ROLE_KEY を入れ、`npm test`。
 // 開発用の Supabase プロジェクトに、架空の人（@example.test）を作って確かめ、最後に消す。本物のデータは使わない。
