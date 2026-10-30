@@ -48,7 +48,7 @@
 
 ## 4. 仕様
 
-参照：設計書 `docs/design/project-dashboard_v24.html` の「概要（使う人とできること）」「1-2 作り方の形」「5 データの設計図（members・member_affiliations・mgr_assignments・permissions）」「9 画面と権限」（「ログインと安全の決まり」を含む）。権限の決まりは NOTES.md の「まとまり2：権限」。
+参照：設計書 `docs/design/project-dashboard_v25.html` の「概要（使う人とできること）」「1-2 作り方の形」「5 データの設計図（teams・members・member_affiliations・mgr_assignments・permissions）」「9 画面と権限」（「ログインと安全の決まり」を含む）。権限の決まりは NOTES.md の「まとまり2：権限」。
 
 ### 表（名前と項目はこのとおりにする。守りのテストがこの名前を使う）
 
