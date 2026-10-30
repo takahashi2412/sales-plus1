@@ -466,8 +466,8 @@
       <div class="grp-card done"><span class="g-no">4</span><b>運用</b><span class="tag tag--good">確定</span></div>
       <div class="grp-card done"><span class="g-no">5</span><b>データの項目</b><span class="tag tag--good">確定</span></div>
       <div class="grp-card next"><span class="g-no">6</span><b>画面</b><span class="tag tag--navy">試作を残して確定</span></div>
-      <div class="grp-card"><span class="g-no">7</span><b>技術構成</b><span class="tag tag--plain">1〜6のあと</span></div>
-      <div class="grp-card"><span class="g-no">8</span><b>段階導入の日付</b><span class="tag tag--plain">7のあと</span></div>
+      <div class="grp-card"><span class="g-no">7</span><b>技術構成</b><span class="tag tag--plain">作りながら（土台で試す）</span></div>
+      <div class="grp-card"><span class="g-no">8</span><b>段階導入の日付</b><span class="tag tag--plain">作りながら</span></div>
     </div>
     <div class="table-wrap" style="margin-top:var(--space-4)">
       <table class="left nw">
@@ -494,7 +494,7 @@
       </table>
     </div>
     <div class="guide">
-      <div><div class="g-label">図の見方</div><ul><li>上の8枚がまとまりの進み具合。緑＝確定、濃紺＝次に詰める、橙＝見本データ待ち</li><li>下の表は、この資料の各図がどこまで決まったか。「案」は中身があるが確定していないもの</li></ul></div>
+      <div><div class="g-label">図の見方</div><ul><li>上の8枚がまとまりの進み具合。緑＝確定、濃紺＝中身は確定で試作が残る、白＝作りながら決める</li><li>下の表は、この資料の各図がどこまで決まったか。「案」は中身があるが確定していないもの</li></ul></div>
       <div class="g-pt"><div class="g-label">ポイント</div><ul><li>まとまり1：メンバー20〜50人、チーム2〜3、MGR3名、拠点は複数で人ごとに固定、異動は<a class="term" href="#g-affiliation">所属の履歴</a>を残す、PC・スマホ両対応</li><li>まとまり2：ログインはMicrosoft 365（<a class="term" href="#g-sso">シングルサインオン</a>）、MGRは担当チームだけ、管理者は権限で与える、<a class="term" href="#g-audit">監査ログ</a>を残す、メンバーにチーム内の順位を見せる（詳しくはセクション9）</li><li>まとまり3：本人版に週間教育も渡す、効果は4段階で判定（基準は指標ごと・件数の下限あり）、自動化は段階方式（修正なしの<a class="term" href="#g-adoption">採用率</a>70%で移行）、基準の値は管理者が変えられる（詳しくはセクション7・8・12）</li><li>まとまり4：KPIは取り込んだ管理者が承認（自動化後は自動承認）、取り込みは終業後に1回、アラートは「本人が設定したKPIの目標に届かない」ときに承認の直後に画面で知らせる（のちにTeams）（詳しくはセクション3・11）</li><li>見本データ：KPIの9つの項目と出どころ、時間帯14区分、目標の逆算が確定（詳しくはセクション3-2）</li><li>まとまり5：6業務（KPI・一般日報・責任者日報・部下メモ・ロープレ・週間教育）と見込みの項目を見本データで確定。効果の判定の線と必要なコールの数も決定（詳しくはセクション5・6・6-2・8）</li></ul></div>
     </div>
   </section>
@@ -1390,7 +1390,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>左が材料のデータ、中央がAIに渡す前の選別、右ができあがるレポート</li><li>濃紺の矢印が本人版（4本）、灰色の線が指導版に入るデータ</li><li>×印は、本人版に入れずに止めるデータ</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>本人版の材料は、KPI・自分の日報・ロープレ結果・週間教育の4つ。週間教育は問題・原因も含めてすべて渡す（まとまり3で確定）。本人はもともと自分の週間教育を見られるので、見える情報は増えない</li><li>この選別は「守りのテスト」で毎回自動で確かめる。作る係（Antigravity）はこのテストを変更できない決まり</li><li>本人版は、責める言い方をせず「次の一手」を1つに絞って書く。週間教育の「原因」も、次の一手として言い換えるようAIに指示する</li><li>本人版は担当リーダー・MGRも全体を見る（確定）。そのため、本人の画面にその旨を表示する</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>本人版の材料は、KPI・自分の日報・ロープレ結果・週間教育の4つ。週間教育は問題・原因も含めてすべて渡す（まとまり3で確定）。本人はもともと自分の週間教育を見られるので、見える情報は増えない</li><li>この選別は「<a class="term" href="#g-guardtest">守りのテスト</a>」で毎回自動で確かめる。作る係（Antigravity）はこのテストを変更できない決まり</li><li>本人版は、責める言い方をせず「次の一手」を1つに絞って書く。週間教育の「原因」も、次の一手として言い換えるようAIに指示する</li><li>本人版は担当リーダー・MGRも全体を見る（確定）。そのため、本人の画面にその旨を表示する</li></ul></div>
     </div>
   </section>
 
@@ -1575,8 +1575,8 @@
           <tr><td>初めてのログイン</td><td>開発用では「新しい利用者の登録」を許す（Microsoft で初めて入った人が利用者として作られるため）。名簿にない人は、入れても何も読めない</td><td><span class="tag tag--good">設定済み</span></td></tr>
           <tr><td>開発用の置き場所</td><td>Supabase の開発用プロジェクト sales-plus1-dev を東京に作成。架空のデータだけを入れる</td><td><span class="tag tag--good">設定済み</span></td></tr>
           <tr><td>表の守り</td><td>すべての表で<a class="term" href="#g-rls">行ごとの読み書きの決まり（RLS）</a>をオンにする。表ごとの許可は SQL のファイルに書き、ログインしていない人には何も許さない。新しい表は自動で公開しない設定にした</td><td><span class="tag tag--good">決定</span></td></tr>
-          <tr><td>鍵の扱い</td><td>管理用の鍵（service_role）は画面のコードに置かず、<a class="term" href="#g-env">.env</a> の画面用の名前（VITE_ で始まる名前）にもしない。チャットにも貼らない</td><td><span class="tag tag--good">決定</span></td></tr>
-          <tr><td>作ったあとの点検</td><td>土台を作り終えたら、Supabase の安全の点検（Security Advisor）の警告の件数と中身を報告書に書く</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>鍵の扱い</td><td><a class="term" href="#g-servicerole">管理用の鍵（service_role）</a>は画面のコードに置かず、<a class="term" href="#g-env">.env</a> の画面用の名前（VITE_ で始まる名前）にもしない。チャットにも貼らない</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>作ったあとの点検</td><td>土台を作り終えたら、Supabase の安全の点検（<a class="term" href="#g-advisor">Security Advisor</a>）の警告の件数と中身を報告書に書く</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>本物のデータを入れる前</td><td>本番では、メールのログインを止めて Microsoft だけにする。本番用と開発用のプロジェクトを分ける。バックアップを決める。管理用の鍵を作り直す。Microsoft の合言葉（シークレット）は180日（2027年4月ごろ）で切れるので、期限の管理を決める</td><td><span class="tag tag--warn">未決（カルテ第1版の節目まで）</span></td></tr>
         </tbody>
       </table>
@@ -1822,7 +1822,7 @@
     <h2><span class="section-num">15</span>未決事項と次の一手：まず土台</h2>
     <div class="issues">
       <div class="iss done"><span class="no">1</span><b>現行Excelの見本</b><span class="tag tag--good" style="align-self:start">決定（6業務すべて受領・確定）</span></div>
-      <div class="iss review"><span class="no">2</span><b>技術構成</b><span class="tag tag--navy" style="align-self:start">土台は Supabase で試す</span></div>
+      <div class="iss review"><span class="no">2</span><b>技術構成</b><span class="tag tag--navy" style="align-self:start">認証・作り方は決定、土台は Supabase で試す</span></div>
       <div class="iss done"><span class="no">3</span><b>KPIの承認フロー</b><span class="tag tag--good" style="align-self:start">決定</span></div>
       <div class="iss done"><span class="no">4</span><b>アラートの条件</b><span class="tag tag--good" style="align-self:start">決定</span></div>
       <div class="iss done"><span class="no">5</span><b>AI提案の自動化</b><span class="tag tag--good" style="align-self:start">決定</span></div>
@@ -1942,13 +1942,16 @@
         <dl id="g-push"><dt>push／pull</dt><dd>push は手元の記録をGitHubへ送ること。pull はGitHubから最新を取ってくること。</dd><dd class="ex">pushは毎回確認を取ってから。作業を始める前に必ず pull する。</dd></dl>
         <dl id="g-foundation"><dt>土台</dt><dd>どの業務も共通で使う部分。ここが1つにまとまっていると、直すときに1か所で済む。</dd><dd class="ex">名簿・ログイン（Microsoft 365）・権限。最初に作り、あとのすべての業務が同じものを使う（セクション1-2）。</dd></dl>
         <dl id="g-module"><dt>業務ごとの箱<small>モジュール</small></dt><dd>1つの業務に必要な表・画面・プログラムを、ほかの業務と分けてまとめたもの。箱の中を直しても、ほかの箱に響かない。</dd><dd class="ex">日報の箱は <code>src/features/〈業務〉/</code> のフォルダと日報の表と計画ファイル。日報に項目を足すときは日報の箱だけ直す（セクション1-2）。</dd></dl>
+        <dl id="g-guardtest"><dt>守りのテスト</dt><dd>絶対に崩してはいけない決まりを、プログラムが毎回自動で確かめるテスト。作る係（Antigravity）は変更・削除・スキップしてはいけない。</dd><dd class="ex">tests/guard/ に置く。今は権限のテスト（架空の8人で、役割ごとに読める範囲・書ける範囲を確かめる）。のちにAI本人版に部下メモ・責任者日報を渡さないことも確かめる。担当は Claude Code。</dd></dl>
+        <dl id="g-servicerole"><dt>管理用の鍵<small>service_role</small></dt><dd>Supabase のデータベースを、行ごとの読み書きの決まり（RLS）を飛びこえて読み書きできる鍵。漏れると全部のデータが見られる。</dd><dd class="ex">守りのテストが架空の人を作って消すためだけに使う。.env に置き、画面のコードには置かない。VITE_ で始まる名前にしない（セクション9）。本物のデータを入れる前に作り直す。</dd></dl>
+        <dl id="g-advisor"><dt>Security Advisor<small>安全の点検</small></dt><dd>Supabase の管理画面にある、設定の危ない所（RLS が切れている表など）を一覧で知らせる機能。</dd><dd class="ex">表や権限を変えた計画では、作る係が最後に開き、警告の件数と中身を報告書に書く（セクション9）。</dd></dl>
         <dl id="g-env"><dt>.env</dt><dd>パスワードやAPIキーなどの秘密の値を置くファイル。コードに直接書かないために使う。</dd><dd class="ex">電話システムのログイン情報やAIのキー、Supabase の URL と鍵を置く。Gitには入れない。管理用の鍵（service_role）は画面用の名前（VITE_ で始まる名前）にしない（v24）。</dd></dl>
         <dl id="g-gitignore"><dt>.gitignore</dt><dd>Gitに入れない（GitHubに上げない）ファイルの一覧。</dd><dd class="ex">.env、Excel・CSV、録音、PDFなどを止めている。</dd></dl>
       </div>
     </div>
   </section>
 
-  <p class="small source">出典：SALES +1 引き継ぎ資料 v1、NOTES.md（決定事項・未決事項・まとまり1〜5・見本データ1〜7・効果の判定・進め方の見直し・並列の壁打ち（docs/discussion と docs/reports）・作り方の形（2026-10-30 本人の提案と選択））、本人からの業務の補足と聞き取り。効果の判定の線と必要な数は、KPIの見本（1人分・36稼働日）から計算（図解 effect-judgment_v2）。責任者日報は図解 manager-report_v3、一般日報は図解 daily-report_v2 で本人が確認。見込み（v18）・受注の3つの形（v19）・画面（v20・v21）は会話の中の画面イメージで本人が確認。画面の試作は未作成。セクション6〜10の例の数字と名前は架空の例。2026年10月27日時点。</p>
+  <p class="small source">出典：SALES +1 引き継ぎ資料 v1、NOTES.md（決定事項・未決事項・まとまり1〜5・見本データ1〜7・効果の判定・進め方の見直し・並列の壁打ち（docs/discussion と docs/reports）・作り方の形（2026-10-30 本人の提案と選択））、本人からの業務の補足と聞き取り。効果の判定の線と必要な数は、KPIの見本（1人分・36稼働日）から計算（図解 effect-judgment_v2）。責任者日報は図解 manager-report_v3、一般日報は図解 daily-report_v2 で本人が確認。見込み（v18）・受注の3つの形（v19）・画面（v20・v21）は会話の中の画面イメージで本人が確認。画面の試作は未作成。セクション6〜10の例の数字と名前は架空の例。2026年10月30日時点。</p>
 
 </main>
 </body>

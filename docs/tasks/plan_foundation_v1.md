@@ -1,6 +1,6 @@
 # 計画：土台（plan_foundation_v1）
 
-作成日：2026-10-27 ／ 作成：Claude Code ／ 作業：Antigravity
+作成日：2026-10-27 ／ 更新：2026-10-28（安全の決まり・Supabase と Microsoft の設定）、2026-10-30（業務ごとに分ける・名前を plan_foundation に） ／ 作成：Claude Code ／ 作業：Antigravity
 作業用ブランチ：task/foundation
 並列：なし ／ 作業するフォルダ：C:\Workspace\apps\sales-plus1
 
@@ -8,11 +8,11 @@
 
 ## 始める前に本人が済ませること（Antigravity は行わない）
 
-- [ ] このPCに Node.js（LTS 版）を入れる
-- [ ] Supabase のアカウントと、開発用のプロジェクトを作る（無料枠）。メールとパスワードのログインは有効のままにする（守りのテストが使う）
+- [x] このPCに Node.js（LTS 版）を入れる
+- [x] Supabase のアカウントと、開発用のプロジェクトを作る（無料枠）。メールとパスワードのログインは有効のままにする（守りのテストが使う）
   - 作るときの Security の設定：「データAPIを有効にする」＝オン、「新しいテーブルを自動的に公開する」＝オフ、「自動RLSを有効にする」＝オン。地域は東京（ap-northeast-1）
   - 「新しい利用者の登録を許す（Allow new users to sign up）」＝オン（Microsoft で初めてログインした人が利用者として作られるため。名簿にない人は RLS で何も読めない）
-- [ ] Microsoft 365（Entra ID）にアプリを登録し（会社のアカウントだけ＝シングルテナント）、Supabase の Azure ログインの設定に、発行された値と会社のテナントの URL を入れる
+- [x] Microsoft 365（Entra ID）にアプリを登録し（会社のアカウントだけ＝シングルテナント）、Supabase の Azure ログインの設定に、発行された値と会社のテナントの URL を入れる
 - [ ] `.env` に次の値を入れる（中身はだれにも見せない。Antigravity にも表示させない）
   - `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`（画面が使う）
   - `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`（守りのテストが使う。架空のデータを作って消すため）
@@ -121,6 +121,12 @@
 - samples/ には本物の見本データ（実名あり）が入っている。開かない・読まない・検索しない・コピーしない
 - APIキーは .env に置き、コードに書かない。.env の中身を表示・出力しない
 - .gitignore を変更しない
+
+### 安全の決まり（2026-10-28 本人の選択）
+- 表を足すときは、マイグレーションの中で RLS（行ごとの読み書きの決まり）をオンにする（`alter table ... enable row level security` を明示。自動の設定に頼らない）
+- 表ごとの許可（GRANT）をマイグレーションに明示する。`authenticated` は必要な操作だけ（行の範囲は RLS で絞る）、`service_role` は守りのテストのため読み書きと削除、`anon`（ログインしていない人）には何も許可しない
+- `service_role` の鍵は画面のコード（`src/`）で使わない。`VITE_` を付けた名前にしない（`VITE_` の付いた値は画面に埋め込まれ、だれでも見られるため）
+- 表や権限を変えた計画では、作業の最後に Supabase の Security Advisor を開き、警告の件数と中身を報告書に書く
 
 ### AI本人版レポート
 - 本人版のAIへの入力に、部下メモ・責任者日報を含めない（コードで除外する）
