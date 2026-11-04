@@ -42,12 +42,13 @@
 ## 技術構成と動かし方（2026-11-04 土台で作った）
 
 - 画面：React 19＋Vite（TypeScript）。テスト：Vitest。データベース・ログイン・権限：Supabase（開発用プロジェクト sales-plus1-dev・東京。Microsoft 365 でログイン）
-- 置き場所：`src/foundation/`（土台）、`src/features/〈業務〉/`（業務の箱。ロープレから）、`supabase/migrations/`（表と権限の SQL）、`tests/guard/`（守りのテスト）、`tests/〈業務〉/`（そのほかのテスト）、`fixtures/〈業務〉/`（架空データと補助のプログラム）
+- 置き場所：`src/foundation/`（土台）、`src/components/`（共通の部品と画面の枠。ロープレ①でできた）、`src/features/〈業務〉/`（業務の箱。ロープレから）、`supabase/migrations/`（表と権限の SQL）、`tests/guard/`（守りのテスト）、`tests/〈業務〉/`（そのほかのテスト）、`fixtures/〈業務〉/`（架空データと補助のプログラム）
 - 動かし方（作業用フォルダで。部品は `npm install` で入れる。`.env` は `.env.example` の名前に本人が値を入れる）
   - `npm run dev`：画面を `http://localhost:5173` で開く
   - `npm test`：テスト（守りのテストを含む）
   - `npm run db:push -- --dry-run` のあと `npm run db:push`：表と権限を開発用のプロジェクトに流し込む
   - `npm run fixtures:load`／`fixtures:remove`／`fixtures:remove-ceo`／`fixtures:cleanup-guard`：架空の名簿と「テスト代表」を入れる・消す、守りのテストの残りを片づける
+  - `npm run fixtures:roleplay:load`／`fixtures:roleplay:remove`／`fixtures:roleplay:cleanup-guard`：ロープレの架空データを入れる・消す、守りのテストの残りを片づける。入れるときは土台が先、消すときはロープレが先（ロープレの表が名簿を参照しているため）
 - このPCには Docker がないので、Supabase の手元の道具（`supabase start` など）は使わない。表と権限の直しは、新しいマイグレーションのファイルで足す
 
 ## 守ること
