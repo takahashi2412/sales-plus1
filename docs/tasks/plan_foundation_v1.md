@@ -17,7 +17,7 @@
 - [x] Supabase の Authentication → URL Configuration で、Site URL を `http://localhost:5173`、Redirect URLs に `http://localhost:5173/**` を入れる（Microsoft でログインしたあと、手元の画面に戻るため）
 - [x] Microsoft 365（Entra ID）の登録したアプリの「トークン構成」で、オプションの要求（ID の種類）に `email` と `xms_edov` を足す（Supabase が Microsoft のメールアドレスを「確認済み」とみなすため。ないと初めてのログインが「メールが未確認」で止まることがある。止まったときは、開発用だけ Authentication の Confirm email をオフにする）
 - [ ] `.env` に次の値を入れる（中身はだれにも見せない。Antigravity にも表示させない）
-  - 鍵は Supabase の Project Settings → API Keys の、Legacy API Keys の `anon` と `service_role` にそろえる（新しい形の Publishable と Secret でも動くが、どちらか一方にそろえる）
+  - 鍵は Supabase の Project Settings → API Keys の、新しい形の Publishable key（`sb_publishable_`）と Secret key（`sb_secret_`）にそろえる（古い形の anon・service_role は2027年の初めに使えなくなるため。2026-11-04）。.env の名前はそのまま：`〜_ANON_KEY` に Publishable key、`SUPABASE_SERVICE_ROLE_KEY` に Secret key を入れる。Secret key はブラウザからは使えないので、画面のコードでは使わない（守りのテストと補助のプログラムだけ）
   - `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`（画面が使う）
   - `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`（守りのテストが使う。架空のデータを作って消すため）
   - `SUPABASE_DB_URL`（表を流し込むための接続の文字。Supabase の「Connect」の **Session pooler**（`〜.pooler.supabase.com:5432`、ユーザー名が `postgres.〈プロジェクトの番号〉` のもの）を使う。`[YOUR-PASSWORD]` をデータベースのパスワードに置きかえる。パスワードに記号があるときは URL 用に書きかえる（Claude Code が案内する）。効くのは開発用のプロジェクトだけ）
