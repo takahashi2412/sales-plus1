@@ -12,7 +12,7 @@
 2. `git status` で、作業用ブランチ `task/roleplay-prep` にいること、変更が残っていないことを確かめる。違っていたら、作業を始めずに報告する。ブランチは作らない・切り替えない（Claude Code が最新の本線から作ってある）
 3. `.env` があるかどうかだけを確かめる（中身は開かない・表示しない）。なければ止めて報告する
 4. 今読み込んでいるルールファイル（AGENTS.md・GEMINI.md など）をすべて挙げて報告する。なければ「なし」と報告する
-5. `npm install` をしてから `npx vitest run tests/guard/permissions.test.ts tests/foundation` を回し、土台の守りのテストと画面のテストが通ることを確かめる（通らなければ、作業を始めずに報告する）。`tests/guard/roleplay.test.ts` は、この計画で直す2件（自分自身のテーマ・自分を課員にした記録）が始める前は落ちてよい（作り終えたら全部通す）
+5. `npm install` をしてから `npx vitest run tests/guard/permissions.test.ts tests/foundation` を回し、土台の守りのテストと画面のテストが通ることを確かめる（通らなければ、作業を始めずに報告する）。`tests/guard/roleplay.test.ts` はここでは回さない（Claude Code が足した2つの確かめ＝「ロープレの記録：自分を実行者にして、読める課員の分だけ足せる」の中の、自分を課員にした記録と、「テーマ表：上席でも自分自身のテーマは足せず、卒業にもできない」は、この計画を作り終えるまで落ちる。作り終えたら全部通す）
 6. ログインの回数の上限：守りのテストは、1回でテスト用の人が 19 回ログインする。開発用の Supabase は、ログインが5分に30回までのことがある。429（回数の上限のエラー）や「rate limit」が出たら、5分待ってから回す。続けて何度も回さない（直したあとにまとめて1回）
 
 ## 1. 目的（なぜやるか）
@@ -22,13 +22,25 @@
 1. 新しいマイグレーション `supabase/migrations/20261104000004_roleplay_supervise_excludes_self.sql` を足す（流し込み済みのファイルは直さない）
    - `private.can_supervise_member(target uuid)` を `create or replace` で作り直し、`target = private.current_member_id()`（自分自身）のときは偽にする。ほかの判定はロープレ①のまま（代表は真、リーダーは今同じチーム、MGR は担当のチーム、管理者の権限では真にしない、メンバーは偽）。`security definer`・`set search_path = ''` もそのまま
    - `roleplays` の追加と変更の決まり（`roleplays_insert_policy`・`roleplays_update_policy` の `with check`）に、`member_id <> private.current_member_id()`（実行者と課員は別の人）を足す。ポリシーは `drop policy if exists` のあと `create policy` で作り直す。ほかの条件はロープレ①のまま
-   - これで、リーダー・MGR は自分自身のテーマを足せず、卒業にもできない（自分の上席＝担当MGR・代表が行う）。ほかの表・権限・関数は変えない
+   - 引数の名前 `target` は変えない（変えると Postgres が作り直しを断る）。`create or replace` は今の実行の許可を引き継ぐが、読みやすいよう `revoke`／`grant` を ①と同じ形で書き直してよい
+   - これで、リーダー・MGR は自分自身のテーマを足せず、卒業にもできない（自分の上席＝担当MGR・代表が行う）。代表自身のテーマとロープレは、だれも書けなくなる（代表の上席はいないため。それでよい）。ほかの表・権限・関数は変えない
 2. `src/features/roleplay/shared/viewer.ts` を足し、`shared/index.ts` から export する
-   - `fetchViewerContext()`：ログインしている人の情報を、画面用の鍵（土台の `src/foundation/supabaseClient`）で読んで返す。返すもの：自分の名簿の id、役割（member／leader／mgr／ceo）、今のチームの id（今日が開始日〜終了日の中の所属。なければ空）、MGR として今担当しているチームの id の一覧、トーク責任者の権限があるか（`permissions` の自分の行で `kind = 'talk_owner'`・`revoked_at` が空）、代表かどうか。日付は土台の日本時間の「今日」の関数（`src/foundation/` にあるもの）を使う
-   - `fetchWritableMembers(viewer)`：ロープレを書ける課員の一覧（名簿の id・名前・今のチームの id）。データベースの決まりと同じ範囲：リーダー・メンバーは今同じチームの人、MGR は担当しているチームに今所属している人、代表は全員。どれも自分を除き、退職日（`retired_on`）が今日より前の人を除く。管理者の権限では広げない
-   - 計算だけの関数（データベースに触らない。画面でボタンを出すかを決めるのに使う）：`canSuperviseMember(viewer, targetTeamId, targetMemberId)`（自分なら偽）、`canMoveTalkToTrial(viewer, talkTeamId)`（チームの上席。チームなしは代表）、`canMoveTalkToStandard(viewer)`（トーク責任者）、`canAddTalkFromList(viewer)`（リーダー・MGR・トーク責任者・代表）、`canEditTalk(viewer, talk)`（作った人は確認待ちの間だけ、チームの上席・トーク責任者・代表はいつでも）、`canCreateSeminar(viewer)`（リーダー・MGR）、`selectableTalkTeams(viewer)`（トークを足すときに選べるチーム：メンバー・リーダーは今のチームだけ、MGR は担当のチーム、代表は「チームなし」とすべてのチーム）
+   - 読み取りの関数と計算の関数を分ける。読み取りの関数は、①の `api.ts` と同じく `client: SupabaseClient = supabase`（土台の `src/foundation/supabaseClient`。画面用の鍵）を受け取る形にする。日本時間の「今日」と期間の判定は、土台の `src/foundation/directory.ts` の `getTodayJstDateString` と `isActivePeriod` を使う
+   - 自分の行は、RLS に頼らず明示して絞る（代表や管理者の権限がある人は、ほかの人の権限・所属・担当も読めるため）：名簿はログインの利用者 id と `auth_user_id` を照らして探し、権限・所属・MGR の担当は自分の名簿の id で絞る
+   - `fetchViewerContext(client?)`：ログインしている人の情報を返す。返すもの（型 `ViewerContext`）：自分の名簿の id、役割（member／leader／mgr／ceo）、今のチームの id、MGR として今担当しているチームの id の一覧、トーク責任者の権限があるか（自分の行で `kind = 'talk_owner'`・`revoked_at` が空）、代表かどうか。自分の行が見つからない（名簿にない・退職した）ときは `null` を返す。読み取りのエラーは throw する
+     - 今のチームは、データベースの `private.member_team_now` と同じ1つ：今日が開始日〜終了日の中の所属のうち、開始日がいちばん新しいもの（土台の名簿の画面のように、全部をつなげない）
+   - `fetchWritableMembers(viewer, client?)`：ロープレを書ける課員の一覧（名簿の id・名前・今のチームの id）。読めた行をそのまま返さず、役割で分けて絞る（管理者の権限がある人は全員を読めるため）：リーダー・メンバーは今同じチームの人、MGR は担当しているチームに今所属している人、代表は全員。どれも自分を除き、退職日（`retired_on`）が今日より前の人を除く。管理者の権限では広げない
+   - 計算の補助の関数（データベースに触らない。読み取りの関数がこれを使う）：`buildViewerContext(rows, today)`（読んだ行から `ViewerContext` を作る）、`pickWritableMembers(viewer, members, affiliations, today)`（書ける課員を選ぶ）
+   - ボタンを出すかの計算だけの関数（データベースに触らない）。判定は「配列があるか」ではなく役割で分ける（データベースは、MGR の担当を役割が mgr のときしか見ない）。データベースの決まりと同じ範囲にする
+     - `canSuperviseMember(viewer, target: { id: string; teamId: string | null })`：自分なら偽。代表は真。リーダーは今のチームが target と同じ。MGR は target のチームを担当している。メンバーは偽
+     - `canMoveTalkToTrial(viewer, talkTeamId: string | null)`：**チームつきのトーク**は、リーダーで今のチームが同じ人、または今そのチームを担当している MGR だけが真（データベースの `is_supervisor_of_team` と同じ。代表とトーク責任者は偽）。**チームなしのトーク**は代表だけが真
+     - `canMoveTalkToStandard(viewer)`：トーク責任者だけ
+     - `canAddTalkFromList(viewer, teams)`：リーダー・MGR・トーク責任者・代表で、かつ `selectableTalkTeams` で選べるもの（チームなしを含む）が1つ以上あるとき
+     - `canEditTalk(viewer, talk: { createdBy: string; status: string; teamId: string | null })`：作った人は確認待ちの間だけ。チームの上席（`canMoveTalkToTrial` と同じリーダー・担当MGR）・トーク責任者・代表はいつでも
+     - `canCreateSeminar(viewer)`：リーダー・MGR だけ（代表は偽）
+     - `selectableTalkTeams(viewer, teams: { id: string; name: string }[])`：返す形は `{ allowNoTeam: boolean; teamIds: string[] }`。メンバー・リーダーは今のチームだけ（なければ空）、MGR は担当のチーム、代表は `allowNoTeam` が真で、`teams` のすべて（代表は teams の表をすべて読める）。トーク責任者でも、役割がメンバーなら今のチームだけ
    - 型（`ViewerContext` など）は `shared/types.ts` に足す
-3. 計算だけの関数のテストを `tests/roleplay/shared/viewer.test.ts` に書く（架空のデータで。役割ごと、自分自身、チームなし、退職した人を除くこと）
+3. 計算の補助の関数とボタンの計算だけの関数のテストを `tests/roleplay/shared/viewer.test.ts` に書く（架空のデータで。役割ごと、自分自身、チームつき・チームなしのトーク、代表がチームつきのトークを試行中にできないこと、所属が2つ重なる人、退職した人を除くこと、管理者の権限で広がらないこと）
 4. 守りのテスト（`tests/guard/`）を通す。Claude Code が `tests/guard/roleplay.test.ts` に、自分自身のテーマ・自分を課員にした記録の2件を足してある
 
 ## 3. やらないこと
@@ -58,7 +70,10 @@
 
 ## 6. 完了条件（すべて満たしたら完了）
 - [ ] 2-1の直しが `supabase/migrations/20261104000004_roleplay_supervise_excludes_self.sql` にあり、`npm run db:push -- --dry-run` のあと `npm run db:push` で流し込み済み
-- [ ] `shared/viewer.ts` と、その計算だけの関数のテストがある
+- [ ] `npm run db:push -- --dry-run` で流す予定が `20261104000004` の1本だけだったことを、報告書に書いた
+- [ ] `shared/viewer.ts` があり、`shared/index.ts` から export している。`shared/` の今ある関数（`api.ts`・`types.ts` の今の型）は変えていない
+- [ ] 計算の補助の関数とボタンの計算だけの関数のテストがある
+- [ ] 報告書の「本人が画面で確かめる手順」には、画面の変更がないこと、`npm run dev` で今の画面が開くことだけを書く（役割ごとの確かめは②③のあとに本人が行う）
 - [ ] `npm test` で、守りのテスト（土台とロープレ）とほかのテストがすべて通る（ログインの回数の上限は 0-6）
 - [ ] `npm run build`（型の点検と組み立て）がエラーなく通る
 - [ ] 守りのテストを変更・削除・スキップしていない
