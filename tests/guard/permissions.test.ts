@@ -198,17 +198,27 @@ function warnIf(label: string, error: { message: string } | null) {
   if (error) console.warn(`後片づけで消せなかった：${label}：${error.message}`);
 }
 
+const permIdsForAudit: string[] = [];
+
 afterAll(async () => {
   if (!admin) return;
   if (outsider.authId) warnIf('名簿にない人', (await admin.auth.admin.deleteUser(outsider.authId)).error);
   const ids = PEOPLE.map((p) => p.memberId).filter(Boolean) as string[];
   if (ids.length) {
+    // ロープレ①で権限の変更が監査ログ（audit_logs）に残るようになる。この回の権限の id を控え、最後に消す
+    const { data: runPerms } = await admin.from('permissions').select('id').in('member_id', ids);
+    permIdsForAudit.push(...(runPerms ?? []).map((p) => String(p.id)));
     warnIf('permissions', (await admin.from('permissions').delete().in('member_id', ids)).error);
     warnIf('mgr_assignments', (await admin.from('mgr_assignments').delete().in('mgr_member_id', ids)).error);
     warnIf('member_affiliations', (await admin.from('member_affiliations').delete().in('member_id', ids)).error);
     warnIf('members', (await admin.from('members').delete().in('id', ids)).error);
   }
   if (teamA || teamB) warnIf('teams', (await admin.from('teams').delete().in('id', [teamA, teamB].filter(Boolean))).error);
+  if (permIdsForAudit.length) {
+    // 監査ログの表がまだない（ロープレ①の前）ときは、何もしない
+    const { error } = await admin.from('audit_logs').delete().eq('table_name', 'permissions').in('row_id', permIdsForAudit);
+    if (error && !/audit_logs/.test(error.message)) warnIf('audit_logs', error);
+  }
   for (const p of PEOPLE) {
     if (p.authId) warnIf(`利用者 ${p.key}`, (await admin.auth.admin.deleteUser(p.authId)).error);
   }

@@ -13,19 +13,36 @@
 3. `.env` があるかどうかだけを確かめる（中身は開かない・表示しない）。なければ止めて報告する
 4. 今読み込んでいるルールファイル（AGENTS.md・GEMINI.md など）をすべて挙げて報告する。なければ「なし」と報告する
 5. `npm install` をしてから `npx vitest run tests/guard/permissions.test.ts tests/foundation` を回し、土台の守りのテストと画面の計算のテストがすべて通ることを確かめる（通らなければ、作業を始めずに報告する）。`tests/guard/roleplay.test.ts` は、この計画で作る表がまだないので、始める前は落ちてよい（作り終えたら通す）
+6. ログインの回数の上限：守りのテストは、1回でテスト用の人が 19 回ログインする（土台9・ロープレ10）。開発用の Supabase は、ログインが5分に30回までのことがある。テストで 429（回数の上限のエラー）や「rate limit」が出たら、5分待ってから回す。守りのテストを続けて何度も回さない（直したあとにまとめて1回）
 
 ## 1. 目的（なぜやるか）
 ロープレの区切りの先頭で、2本の並列（②記録とテーマ表、③トーク一覧と研修の記録）がぶつからないように、表・権限・架空データ・画面の切り替えと左メニュー・共通の部品・デザインのお手本を、先に1本で作る。あわせて、退職した人が読めないように土台の判定を直す。
 
 ## 2. やること
 1. 新しいマイグレーションのファイルを `supabase/migrations/` に足す（番号は `20261104000002` より後。流し込み済みのファイルは直さない）
-   - 土台の直し：`private.current_member_id()` を、退職日（`retired_on`）が今日（`private.today_jst()`）より前の人には何も返さない（null）ように作り直す。これで退職した人は、ログインできても名簿にない人と同じく何も読めない。退職した人の名簿の行と記録は消えない（代表は読める。リーダー・MGR からは、所属が閉じるので見えない。これは土台の決まりのまま）
-   - 指導の記録用の判定を2つ足す（`private` のスキーマ。`security definer`・`set search_path = ''`・`authenticated` に `execute`、`anon` と `public` から外す。土台の関数と同じ作り）
-     - `private.can_supervise_member(target uuid)`：代表なら真。リーダーなら、今の所属が target と同じチーム。MGR なら、今担当しているチームに target が今所属している。**管理者の権限では真にしない**。メンバーは偽
-     - `private.is_supervisor_of_team(team uuid)`：リーダーで今その team に所属している、または MGR で今その team を担当している
-   - 土台の追加の表（`masters`・`settings`・`audit_logs`）と、ロープレと研修の表（4章）。すべてに RLS と GRANT を明示する
-   - 監査ログ：`masters`・`settings`・`permissions` の追加・変更・削除を、トリガー（`security definer` の関数を `private` に置く）で `audit_logs` に残す
-2. 架空データを `fixtures/roleplay/` に置き、`package.json` の scripts に `fixtures:roleplay:load`・`fixtures:roleplay:remove` を足す（`node --env-file=.env` で動かす）。土台の `npm run fixtures:load` を先に入れてから使う。入れるもの：テーマ一覧（段階1〜6の架空の例）、テーマ表、ロープレの記録、トーク（確認待ち・試行中・標準を1つ以上ずつ）、研修と参加者、一覧（場面・業種・リストの種類の言葉）、設定値（ロープレの注意30分・14日、卒業の回数2、確認までの日数14）、架空のトーク責任者の権限（土台の架空の人のうち1人に `talk_owner`。権限を与える画面はカルテ第1版で作るため）
+   - 土台の直し（`create or replace` で作り直す。今の実行許可はそのまま残る）
+     - `private.current_member_id()` を、退職日（`retired_on`）が今日（`private.today_jst()`）より前の人には何も返さない（null）ように作り直す
+     - `private.current_member_role()` も、`auth.uid()` で直接引かず、`where m.id = private.current_member_id()` で引くように作り直す（これで `is_ceo()`・`has_active_permission()`・`is_admin()` にも退職が効く。退職した代表が権限の表を読み書きできないようにするため）
+     - これで退職した人は、ログインできても名簿にない人と同じく何も読めない・書けない。退職した人の名簿の行と記録は消えない（代表は読める。リーダー・MGR からは、所属が閉じるので見えない。これは土台の決まりのまま）
+   - 判定の関数を足す（`private` のスキーマ。`security definer`・`set search_path = ''`・`authenticated` と `service_role` に `execute`、`anon` と `public` から外す。土台の関数と同じ作り。名前はこのとおりにする）
+     - `private.current_team_id()`：ログインしている人が今所属しているチーム（今日が開始日〜終了日の中の所属）。なければ空
+     - `private.member_team_now(target uuid)`：target が今所属しているチーム。なければ空
+     - `private.can_supervise_member(target uuid)`：代表なら真。リーダーなら、`current_team_id()` と `member_team_now(target)` が同じ（どちらも空でない）。MGR なら、今担当しているチームに target が今所属している。**管理者の権限では真にしない**。メンバーは偽
+     - `private.is_supervisor_of_team(team uuid)`：リーダーで今その team に所属している、または MGR で今その team を担当している（team が空なら偽）
+     - `private.is_seminar_participant(seminar uuid)`：ログインしている人が、その研修の `seminar_members` にいて `removed_at` が空
+     - `private.is_seminar_creator(seminar uuid)`：その研修の `created_by` が、ログインしている人
+     - 研修の2つの関数は、`seminars` と `seminar_members` の決まり（ポリシー）がおたがいの表を直接参照して、無限に参照が続くエラー（infinite recursion）にならないように使う。ポリシーの中で、もう一方の表を直接 select しない
+   - 土台の追加の表（`masters`・`settings`・`audit_logs`）と、ロープレと研修の表（4章）。すべてに RLS をオンにし、土台と同じく、まず `revoke all on table … from public, anon, authenticated` で既定の許可を外してから、必要な操作だけを `grant` する
+   - 監査ログ：`masters`・`settings`・`permissions` の追加・変更・削除を、トリガー（`security definer` の関数を `private` に置く）で `audit_logs` に残す。書き方はこのとおりにする（守りのテストがこの形で探す）
+     - `table_name`：スキーマを付けない表の名前（`TG_TABLE_NAME`。例：`masters`）
+     - `action`：小文字（`insert`／`update`／`delete`）
+     - `row_id`：`settings` は `key`、ほかは `id::text`
+     - `actor_member_id`：`private.current_member_id()`（管理用の鍵で変えたときは空になる）
+     - `before`・`after`：変更の前と後の行（`to_jsonb`。追加では `before` が空、削除では `after` が空）
+   - トリガーの関数（監査ログ・トークの状態の確かめ・テーマ表の種類の確かめ）は、土台の `handle_auth_user_login` と同じく、`revoke all on function … from public, anon, authenticated` で実行の許可を外す
+2. 架空データを `fixtures/roleplay/` に置き、`package.json` の scripts に `fixtures:roleplay:load`・`fixtures:roleplay:remove` を足す（`node --env-file=.env` で動かす）。土台の `npm run fixtures:load` を先に入れてから使う。入れるもの：テーマ一覧（段階1〜6の架空の例）、テーマ表、ロープレの記録、トーク（確認待ち・試行中・標準を1つ以上ずつ）、研修と参加者、一覧（場面・業種・リストの種類の言葉）、設定値（4章の4つのキー）、架空のトーク責任者の権限（土台の架空の人のうち1人に `talk_owner`。権限を与える画面はカルテ第1版で作るため）
+   - 消すときの順番：`fixtures:roleplay:remove` を先に流してから、土台の `fixtures:remove`（ロープレの表が名簿を参照しているので、逆だと止まる）。消すときはエラーを確かめ、消せなかったら「消せなかった」と出して終わる
+   - 守りのテストの残りを片づける `fixtures/roleplay/cleanup-guard.mjs` を足し、`package.json` に `fixtures:roleplay:cleanup-guard` を足す。名前が `guard` で始まる人の、ロープレと研修の表の行（研修の参加者 → 研修・ロープレ・テーマ表・トーク）と、名前が `guard` で始まるテーマ一覧・一覧・設定値を消す。エラーを確かめる。土台の `fixtures:cleanup-guard` より先に流す（使い方を報告書に書く）
 3. 画面の切り替えと画面の枠を作る（部品は足さず、アドレスの「#」で切り替える。例：`#/roleplay`）：上の帯・左メニュー・中身の場所。左メニューは「名簿の確認」「ロープレ」「テーマ表」「トーク一覧」「研修の記録」。②③の画面は、入口のファイル（`src/features/roleplay/record/index.tsx`・`talks/index.tsx`・`seminar/index.tsx`。中身は「準備中」と出すだけ）を①で作り、②③がそれぞれの中身を作る
 4. 共通の部品を作る：ボタン・入力欄・選ぶ欄・表・タグ・知らせの枠・日付の表示（`src/` の共通の場所。名前は任せる）と、ロープレの箱の中で共通に使うもの（表の読み書きの部品・型。`src/features/roleplay/shared/`）
 5. デザインのお手本：土台の「名簿の一覧」の画面を、共通の枠と部品で作り直す。②③はこの画面を見本にする
@@ -46,37 +63,38 @@
 | 表 | 項目 |
 |---|---|
 | `masters` | `id`（uuid）、`kind`（`scene`＝場面／`industry`＝業種／`list_type`＝リストの種類。のちの区切りで種類を足す）、`name`、`sort_order`（整数）、`is_active`（真偽。初めは真。消すときは偽） |
-| `settings` | `key`（主キー。例：`roleplay_alert_minutes`）、`value`（jsonb）、`reason`（変えた理由。必須）、`updated_by`（member の id。members への鍵にはしない）、`updated_at` |
+| `settings` | `key`（主キー）、`value`（jsonb）、`reason`（変えた理由。必須）、`updated_by`（member の id。members への鍵にはしない。空でよい＝管理用の鍵で入れたとき）、`updated_at`。ロープレで使うキーはこの4つ（②③がこの名前に頼る）：`roleplay_alert_minutes`（注意の分。初め 30）、`roleplay_alert_days`（注意の日数。初め 14）、`roleplay_graduate_count`（卒業の候補にする○の回数。初め 2）、`roleplay_check_days`（卒業から確認のロープレまでの日数。初め 14） |
 | `audit_logs` | `id`、`actor_member_id`（変えた人。members への鍵にはしない。管理用の鍵で変えたときは空）、`action`（`insert`／`update`／`delete`）、`table_name`、`row_id`（text）、`before`（jsonb）、`after`（jsonb）、`created_at` |
-| `roleplay_themes` | `id`、`no`（テーマ番号）、`stage`（1〜6）、`name`、`kind`（`apo`＝アポ／`sales`＝営業）、`pass_example`、`is_active` |
-| `member_themes` | `id`、`member_id`（members）、`theme_id`（roleplay_themes）、`kind`（テーマと同じ。下の一意の決まりのため）、`started_on`、`pass_line`、`status`（`practicing`＝練習中／`graduated`＝卒業）、`graduated_on`、`check_on`、`created_by`（members）、`hidden_at`（見えなくした日時。空なら見える）。練習中はアポと営業で1つずつまで（`member_id`・`kind` の組で、`status = 'practicing'` かつ `hidden_at` が空の行は1つまで） |
-| `roleplays` | `id`、`date`、`runner_member_id`（実行者＝書いた人。members）、`member_id`（課員。members）、`time_slot`、`kind`（`apo`／`sales`）、`theme_id`、`used_talk_id`（talks。空でよい）、`minutes`、`homework_result`（`o`／`d`／`x`＝○△×。空でよい）、`repeat_count`、`pass_result`（`o`／`d`／`x`）、`next_homework`、`fixed_point`（今日直した点。送るときは必須）、`note`、`purpose`（今回は空）、`result_ap`・`result_rate`（今回は空）、`submitted_at`（送った日時。空なら書きかけ）、`hidden_at` |
-| `talks` | `id`、`code`（`OUT-`／`SC-` で始まる）、`scene_id`・`industry_id`・`list_type_id`（masters。空でよい）、`their_words`、`wording`、`aim`、`team_id`（作った人の今のチーム。teams）、`created_by`（members）、`status`（`pending`＝確認待ち／`trial`＝試行中／`standard`＝標準）、`hidden_at`。練習回数と合格率は表に持たず、roleplays から数える |
+| `roleplay_themes` | `id`、`no`（テーマ番号。整数。一意にはしない）、`stage`（1〜6）、`name`、`kind`（`apo`＝アポ／`sales`＝営業）、`pass_example`、`is_active` |
+| `member_themes` | `id`、`member_id`（members）、`theme_id`（roleplay_themes）、`kind`（テーマの `kind` と必ず同じ。トリガーで確かめる。下の一意の決まりのため）、`started_on`、`pass_line`、`status`（`practicing`＝練習中／`graduated`＝卒業）、`graduated_on`、`check_on`、`created_by`（members）、`hidden_at`（見えなくした日時。空なら見える）。練習中はアポと営業で1つずつまで（`member_id`・`kind` の組で、`status = 'practicing'` かつ `hidden_at` が空の行は1つまで） |
+| `roleplays` | `id`、`date`、`runner_member_id`（実行者＝書いた人。members）、`member_id`（課員。members）、`time_slot`（文字。例：`'10'`＝10時台）、`kind`（`apo`／`sales`）、`theme_id`、`used_talk_id`（talks。空でよい）、`minutes`、`homework_result`（`o`／`d`／`x`＝○△×。空でよい）、`repeat_count`、`pass_result`（`o`／`d`／`x`）、`next_homework`、`fixed_point`（今日直した点。送るときは必須）、`note`、`purpose`（今回は空）、`result_ap`・`result_rate`（今回は空）、`submitted_at`（送った日時。空なら書きかけ）、`hidden_at` |
+| `talks` | `id`、`code`（`OUT-`／`SC-` で始まる）、`scene_id`・`industry_id`・`list_type_id`（masters。空でよい）、`their_words`、`wording`、`aim`、`team_id`（teams。空でよい。メンバー・リーダーは自分の今のチーム、MGR は今担当しているチームから選ぶ、代表は空（チームなし＝全体）でもどのチームでもよい。2026-11-04 本人の選択）、`created_by`（members）、`status`（`pending`＝確認待ち／`trial`＝試行中／`standard`＝標準）、`hidden_at`。練習回数と合格率は表に持たず、roleplays から数える |
 | `seminars` | `id`、`date`、`theme`、`lecturer`、`minutes`、`content`、`created_by`（members）、`hidden_at` |
-| `seminar_members` | `seminar_id`（seminars）、`member_id`（members）。2つの組が主キー |
+| `seminar_members` | `seminar_id`（seminars）、`member_id`（members）、`removed_at`（参加者から外した日時。空なら参加。間違えて入れた人を外すため。削除はしない）。`seminar_id` と `member_id` の組が主キー |
 
 ### 権限（RLS。「名簿にいる人」＝ `private.current_member_id()` が空でない人。退職した人は含まない）
 | 表 | 読める | 書ける |
 |---|---|---|
 | `masters`・`settings`・`roleplay_themes` | 名簿にいる人 | 管理者の権限がある人だけ（`private.is_admin()`。追加・変更。画面は後の区切り） |
 | `audit_logs` | 代表と、管理者の権限がある人 | ログインした人はだれも書けない（トリガーだけが書く） |
-| `roleplays` | 書いた人（`runner_member_id` が自分）は書きかけも。送った記録（`submitted_at` あり）は、課員本人（`member_id` が自分）と、`private.can_supervise_member(member_id)` が真の人 | 追加：名簿にいる人が、自分を実行者にして、`private.can_read_member(member_id)` が真の課員の分だけ。変更：書いた人だけ。消す＝`hidden_at` を入れる（書いた人だけ） |
-| `member_themes` | 課員本人と、`private.can_supervise_member(member_id)` が真の人 | 追加・変更：`private.can_supervise_member(member_id)` が真の人（代表・リーダー・MGR） |
-| `talks` | 名簿にいる人は `trial` と `standard`。`pending` は、作った人・`private.is_supervisor_of_team(team_id)` が真の人・トーク責任者の権限がある人（`private.has_active_permission('talk_owner')`）・代表 | 追加：名簿にいる人が `status = 'pending'`・`created_by` が自分の行だけ（ロープレから新しい言い方を入れるため）。状態の変更：`pending` → `trial` は `private.is_supervisor_of_team(team_id)` が真の人、`trial` → `standard` はトーク責任者の権限がある人だけ（変更の前と後を比べるトリガーで確かめる）。中身の直し：作った人・そのチームのリーダーと担当MGR・トーク責任者 |
-| `seminars`・`seminar_members` | 参加した本人（`seminar_members` に自分がいる研修）と、リーダー・MGR・代表 | リーダー・MGR（追加と、自分が作った研修の変更） |
+| `roleplays` | 書いた人（`runner_member_id` が自分）は書きかけも。送った記録（`submitted_at` あり）は、課員本人（`member_id` が自分）と、`private.can_supervise_member(member_id)` が真の人 | 追加：名簿にいる人が、自分を実行者にして（`runner_member_id = private.current_member_id()`）、課員が「上席として見ている人（`private.can_supervise_member(member_id)`）」か「今同じチームの人（`private.current_team_id()` と `private.member_team_now(member_id)` が同じ）」の分だけ。`private.can_read_member()` は管理者に全員を返すので、ここでは使わない。変更：書いた人だけ。変更のあとも追加と同じ条件を満たすこと（`with check`。実行者をほかの人に、課員を書けない人に付けかえられない）。消す＝`hidden_at` を入れる（書いた人だけ） |
+| `member_themes` | 課員本人と、`private.can_supervise_member(member_id)` が真の人 | 追加・変更：`private.can_supervise_member(member_id)` が真の人（代表・リーダー・MGR）だけ。卒業にする・練習中に戻すのも上席だけ（課員本人や、実行者のメンバーはできない。2026-11-04 本人の選択） |
+| `talks` | 名簿にいる人は `trial` と `standard`。`pending` は、作った人・`private.is_supervisor_of_team(team_id)` が真の人・トーク責任者の権限がある人（`private.has_active_permission('talk_owner')`）・代表 | 追加：名簿にいる人が `status = 'pending'`・`created_by` が自分の行だけ（ロープレから新しい言い方を入れるため）。`team_id` は、`private.current_team_id()` と同じ、または `private.is_supervisor_of_team(team_id)` が真（MGR の担当）、または代表（空でもどのチームでもよい）。状態の変更（変更の前と後を比べるトリガーで確かめる）：`pending` → `trial` は `private.is_supervisor_of_team(team_id)` が真の人（`team_id` が空なら代表）、`trial` → `standard` はトーク責任者の権限がある人だけ。**この2つのほかの状態の変化（飛ばす・戻す）は、だれもできない**。中身の直し（`hidden_at` を含む）：作った人は `pending` の間だけ。そのチームのリーダーと担当MGR・トーク責任者・代表は、いつでも |
+| `seminars` | 参加した本人（`private.is_seminar_participant(id)`）と、リーダー・MGR・代表（`private.current_member_role() in ('leader','mgr','ceo')`） | 追加：リーダー・MGR（`created_by` が自分）。変更（`hidden_at` を含む）：作った人だけ（`private.is_seminar_creator(id)`） |
+| `seminar_members` | 自分の行と、リーダー・MGR・代表 | 追加・変更（`removed_at` を入れて外す・空に戻す）：その研修を作った人だけ（`private.is_seminar_creator(seminar_id)`）。参加者が自分で自分を足すことはできない |
 
-- 指導の記録（`roleplays`・`member_themes`）を読む範囲に、`private.is_admin()` を使わない（管理者の権限では広げない。2026-11-04 本人の選択）
+- 指導の記録（`roleplays`・`member_themes`）を読む範囲にも書く範囲にも、`private.is_admin()` と `private.can_read_member()` を使わない（管理者の権限では広げない。2026-11-04 本人の選択）
 - ログインした人（`authenticated`）には、どの表も削除（DELETE）の許可を出さない。消すのは `hidden_at` や `is_active` で見えなくするだけ
 - 管理用の鍵（`service_role`）には、すべての表の読み書きと削除を許す（守りのテストと架空データの出し入れのため）
 - ログインしていない人（`anon`）には、何も許さない
 
 ### この区切り全体の決まり
 - 業務ごとに分ける：ロープレの箱のプログラムは `src/features/roleplay/` の中に置き、記録とテーマ表は `record/`、トーク一覧は `talks/`、研修の記録は `seminar/`、ロープレの箱の中で共通に使うものは `shared/`（①だけが作る）に分ける（並列の2本がぶつからないように）
-- 権限は、データベースの段階（RLS）で絞る。判定には土台の関数と、この計画で足す2つの関数だけを使う
+- 権限は、データベースの段階（RLS）で絞る。判定には土台の関数と、この計画で足す6つの関数（2-1）だけを使う。ほかの判定の関数が要りそうなら、止めて質問する
 - 削除はしない。消す操作は「見えなくする」印にする
 - 画面は Rush up 資料デザイン（7章）。PC とスマホの両方で使える形（レスポンシブ）にする
 
-守りのテスト（変更禁止）：`tests/guard/permissions.test.ts`（土台）、`tests/guard/roleplay.test.ts`（ロープレ。上の権限の表、トークの2段階の確認、監査ログ、退職した人を確かめる）
+守りのテスト（変更禁止）：`tests/guard/permissions.test.ts`（土台）、`tests/guard/roleplay.test.ts`（ロープレ。上の権限の表、トークの2段階の確認とチーム、研修の参加者、監査ログの書き方、退職したリーダー・代表を確かめる）
 
 触ってよいファイル・フォルダ：`supabase/migrations/`（新しいファイルを足すだけ）、`supabase/config.toml`（project_id だけ）、`fixtures/roleplay/`、`src/`（`src/foundation/` は名簿の一覧の画面の作り直しと、画面の枠への組み込みだけ）、`package.json`（scripts の追加だけ）、`tests/` の中で `tests/guard/` 以外、`docs/reports/report_roleplay-common_v1.md`
 触ってはいけないもの：`tests/guard/`、`fixtures/foundation/`、`docs/`（報告書を除く）、`CLAUDE.md`、`NOTES.md`、`README.md`、ルートの `.gitignore`、`samples/`、流し込み済みのマイグレーションのファイル
@@ -90,9 +108,10 @@
 
 ## 6. 完了条件（すべて満たしたら完了）
 - [ ] 4章の表・関数・権限・トリガーが、すべて `supabase/migrations/` の新しいファイルにあり、`npm run db:push -- --dry-run` のあと `npm run db:push` で流し込み済み
-- [ ] `npm run fixtures:load` のあと `npm run fixtures:roleplay:load` で架空データが入り、`fixtures:roleplay:remove` で消せる（名前は架空だけ）
+- [ ] `npm run fixtures:load` のあと `npm run fixtures:roleplay:load` で架空データが入り、`fixtures:roleplay:remove` のあと `fixtures:remove` で消せる（名前は架空だけ）。`fixtures:roleplay:cleanup-guard` のあと `fixtures:cleanup-guard` で、守りのテストの残りが消える
 - [ ] 画面の枠と左メニューがあり、名簿の一覧がそれを使って作り直され、②③の入口が「準備中」で開ける（本人が確かめる手順を報告書に書く）
-- [ ] `npm test` で、守りのテスト（土台とロープレ）とほかのテストがすべて通る
+- [ ] `npm test` で、守りのテスト（土台とロープレ）とほかのテストがすべて通る（ログインの回数の上限は 0-6）
+- [ ] `npm run build`（型の点検と組み立て）がエラーなく通る
 - [ ] 守りのテストを変更・削除・スキップしていない
 - [ ] `git ls-files` に `.env` が出ない
 - [ ] 報告書に「Security Advisor の確認が要る」と書いた

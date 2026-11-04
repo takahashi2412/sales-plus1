@@ -38,7 +38,8 @@ const PEOPLE: Person[] = (
     ['talkOwner', 'member', 'B'], // トーク責任者の権限を持つ
     ['mgr1', 'mgr', null], // チームAを担当中
     ['ceo', 'ceo', null],
-    ['retired', 'member', 'A', '2025-12-31'], // 退職した人
+    ['retired', 'leader', 'A', '2025-12-31'], // 退職したリーダー（役割が残っていても、何も読めない・書けない）
+    ['retiredCeo', 'ceo', null, '2025-12-31'], // 退職した代表（代表の判定も退職で外れる）
   ] as const
 ).map(([key, role, team, retiredOn]) => ({
   key,
@@ -68,9 +69,12 @@ const ids = {
   talkPendA: '', // チームAの確認待ち（作った人 memberA1）
   talkTrialA: '', // チームAの試行中（作った人 leaderA）
   talkPendB: '', // チームBの確認待ち（作った人 memberB1）
-  seminar: '', // 研修（参加者 memberA1）
+  seminar: '', // 研修（参加者 memberA1。作った人 leaderA）
 };
+const permissionIds: string[] = []; // 監査ログの片づけに使う
 const settingKey = `${RUN}_setting`;
+// テーマ番号は一意にしない決まりだが、途中で落ちた回の残りとぶつからないよう回ごとに変える
+const themeNo = 900000 + Math.floor(Math.random() * 90000);
 
 const anonClient = () => createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
 
@@ -139,13 +143,13 @@ beforeAll(async () => {
     end_date: null,
     assigned_by: P('ceo').memberId,
   });
-  await insertOne('permissions', { member_id: P('leaderB').memberId, kind: 'admin', granted_by: P('ceo').memberId, granted_at: new Date().toISOString() });
-  await insertOne('permissions', { member_id: P('talkOwner').memberId, kind: 'talk_owner', granted_by: P('ceo').memberId, granted_at: new Date().toISOString() });
+  permissionIds.push(await insertOne('permissions', { member_id: P('leaderB').memberId, kind: 'admin', granted_by: P('ceo').memberId, granted_at: new Date().toISOString() }));
+  permissionIds.push(await insertOne('permissions', { member_id: P('talkOwner').memberId, kind: 'talk_owner', granted_by: P('ceo').memberId, granted_at: new Date().toISOString() }));
 
   ids.master = await insertOne('masters', { kind: 'scene', name: `${RUN}-scene`, sort_order: 1, is_active: true });
   const { error: setErr } = await admin.from('settings').insert({ key: settingKey, value: 30, reason: '守りのテストの準備', updated_by: null, updated_at: new Date().toISOString() });
   if (setErr) throw setErr;
-  ids.theme = await insertOne('roleplay_themes', { no: 9001, stage: 1, name: `${RUN}-theme`, kind: 'apo', pass_example: '架空の例', is_active: true });
+  ids.theme = await insertOne('roleplay_themes', { no: themeNo, stage: 1, name: `${RUN}-theme`, kind: 'apo', pass_example: '架空の例', is_active: true });
 
   const rp = (runner: string, member: string, submitted: boolean) => ({
     date: '2025-05-01',
@@ -216,6 +220,14 @@ afterAll(async () => {
     warnIf('talks', (await admin.from('talks').delete().in('created_by', memberIds)).error);
   }
   warnIf('roleplay_themes', (await admin.from('roleplay_themes').delete().like('name', `${RUN}%`)).error);
+  // 監査ログの片づけ用に、この回で入れた一覧と権限の id を控える
+  const auditRowIds: string[] = [settingKey, ...permissionIds];
+  const { data: runMasters } = await admin.from('masters').select('id').like('name', `${RUN}%`);
+  for (const m of runMasters ?? []) auditRowIds.push(String(m.id));
+  if (memberIds.length) {
+    const { data: runPerms } = await admin.from('permissions').select('id').in('member_id', memberIds);
+    for (const p of runPerms ?? []) auditRowIds.push(String(p.id));
+  }
   warnIf('masters', (await admin.from('masters').delete().like('name', `${RUN}%`)).error);
   warnIf('settings', (await admin.from('settings').delete().like('key', `${RUN}%`)).error);
   if (memberIds.length) {
@@ -225,6 +237,8 @@ afterAll(async () => {
     warnIf('members', (await admin.from('members').delete().in('id', memberIds)).error);
   }
   if (teams.length) warnIf('teams', (await admin.from('teams').delete().in('id', teams)).error);
+  // 片づけの削除で増えた分も含めて、この回の監査ログを消す（管理用の鍵だけが消せる）
+  warnIf('audit_logs', (await admin.from('audit_logs').delete().in('row_id', [...new Set(auditRowIds)])).error);
   for (const p of PEOPLE) {
     if (p.authId) warnIf(`利用者 ${p.key}`, (await admin.auth.admin.deleteUser(p.authId)).error);
   }
@@ -244,11 +258,18 @@ describe('読める範囲', () => {
     expect(await rowsOf(c, 'audit_logs', 'row_id', [ids.master])).toHaveLength(0);
   });
 
-  it('退職日を過ぎた人は、ログインできても名簿も記録も読めない', async () => {
-    const c = P('retired').client!;
-    expect(await rowsOf(c, 'members', 'id', PEOPLE.map((p) => p.memberId!))).toHaveLength(0);
-    expect(await rowsOf(c, 'masters', 'id', [ids.master])).toHaveLength(0);
-    expect(await rowsOf(c, 'talks', 'id', [ids.talkTrialA])).toHaveLength(0);
+  it('退職日を過ぎた人は、リーダーや代表の役割が残っていても、名簿も記録も権限も読めない', async () => {
+    for (const key of ['retired', 'retiredCeo']) {
+      const c = P(key).client!;
+      expect(await rowsOf(c, 'members', 'id', PEOPLE.map((p) => p.memberId!))).toHaveLength(0);
+      expect(await rowsOf(c, 'permissions', 'member_id', PEOPLE.map((p) => p.memberId!))).toHaveLength(0);
+      expect(await rowsOf(c, 'masters', 'id', [ids.master])).toHaveLength(0);
+      expect(await rowsOf(c, 'talks', 'id', [ids.talkPendA, ids.talkTrialA, ids.talkPendB])).toHaveLength(0);
+      expect(await rowsOf(c, 'roleplays', 'id', [ids.rpA1, ids.rpB1])).toHaveLength(0);
+      expect(await rowsOf(c, 'member_themes', 'id', [ids.mtA1])).toHaveLength(0);
+      expect(await rowsOf(c, 'seminars', 'id', [ids.seminar])).toHaveLength(0);
+      expect(await rowsOf(c, 'audit_logs', 'row_id', [ids.master])).toHaveLength(0);
+    }
   });
 
   it('退職した人の名簿の行は消えず、代表は読める（リーダーからは、所属が閉じたので見えない）', async () => {
@@ -321,6 +342,9 @@ describe('読める範囲', () => {
   });
 
   it('監査ログ：代表と管理者は読め、メンバー・リーダーは読めない', async () => {
+    // 管理用の鍵で入れた行は、変えた人が空になる
+    const byService = await adminRows('audit_logs', (q) => q.eq('table_name', 'masters').eq('row_id', ids.master));
+    expect(byService.some((l) => l.action === 'insert' && l.actor_member_id === null)).toBe(true);
     expect((await rowsOf(P('ceo').client!, 'audit_logs', 'row_id', [ids.master])).length).toBeGreaterThan(0);
     expect((await rowsOf(P('leaderB').client!, 'audit_logs', 'row_id', [ids.master])).length).toBeGreaterThan(0);
     expect(await rowsOf(P('memberA1').client!, 'audit_logs', 'row_id', [ids.master])).toHaveLength(0);
@@ -360,17 +384,41 @@ describe('書ける範囲', () => {
     const outside = `${RUN}-outside`;
     await P('memberB1').client!.from('roleplays').insert(newRp('memberB1', 'memberA1', outside));
     expect(await rpByFixed(outside)).toHaveLength(0);
+
+    // 管理者の権限では、書ける範囲も広がらない（役割どおり）
+    const byAdmin = `${RUN}-by-admin-leader`;
+    await P('leaderB').client!.from('roleplays').insert(newRp('leaderB', 'memberA1', byAdmin));
+    expect(await rpByFixed(byAdmin)).toHaveLength(0);
+
+    const mgr = `${RUN}-by-mgr`;
+    await P('mgr1').client!.from('roleplays').insert(newRp('mgr1', 'memberA1', mgr));
+    expect(await rpByFixed(mgr)).toHaveLength(1);
   });
 
-  it('ロープレの記録：直せるのは書いた人だけ', async () => {
+  it('ロープレの記録：直せるのは書いた人だけ。実行者や課員を、ほかの人や読めない人に付けかえられない', async () => {
     await P('mgr1').client!.from('roleplays').update({ note: `${RUN}-by-mgr` }).eq('id', ids.rpA1);
     expect((await adminRows('roleplays', (q) => q.eq('id', ids.rpA1)))[0].note).not.toBe(`${RUN}-by-mgr`);
     await P('leaderA').client!.from('roleplays').update({ note: `${RUN}-by-runner` }).eq('id', ids.rpA1);
     expect((await adminRows('roleplays', (q) => q.eq('id', ids.rpA1)))[0].note).toBe(`${RUN}-by-runner`);
+
+    await P('leaderA').client!.from('roleplays').update({ runner_member_id: P('mgr1').memberId }).eq('id', ids.rpA1);
+    expect((await adminRows('roleplays', (q) => q.eq('id', ids.rpA1)))[0].runner_member_id).toBe(P('leaderA').memberId);
+    await P('leaderA').client!.from('roleplays').update({ member_id: P('memberB1').memberId }).eq('id', ids.rpA1);
+    expect((await adminRows('roleplays', (q) => q.eq('id', ids.rpA1)))[0].member_id).toBe(P('memberA1').memberId);
+  });
+
+  it('テーマ表：卒業にできるのは上席だけ（課員本人はできない）', async () => {
+    const statusOf = async () => (await adminRows('member_themes', (q) => q.eq('id', ids.mtA1)))[0].status;
+    await P('memberA1').client!.from('member_themes').update({ status: 'graduated', graduated_on: '2025-05-10' }).eq('id', ids.mtA1);
+    expect(await statusOf()).toBe('practicing');
+    await P('memberA2').client!.from('member_themes').update({ status: 'graduated', graduated_on: '2025-05-10' }).eq('id', ids.mtA1);
+    expect(await statusOf()).toBe('practicing');
+    await P('leaderA').client!.from('member_themes').update({ status: 'graduated', graduated_on: '2025-05-10' }).eq('id', ids.mtA1);
+    expect(await statusOf()).toBe('graduated');
   });
 
   it('テーマ表：課員本人は足せず、上席は足せる', async () => {
-    const theme2 = await insertOne('roleplay_themes', { no: 9002, stage: 2, name: `${RUN}-theme2`, kind: 'sales', pass_example: '架空の例', is_active: true });
+    const theme2 = await insertOne('roleplay_themes', { no: themeNo + 1, stage: 2, name: `${RUN}-theme2`, kind: 'sales', pass_example: '架空の例', is_active: true });
     const row = (member: string, by: string) => ({
       member_id: P(member).memberId,
       theme_id: theme2,
@@ -394,6 +442,29 @@ describe('書ける範囲', () => {
     expect(await adminRows('talks', (q) => q.eq('code', `OUT-${RUN}-skip`))).toHaveLength(0);
   });
 
+  it('トーク一覧：チームは、メンバーは今の所属、MGRは担当のチームだけ。代表はチームなしでよい', async () => {
+    const add = (key: string, code: string, team: string | null) =>
+      P(key).client!.from('talks').insert({ their_words: '架空', wording: '架空', aim: '架空', team_id: team, created_by: P(key).memberId, code, status: 'pending' });
+    const count = async (code: string) => (await adminRows('talks', (q) => q.eq('code', code))).length;
+
+    await add('memberA2', `OUT-${RUN}-wrongteam`, ids.teamB);
+    expect(await count(`OUT-${RUN}-wrongteam`)).toBe(0);
+    await add('mgr1', `OUT-${RUN}-mgr-a`, ids.teamA);
+    expect(await count(`OUT-${RUN}-mgr-a`)).toBe(1);
+    await add('mgr1', `OUT-${RUN}-mgr-b`, ids.teamB);
+    expect(await count(`OUT-${RUN}-mgr-b`)).toBe(0);
+    await add('ceo', `OUT-${RUN}-ceo`, null);
+    expect(await count(`OUT-${RUN}-ceo`)).toBe(1);
+
+    // チームなしの確認待ちは、試行中にできるのは代表だけ。メンバー・ほかのチームのリーダーには見えない
+    const ceoTalk = (await adminRows('talks', (q) => q.eq('code', `OUT-${RUN}-ceo`)))[0];
+    expect(await rowsOf(P('memberA1').client!, 'talks', 'id', [String(ceoTalk.id)])).toHaveLength(0);
+    await P('leaderA').client!.from('talks').update({ status: 'trial' }).eq('id', String(ceoTalk.id));
+    expect((await adminRows('talks', (q) => q.eq('id', String(ceoTalk.id))))[0].status).toBe('pending');
+    await P('ceo').client!.from('talks').update({ status: 'trial' }).eq('id', String(ceoTalk.id));
+    expect((await adminRows('talks', (q) => q.eq('id', String(ceoTalk.id))))[0].status).toBe('trial');
+  });
+
   it('トーク一覧の2段階：確認待ち→試行中はそのチームの上席だけ、試行中→標準はトーク責任者だけ', async () => {
     const statusOf = async (id: string) => (await adminRows('talks', (q) => q.eq('id', id)))[0].status;
 
@@ -408,6 +479,14 @@ describe('書ける範囲', () => {
     expect(await statusOf(ids.talkTrialA)).toBe('trial');
     await P('talkOwner').client!.from('talks').update({ status: 'standard' }).eq('id', ids.talkTrialA);
     expect(await statusOf(ids.talkTrialA)).toBe('standard');
+
+    // 2つの段階のほかの動き（飛ばす・戻す）は、だれもできない
+    await P('talkOwner').client!.from('talks').update({ status: 'standard' }).eq('id', ids.talkPendB);
+    expect(await statusOf(ids.talkPendB)).toBe('pending');
+    await P('talkOwner').client!.from('talks').update({ status: 'trial' }).eq('id', ids.talkTrialA);
+    expect(await statusOf(ids.talkTrialA)).toBe('standard');
+    await P('leaderA').client!.from('talks').update({ status: 'pending' }).eq('id', ids.talkPendA);
+    expect(await statusOf(ids.talkPendA)).toBe('trial');
   });
 
   it('研修の記録：メンバーは足せず、リーダーは足せる', async () => {
@@ -416,6 +495,22 @@ describe('書ける範囲', () => {
     expect(await adminRows('seminars', (q) => q.eq('theme', `${RUN}-sem-member`))).toHaveLength(0);
     await P('leaderA').client!.from('seminars').insert(row('leaderA', `${RUN}-sem-leader`));
     expect(await adminRows('seminars', (q) => q.eq('theme', `${RUN}-sem-leader`))).toHaveLength(1);
+  });
+
+  it('研修の参加者：足す・外すのは研修を作った人だけ。外した人は読めなくなる', async () => {
+    const part = () => adminRows('seminar_members', (q) => q.eq('seminar_id', ids.seminar).eq('member_id', P('memberA2').memberId!));
+    await P('memberA2').client!.from('seminar_members').insert({ seminar_id: ids.seminar, member_id: P('memberA2').memberId });
+    expect(await part()).toHaveLength(0);
+    await P('leaderB').client!.from('seminar_members').insert({ seminar_id: ids.seminar, member_id: P('memberA2').memberId });
+    expect(await part()).toHaveLength(0);
+
+    await P('leaderA').client!.from('seminar_members').insert({ seminar_id: ids.seminar, member_id: P('memberA2').memberId });
+    expect(await part()).toHaveLength(1);
+    expect(idsOf(await rowsOf(P('memberA2').client!, 'seminars', 'id', [ids.seminar]))).toContain(ids.seminar);
+
+    await P('leaderA').client!.from('seminar_members').update({ removed_at: new Date().toISOString() }).eq('seminar_id', ids.seminar).eq('member_id', P('memberA2').memberId!);
+    expect((await part())[0].removed_at).not.toBeNull();
+    expect(await rowsOf(P('memberA2').client!, 'seminars', 'id', [ids.seminar])).toHaveLength(0);
   });
 
   it('一覧と設定値：メンバーは変えられず、管理者は変えられ、監査ログにだれが変えたかが残る', async () => {
@@ -432,6 +527,8 @@ describe('書ける範囲', () => {
 
     await P('leaderB').client!.from('settings').update({ value: 45, reason: '守りのテスト' }).eq('key', settingKey);
     expect((await adminRows('settings', (q) => q.eq('key', settingKey)))[0].value).toBe(45);
+    const setLogs = await adminRows('audit_logs', (q) => q.eq('table_name', 'settings').eq('row_id', settingKey));
+    expect(setLogs.some((l) => l.actor_member_id === P('leaderB').memberId && l.action === 'update')).toBe(true);
   });
 
   it('監査ログ：管理者でも書きかえ・削除できない', async () => {
@@ -454,5 +551,19 @@ describe('書ける範囲', () => {
     expect(await adminRows('seminars', (q) => q.eq('id', ids.seminar))).toHaveLength(1);
     expect(await adminRows('talks', (q) => q.eq('id', ids.talkTrialA))).toHaveLength(1);
     expect(await adminRows('masters', (q) => q.eq('id', ids.master))).toHaveLength(1);
+  });
+
+  // 権限を足すと、ほかのテストの読める範囲が変わるので、いちばん最後に置く
+  it('権限：退職した代表は与えられず、代表が与えると監査ログに残る', async () => {
+    const perms = () => adminRows('permissions', (q) => q.eq('member_id', P('memberB1').memberId!));
+    await P('retiredCeo').client!.from('permissions').insert({ member_id: P('memberB1').memberId, kind: 'admin', granted_by: P('retiredCeo').memberId, granted_at: new Date().toISOString() });
+    expect(await perms()).toHaveLength(0);
+
+    await P('ceo').client!.from('permissions').insert({ member_id: P('memberB1').memberId, kind: 'talk_owner', granted_by: P('ceo').memberId, granted_at: new Date().toISOString() });
+    const added = await perms();
+    expect(added).toHaveLength(1);
+    permissionIds.push(String(added[0].id));
+    const logs = await adminRows('audit_logs', (q) => q.eq('table_name', 'permissions').eq('row_id', String(added[0].id)));
+    expect(logs.some((l) => l.actor_member_id === P('ceo').memberId && l.action === 'insert')).toBe(true);
   });
 });
