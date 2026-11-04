@@ -1,21 +1,9 @@
 # 計画：ロープレ①：土台の追加・ロープレと研修の表・共通の部品（plan_roleplay-common_v1）
 
-作成日：2026-11-04（下書き） ／ 作成：Claude Code ／ 作業：Antigravity
+作成日：2026-11-04 ／ 仕上げ：2026-11-04（土台に合わせて。区切りの点検のあと渡す） ／ 作成：Claude Code ／ 作業：Antigravity
 作業用ブランチ：task/roleplay-common
 並列：なし（この計画が本線に入ってから、②plan_roleplay-record と③plan_roleplay-talks を2本の並列で始める）
 作業するフォルダ：C:\Workspace\apps\sales-plus1-worktrees\roleplay-common\（Claude Code が用意した、この計画専用の作業用フォルダ（ワークツリー）。作業用ブランチもできている）
-
-> **下書き（2026-11-04）**：土台は 2026-11-04 に本線に入った。いま、土台の作り（権限の判定の関数の名前など）に合わせて仕上げ中。「下書き」を外してから渡す。Antigravity には、この印がある間は渡さない。
-
-> **仕上げのときに直すこと**（2026-11-04 の区切りの点検より）：
-> - 権限の表に、使う土台の関数の組み合わせを書く。`private.can_read_member()` はメンバー・リーダーに同じチームの全員を、管理者に全員を返すので、「本人は自分の分」は `member_id = private.current_member_id()`、「リーダー・MGR は担当の人の分」は `private.current_member_role() in ('leader','mgr') and private.can_read_member(member_id)` のように組み合わせる。管理者の権限がある人にも、ロープレの記録は役割どおりの範囲だけ見せる（全員分は代表だけ。2026-11-04 本人の選択）。`private.is_admin()` を読む範囲の判定に使わない
-> - 退職した人：①の新しいマイグレーションで、土台の `private.current_member_id()` を「退職日（`retired_on`）が今日（日本時間）より前の人には何も返さない」に直す（2026-11-04 本人の選択）。これで退職した人は、ログインできても名簿にない人と同じく何も読めない。退職した人が残した記録は、上席がこれまでどおり読める。守りのテストに1件足す（Claude Code）
-> - 監査ログ：`actor_member_id` を members につなぐ鍵（FK）にしない、または `service_role` の削除だけは許す（守りのテストと `fixtures:cleanup-guard` が、架空の人の権限と名簿を消すため）
-> - 画面の切り替え（ルーター）と、`record/`・`talks/`・`seminar/` の入口のファイル（中身は空でよい）は①で作る。左メニューには②③の画面の入口も①で出す（「作っていない画面は出さない」は、入口のファイルがある画面は出す、に直す）
-> - ロープレから新しい言い方をトーク一覧に「確認待ち」で入れられる人（実行者）を、talks の書ける範囲に足す
-> - 新しいマイグレーションの番号は `20261104000002` より後にする。流し込みは `npm run db:push`（dry-run のあと）、架空データは土台の `npm run fixtures:load` を先に入れてから
-> - `supabase/config.toml` の `project_id = "foundation"`（作業用フォルダの名前が入った）を `sales-plus1` に直す（①で）
-> - settings の列（key・value・reason）を、設計書5章の settings と合わせる
 
 > この計画に書いていないことは、進めずに質問してください。
 
@@ -24,78 +12,91 @@
 2. `git status` で、作業用ブランチ `task/roleplay-common` にいること、変更が残っていないことを確かめる。違っていたら、作業を始めずに報告する。ブランチは作らない・切り替えない（Claude Code が最新の本線から作ってある）
 3. `.env` があるかどうかだけを確かめる（中身は開かない・表示しない）。なければ止めて報告する
 4. 今読み込んでいるルールファイル（AGENTS.md・GEMINI.md など）をすべて挙げて報告する。なければ「なし」と報告する
-5. `npm install` をしてから `npm test` を回し、土台までの守りのテストがすべて通ることを確かめる（通らなければ、作業を始めずに報告する）
+5. `npm install` をしてから `npx vitest run tests/guard/permissions.test.ts tests/foundation` を回し、土台の守りのテストと画面の計算のテストがすべて通ることを確かめる（通らなければ、作業を始めずに報告する）。`tests/guard/roleplay.test.ts` は、この計画で作る表がまだないので、始める前は落ちてよい（作り終えたら通す）
 
 ## 1. 目的（なぜやるか）
-ロープレの区切りの先頭で、2本の並列（②記録とテーマ表、③トーク一覧と研修の記録）がぶつからないように、表・権限・架空データ・共通の部品（左メニュー・画面の枠）とデザインのお手本を、先に1本で作る。
+ロープレの区切りの先頭で、2本の並列（②記録とテーマ表、③トーク一覧と研修の記録）がぶつからないように、表・権限・架空データ・画面の切り替えと左メニュー・共通の部品・デザインのお手本を、先に1本で作る。あわせて、退職した人が読めないように土台の判定を直す。
 
 ## 2. やること
-1. 土台の追加の表を作る：`masters`（一覧）・`settings`（設定値）・`audit_logs`（監査ログ）。画面は作らない（設定値と監査ログの画面は週間教育の区切りで作る）
-   - 一覧・設定値・権限（permissions）を変えたら、データベースの仕組み（トリガー）で監査ログに残す（だれが・いつ・何を・前と後）
-2. ロープレと研修の表を作る：`roleplay_themes`・`member_themes`・`roleplays`・`talks`・`seminars`・`seminar_members`（4章）。権限（RLS と GRANT）も同じマイグレーションで作る
-3. 架空データを `fixtures/roleplay/` に置き、入れる手順を用意する：テーマ一覧（段階1〜6の架空の例）、テーマ表、ロープレの記録、トーク（確認待ち・試行中・標準を1つ以上ずつ）、研修と参加者、一覧（場面・業種・リストの種類の言葉）、設定値（30分・14日・卒業の回数2・確認までの日数14）。架空のトーク責任者の権限（`permissions` の `talk_owner`）もここで入れる（権限を与える画面はカルテ第1版で作るため）
-4. ロープレの箱の中で共通に使うもの（表の読み書きの部品・型）を `src/features/roleplay/shared/` に作る。共通の部品を作る：画面の枠（上の帯・左メニュー・中身の場所）、ボタン・入力欄・表・タグなどの部品、日付の表示。左メニューには、この区切りまでに作る画面だけを出す（ロープレ・トーク一覧・研修の記録・名簿の確認）。作っていない画面は出さない
-5. デザインのお手本：土台で作った「名簿の一覧」の画面を、共通の枠と部品で作り直す。②③はこの画面を見本にする
-6. 守りのテストを通す（4章）
+1. 新しいマイグレーションのファイルを `supabase/migrations/` に足す（番号は `20261104000002` より後。流し込み済みのファイルは直さない）
+   - 土台の直し：`private.current_member_id()` を、退職日（`retired_on`）が今日（`private.today_jst()`）より前の人には何も返さない（null）ように作り直す。これで退職した人は、ログインできても名簿にない人と同じく何も読めない。退職した人の名簿の行と記録は消えない（代表は読める。リーダー・MGR からは、所属が閉じるので見えない。これは土台の決まりのまま）
+   - 指導の記録用の判定を2つ足す（`private` のスキーマ。`security definer`・`set search_path = ''`・`authenticated` に `execute`、`anon` と `public` から外す。土台の関数と同じ作り）
+     - `private.can_supervise_member(target uuid)`：代表なら真。リーダーなら、今の所属が target と同じチーム。MGR なら、今担当しているチームに target が今所属している。**管理者の権限では真にしない**。メンバーは偽
+     - `private.is_supervisor_of_team(team uuid)`：リーダーで今その team に所属している、または MGR で今その team を担当している
+   - 土台の追加の表（`masters`・`settings`・`audit_logs`）と、ロープレと研修の表（4章）。すべてに RLS と GRANT を明示する
+   - 監査ログ：`masters`・`settings`・`permissions` の追加・変更・削除を、トリガー（`security definer` の関数を `private` に置く）で `audit_logs` に残す
+2. 架空データを `fixtures/roleplay/` に置き、`package.json` の scripts に `fixtures:roleplay:load`・`fixtures:roleplay:remove` を足す（`node --env-file=.env` で動かす）。土台の `npm run fixtures:load` を先に入れてから使う。入れるもの：テーマ一覧（段階1〜6の架空の例）、テーマ表、ロープレの記録、トーク（確認待ち・試行中・標準を1つ以上ずつ）、研修と参加者、一覧（場面・業種・リストの種類の言葉）、設定値（ロープレの注意30分・14日、卒業の回数2、確認までの日数14）、架空のトーク責任者の権限（土台の架空の人のうち1人に `talk_owner`。権限を与える画面はカルテ第1版で作るため）
+3. 画面の切り替えと画面の枠を作る（部品は足さず、アドレスの「#」で切り替える。例：`#/roleplay`）：上の帯・左メニュー・中身の場所。左メニューは「名簿の確認」「ロープレ」「テーマ表」「トーク一覧」「研修の記録」。②③の画面は、入口のファイル（`src/features/roleplay/record/index.tsx`・`talks/index.tsx`・`seminar/index.tsx`。中身は「準備中」と出すだけ）を①で作り、②③がそれぞれの中身を作る
+4. 共通の部品を作る：ボタン・入力欄・選ぶ欄・表・タグ・知らせの枠・日付の表示（`src/` の共通の場所。名前は任せる）と、ロープレの箱の中で共通に使うもの（表の読み書きの部品・型。`src/features/roleplay/shared/`）
+5. デザインのお手本：土台の「名簿の一覧」の画面を、共通の枠と部品で作り直す。②③はこの画面を見本にする
+6. `supabase/config.toml` の `project_id = "foundation"` を `"sales-plus1"` に直す
+7. 守りのテスト（4章）を通す
 
 ## 3. やらないこと
-- ロープレの記録・テーマ表・卒業の知らせの画面（②で作る）、トーク一覧・研修の記録の画面（③で作る）
+- ロープレの記録・テーマ表・卒業の知らせの画面の中身（②で作る）、トーク一覧・研修の記録の画面の中身（③で作る）
 - 設定値・監査ログ・名簿・権限の画面（週間教育・カルテ第1版の区切りで作る）
 - ホーム（今日やること）への知らせの集約（カルテ第1版で作る）
-- KPI・週間教育の表とのつながり（ロープレの「結果（翌日のア数と実率）」「課題/目的（週間教育から）」は、それぞれの区切りでつなぐ。今回は列だけ作り、空でよい）
+- KPI・週間教育の表とのつながり（ロープレの「課題/目的」「翌日の結果」は、列だけ作って空でよい）
 - 本物のトーク・本物の過去の記録の取り込み
 
 ## 4. 仕様
-参照：設計書 `docs/design/project-dashboard_v27.html` の「5 データの設計図」の「ロープレの形（v15）」「変わりやすいものは一覧と設定値で持つ（v21）」、「9 画面と権限」。図解 `docs/design/roleplay_v1.html`（ロープレの仕様）。列の名前は、下の表とこの計画が正
+参照：設計書 `docs/design/project-dashboard_v27.html` の「5 データの設計図」の「ロープレの形（v15）」「変わりやすいものは一覧と設定値で持つ（v21）」、「9 画面と権限」（「ログインと安全の決まり」の「指導の記録を読める範囲」を含む）、「書く画面の決まり」。図解 `docs/design/roleplay_v1.html`。表と列の名前は、この計画が正（守りのテストがこの名前を使う）
 
-### 表（〈要確認〉列の名前は、土台の作りを見て仕上げで確定する）
-| 表 | 主な項目 |
+### 表（名前と項目はこのとおりにする）
+| 表 | 項目 |
 |---|---|
-| `masters` | id、kind（種類：場面・業種・リストの種類など）、name、sort_order（並び順）、is_active（使うかどうか。消すときは false） |
-| `settings` | key、value、reason（変えた理由。必須）、updated_by、updated_at。変えたら「次から効く」 |
-| `audit_logs` | id、actor_member_id、action（操作の種類）、table_name、row_id、before、after、created_at。だれも書きかえ・削除できない |
-| `roleplay_themes` | id、no（テーマ番号）、stage（段階 1 暗記〜6 営業。目安）、name、kind（アポ／営業）、pass_example（合格ラインの例）、is_active |
-| `member_themes` | id、member_id、theme_id、started_on、pass_line（合格ライン）、status（練習中／卒業）、graduated_on、check_on（確認の日）。練習中はアポと営業で1つずつまで |
-| `roleplays` | id、date、runner_member_id（実行者）、member_id（課員）、time_slot（時間帯）、kind（アポ／営業）、theme_id、used_talk_id、minutes、homework_result（前回の宿題の○△×）、repeat_count、pass_result（合格ラインの○△×）、next_homework、fixed_point（今日直した点。必須）、note（申し送り・新しい言い方）、purpose（週間教育から。今回は空）、result_ap・result_rate（翌日の結果。今回は空） |
-| `talks` | id、code（OUT- または SC-）、scene、industry、list_type（一覧の言葉）、their_words（相手の言葉）、wording（言い方）、aim（ねらい）、created_by、status（確認待ち／試行中／標準）。練習回数と合格率は表に持たず、roleplays から数える |
-| `seminars`・`seminar_members` | 日付・テーマ・講師・時間・内容／研修と参加者（複数） |
+| `masters` | `id`（uuid）、`kind`（`scene`＝場面／`industry`＝業種／`list_type`＝リストの種類。のちの区切りで種類を足す）、`name`、`sort_order`（整数）、`is_active`（真偽。初めは真。消すときは偽） |
+| `settings` | `key`（主キー。例：`roleplay_alert_minutes`）、`value`（jsonb）、`reason`（変えた理由。必須）、`updated_by`（member の id。members への鍵にはしない）、`updated_at` |
+| `audit_logs` | `id`、`actor_member_id`（変えた人。members への鍵にはしない。管理用の鍵で変えたときは空）、`action`（`insert`／`update`／`delete`）、`table_name`、`row_id`（text）、`before`（jsonb）、`after`（jsonb）、`created_at` |
+| `roleplay_themes` | `id`、`no`（テーマ番号）、`stage`（1〜6）、`name`、`kind`（`apo`＝アポ／`sales`＝営業）、`pass_example`、`is_active` |
+| `member_themes` | `id`、`member_id`（members）、`theme_id`（roleplay_themes）、`kind`（テーマと同じ。下の一意の決まりのため）、`started_on`、`pass_line`、`status`（`practicing`＝練習中／`graduated`＝卒業）、`graduated_on`、`check_on`、`created_by`（members）、`hidden_at`（見えなくした日時。空なら見える）。練習中はアポと営業で1つずつまで（`member_id`・`kind` の組で、`status = 'practicing'` かつ `hidden_at` が空の行は1つまで） |
+| `roleplays` | `id`、`date`、`runner_member_id`（実行者＝書いた人。members）、`member_id`（課員。members）、`time_slot`、`kind`（`apo`／`sales`）、`theme_id`、`used_talk_id`（talks。空でよい）、`minutes`、`homework_result`（`o`／`d`／`x`＝○△×。空でよい）、`repeat_count`、`pass_result`（`o`／`d`／`x`）、`next_homework`、`fixed_point`（今日直した点。送るときは必須）、`note`、`purpose`（今回は空）、`result_ap`・`result_rate`（今回は空）、`submitted_at`（送った日時。空なら書きかけ）、`hidden_at` |
+| `talks` | `id`、`code`（`OUT-`／`SC-` で始まる）、`scene_id`・`industry_id`・`list_type_id`（masters。空でよい）、`their_words`、`wording`、`aim`、`team_id`（作った人の今のチーム。teams）、`created_by`（members）、`status`（`pending`＝確認待ち／`trial`＝試行中／`standard`＝標準）、`hidden_at`。練習回数と合格率は表に持たず、roleplays から数える |
+| `seminars` | `id`、`date`、`theme`、`lecturer`、`minutes`、`content`、`created_by`（members）、`hidden_at` |
+| `seminar_members` | `seminar_id`（seminars）、`member_id`（members）。2つの組が主キー |
 
-### 権限（〈要確認〉土台の判定の関数に合わせて仕上げで確定する）
+### 権限（RLS。「名簿にいる人」＝ `private.current_member_id()` が空でない人。退職した人は含まない）
 | 表 | 読める | 書ける |
 |---|---|---|
-| ロープレ（roleplays）・テーマ表 | 本人は自分の分。リーダー・MGR は担当の人の分。代表は全員 | 実行者（リーダー・MGR。メンバーが実行者として書く場合も設計書9章どおり）。直す・消す（見えなくする）は書いた本人だけ |
-| テーマ一覧・一覧（masters）・設定値 | ログインして名簿にいる人 | 管理者の権限がある人だけ（画面は後の区切り。今回は架空データで入れる） |
-| トーク一覧 | 名簿にいる人は標準と試行中。リーダー・MGR・トーク責任者は確認待ちも | 確認待ち→試行中：そのチームのリーダーと担当MGR。試行中→標準：トーク責任者の権限がある人だけ |
-| 研修の記録 | 参加した本人。リーダー・MGR・代表 | リーダー・MGR |
-| 監査ログ | 管理者の権限がある人・代表 | だれも書けない（仕組みだけが書く） |
+| `masters`・`settings`・`roleplay_themes` | 名簿にいる人 | 管理者の権限がある人だけ（`private.is_admin()`。追加・変更。画面は後の区切り） |
+| `audit_logs` | 代表と、管理者の権限がある人 | ログインした人はだれも書けない（トリガーだけが書く） |
+| `roleplays` | 書いた人（`runner_member_id` が自分）は書きかけも。送った記録（`submitted_at` あり）は、課員本人（`member_id` が自分）と、`private.can_supervise_member(member_id)` が真の人 | 追加：名簿にいる人が、自分を実行者にして、`private.can_read_member(member_id)` が真の課員の分だけ。変更：書いた人だけ。消す＝`hidden_at` を入れる（書いた人だけ） |
+| `member_themes` | 課員本人と、`private.can_supervise_member(member_id)` が真の人 | 追加・変更：`private.can_supervise_member(member_id)` が真の人（代表・リーダー・MGR） |
+| `talks` | 名簿にいる人は `trial` と `standard`。`pending` は、作った人・`private.is_supervisor_of_team(team_id)` が真の人・トーク責任者の権限がある人（`private.has_active_permission('talk_owner')`）・代表 | 追加：名簿にいる人が `status = 'pending'`・`created_by` が自分の行だけ（ロープレから新しい言い方を入れるため）。状態の変更：`pending` → `trial` は `private.is_supervisor_of_team(team_id)` が真の人、`trial` → `standard` はトーク責任者の権限がある人だけ（変更の前と後を比べるトリガーで確かめる）。中身の直し：作った人・そのチームのリーダーと担当MGR・トーク責任者 |
+| `seminars`・`seminar_members` | 参加した本人（`seminar_members` に自分がいる研修）と、リーダー・MGR・代表 | リーダー・MGR（追加と、自分が作った研修の変更） |
+
+- 指導の記録（`roleplays`・`member_themes`）を読む範囲に、`private.is_admin()` を使わない（管理者の権限では広げない。2026-11-04 本人の選択）
+- ログインした人（`authenticated`）には、どの表も削除（DELETE）の許可を出さない。消すのは `hidden_at` や `is_active` で見えなくするだけ
+- 管理用の鍵（`service_role`）には、すべての表の読み書きと削除を許す（守りのテストと架空データの出し入れのため）
+- ログインしていない人（`anon`）には、何も許さない
 
 ### この区切り全体の決まり
-- 業務ごとに分ける：ロープレの箱のプログラムは `src/features/roleplay/` の中に置き、記録とテーマ表は `record/`、トーク一覧は `talks/`、研修の記録は `seminar/`、ロープレの箱の中で共通に使うものは `shared/`（①だけが作る）に分ける（並列の2本がぶつからないように）。土台の `src/foundation/` は、この計画で触ってよいと書いた所だけ触る
-- 権限：だれが読める・書けるかはデータベースの段階（RLS）で絞る。判定には土台で作った関数（private のスキーマ）を使い、新しく判定を作らない。すべての表で RLS をオンにし、表ごとの許可（GRANT）をマイグレーションに明示する（`anon` には何も許さない）
-- 削除はしない。消す操作は「見えなくする」印（論理削除）にする（土台の決まり）
+- 業務ごとに分ける：ロープレの箱のプログラムは `src/features/roleplay/` の中に置き、記録とテーマ表は `record/`、トーク一覧は `talks/`、研修の記録は `seminar/`、ロープレの箱の中で共通に使うものは `shared/`（①だけが作る）に分ける（並列の2本がぶつからないように）
+- 権限は、データベースの段階（RLS）で絞る。判定には土台の関数と、この計画で足す2つの関数だけを使う
+- 削除はしない。消す操作は「見えなくする」印にする
 - 画面は Rush up 資料デザイン（7章）。PC とスマホの両方で使える形（レスポンシブ）にする
 
-守りのテスト（変更禁止）：`tests/guard/permissions.test.ts`（土台）と、`tests/guard/roleplay.test.ts`（〈要確認〉Claude Code が渡す前に書く。上の権限の表とトークの2段階の確認、監査ログを確かめる）
+守りのテスト（変更禁止）：`tests/guard/permissions.test.ts`（土台）、`tests/guard/roleplay.test.ts`（ロープレ。上の権限の表、トークの2段階の確認、監査ログ、退職した人を確かめる）
 
-触ってよいファイル・フォルダ：`supabase/migrations/`（新しいファイルを足すだけ。流し込み済みのファイルは直さない）、`supabase/` の補助のプログラム、`fixtures/roleplay/`、`src/`（`src/foundation/` は名簿の一覧の画面と、共通の部品から使う所だけ）、`package.json` の scripts、`tests/` の中で `tests/guard/` 以外、`docs/reports/report_roleplay-common_v1.md`
-触ってはいけないもの：`tests/guard/`、`docs/`（報告書を除く）、`CLAUDE.md`、`NOTES.md`、`README.md`、ルートの `.gitignore`、`samples/`、流し込み済みのマイグレーションのファイル
+触ってよいファイル・フォルダ：`supabase/migrations/`（新しいファイルを足すだけ）、`supabase/config.toml`（project_id だけ）、`fixtures/roleplay/`、`src/`（`src/foundation/` は名簿の一覧の画面の作り直しと、画面の枠への組み込みだけ）、`package.json`（scripts の追加だけ）、`tests/` の中で `tests/guard/` 以外、`docs/reports/report_roleplay-common_v1.md`
+触ってはいけないもの：`tests/guard/`、`fixtures/foundation/`、`docs/`（報告書を除く）、`CLAUDE.md`、`NOTES.md`、`README.md`、ルートの `.gitignore`、`samples/`、流し込み済みのマイグレーションのファイル
 
 ## 5. 決めてよいこと／決めてはいけないこと
 
 | 決めてよい | 決めてはいけない（止めて質問する） |
 |---|---|
-| 変数名・関数名、ファイル内の書き方、`src/features/` の中のフォルダの名前 | 4章の表の名前・権限の範囲、ライブラリの追加 |
-| 共通の部品の作り方、画面の見た目（Rush up 資料デザインに従う） | 左メニューに出す画面、画面の構成、この計画にない仕様 |
+| 変数名・関数名（4章で名前を決めたものを除く）、ファイル内の書き方、共通の部品の作り方と置き場所 | 4章の表の名前・項目・権限の範囲、ライブラリの追加 |
+| 画面の見た目（Rush up 資料デザインに従う）、架空データの中身（架空の名前だけ） | 左メニューに出す画面、画面の構成、この計画にない仕様 |
 
 ## 6. 完了条件（すべて満たしたら完了）
-- [ ] 4章の表と権限が、すべて `supabase/migrations/` の新しいファイルにあり、流し込み済み
-- [ ] 架空データを入れる手順がある（名前は架空だけ）
-- [ ] 共通の部品と左メニューがあり、名簿の一覧がそれを使って作り直されている（本人が確かめる手順を報告書に書く）
+- [ ] 4章の表・関数・権限・トリガーが、すべて `supabase/migrations/` の新しいファイルにあり、`npm run db:push -- --dry-run` のあと `npm run db:push` で流し込み済み
+- [ ] `npm run fixtures:load` のあと `npm run fixtures:roleplay:load` で架空データが入り、`fixtures:roleplay:remove` で消せる（名前は架空だけ）
+- [ ] 画面の枠と左メニューがあり、名簿の一覧がそれを使って作り直され、②③の入口が「準備中」で開ける（本人が確かめる手順を報告書に書く）
 - [ ] `npm test` で、守りのテスト（土台とロープレ）とほかのテストがすべて通る
 - [ ] 守りのテストを変更・削除・スキップしていない
+- [ ] `git ls-files` に `.env` が出ない
 - [ ] 報告書に「Security Advisor の確認が要る」と書いた
 - [ ] 報告書を書いてコミットした
-
 
 ## 7. 守ること（毎回同じ。ひな形から変えない）
 
