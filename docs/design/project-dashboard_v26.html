@@ -488,7 +488,7 @@
           <tr><td>10 画面の構図</td><td><span class="tag tag--warn">案</span></td><td>画面の中身はすべて確定（v21で書く画面・管理画面・目標の画面）。試作が残る</td><td>6</td></tr>
           <tr><td>11 1日・1週間</td><td><span class="tag tag--good">確定</span></td><td>－</td><td>－</td></tr>
           <tr><td>12 AIサイクル</td><td><span class="tag tag--good">確定</span></td><td>－（AIの連携先は技術構成で決める）</td><td>（7）</td></tr>
-          <tr><td>13 段階導入</td><td><span class="tag tag--warn">案</span></td><td>全体の作る順番（土台から自動化までの9つの区切り）と並列の場所は決定（v23）。区切りは中身の名前で呼ぶ（v24）。ロープレの範囲の細部・日付は未決。<span class="tag tag--warn">未決</span> 管理の画面のうち「名簿・所属・MGRの担当」と「権限」を、どの区切りで作るか（本物のデータを入れる前＝カルテ第1版の節目までに要る）</td><td>作りながら</td></tr>
+          <tr><td>13 段階導入</td><td><span class="tag tag--warn">案</span></td><td>全体の作る順番（土台から自動化までの9つの区切り）と並列の場所は決定（v23）。区切りは中身の名前で呼ぶ（v24）。ロープレの範囲は設計書どおり全部（2026-11-04 決定）。管理の画面2つはカルテ第1版で作る（2026-11-04 決定）。日付は未決</td><td>作りながら</td></tr>
           <tr><td>14 開発の流れ</td><td><span class="tag tag--good">確定</span></td><td>－（v23で並列の決まりを追加）</td><td>－</td></tr>
         </tbody>
       </table>
@@ -1710,7 +1710,7 @@
   <!-- 13 段階導入 -->
   <section id="s13">
     <h2><span class="section-num">13</span>段階導入：土台から自動化まで、9つの区切りで作る。画面だけを2本の並列で進める</h2>
-    <p class="lead"><span class="tag tag--warn">変更</span> v22（2026-10-27 本人の選択）：「8つのまとまりをすべて確定してから開発」をやめ、1業務ずつ「決める→作る→使ってみる」で回します。設計書は地図として使い続けます。<span class="tag tag--warn">変更</span> v23：Antigravity との壁打ち（docs/discussion/parallel-dev_v1・v2）の結論を本人が採用し、全体の作る順番と<a class="term" href="#g-parallel">並列</a>の場所を決めました。<span class="tag tag--warn">変更</span> v24：区切りを「周1」「E」のような番号や記号ではなく、中身の名前（土台・ロープレなど）で呼ぶことにしました（本人の指示）。順番は変えていません。<span class="tag tag--warn">未決</span> 管理の画面のうち「名簿・所属・MGRの担当」と「権限」を、どの区切りで作るか（本物のデータを入れる前＝カルテ第1版の節目までに要る）。（区切りの名前は、同じ時期に作るもののまとまりで、画面のまとまりではありません。例：「KPI・部下メモ」は、KPI の画面と部下メモの画面を同じ時期に作るという意味で、サイトでは別々の画面です）</p>
+    <p class="lead"><span class="tag tag--warn">変更</span> v22（2026-10-27 本人の選択）：「8つのまとまりをすべて確定してから開発」をやめ、1業務ずつ「決める→作る→使ってみる」で回します。設計書は地図として使い続けます。<span class="tag tag--warn">変更</span> v23：Antigravity との壁打ち（docs/discussion/parallel-dev_v1・v2）の結論を本人が採用し、全体の作る順番と<a class="term" href="#g-parallel">並列</a>の場所を決めました。<span class="tag tag--warn">変更</span> v24：区切りを「周1」「E」のような番号や記号ではなく、中身の名前（土台・ロープレなど）で呼ぶことにしました（本人の指示）。順番は変えていません。<span class="tag tag--warn">変更</span> 2026-11-04：管理の画面のうち「名簿・所属・MGRの担当」と「権限」は、カルテ第1版で作る（本物のデータを入れる前に要るため。それまでトーク責任者などの権限は、架空データとしてデータベースに入れる）。ロープレは設計書どおり全部（記録・テーマ表と卒業の知らせ・トーク一覧・研修の記録）を作る。（区切りの名前は、同じ時期に作るもののまとまりで、画面のまとまりではありません。例：「KPI・部下メモ」は、KPI の画面と部下メモの画面を同じ時期に作るという意味で、サイトでは別々の画面です）</p>
     <div class="svg-wrap">
       <svg viewBox="0 0 880 530" role="img" aria-label="全体の作る順番。土台、ロープレ（土台の追加とロープレと研修の表と共通の部品のあと、記録とテーマ・卒業の画面とトーク一覧を2本で並列）、KPI・部下メモ（表のあと、KPI と部下メモの画面を2本で並列）、カルテ第1版（リーダーのホームと過去の記録、節目1）、一般日報（節目2）、週間教育（表のあと、週間教育の画面と設定値・監査ログの画面を2本で並列）、責任者日報・集める画面、AI（節目3）、自動化">
         <text class="t-navy" x="10" y="22">作るもの（順番）</text>
@@ -1731,7 +1731,7 @@
         <rect class="s-bar" x="680" y="126" width="180" height="40" rx="6"/><text class="t-body" x="692" y="151">部下メモ</text>
 
         <rect class="s-warn" x="10" y="172" width="170" height="40" rx="6"/><text class="t-title" x="95" y="197" text-anchor="middle">カルテ第1版</text>
-        <rect class="s-box" x="190" y="172" width="290" height="40" rx="6"/><text class="t-body" x="202" y="197">カルテ・リーダーのホーム・過去の記録</text>
+        <rect class="s-box" x="190" y="172" width="290" height="40" rx="6"/><text class="t-body" x="202" y="197">カルテ・ホーム・名簿と権限の画面・過去</text>
         <rect class="s-warn" x="490" y="172" width="370" height="40" rx="6"/><text class="t-body" x="502" y="197">節目①：リーダー層に数日触ってもらう</text>
 
         <rect class="s-warn" x="10" y="218" width="170" height="40" rx="6"/><text class="t-title" x="95" y="243" text-anchor="middle">一般日報</text>
