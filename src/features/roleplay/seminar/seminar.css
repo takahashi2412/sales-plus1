@@ -1,0 +1,144 @@
+.rp-seminar-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rp-seminar-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rp-seminar-header-row .section-title {
+  margin-bottom: 0;
+}
+
+.rp-seminar-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rp-seminar-form-full {
+  grid-column: 1 / -1;
+}
+
+.rp-seminar-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.rp-seminar-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.rp-seminar-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rp-seminar-meta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.rp-seminar-meta-sub {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.rp-seminar-content-block {
+  max-width: 360px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.rp-seminar-participants-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rp-seminar-participant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.rp-seminar-participant-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rp-seminar-inline-remove-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--navy-text);
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.rp-seminar-inline-remove-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rp-seminar-inline-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.rp-seminar-inline-select {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  background: var(--surface);
+}
+
+.rp-seminar-small-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.rp-seminar-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .rp-seminar-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

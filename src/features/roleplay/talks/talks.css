@@ -1,0 +1,112 @@
+.rp-talks-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rp-talks-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rp-talks-header-row .section-title {
+  margin-bottom: 0;
+}
+
+.rp-talks-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.rp-talks-filter-actions {
+  display: flex;
+  align-items: center;
+}
+
+.rp-talks-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rp-talks-form-full {
+  grid-column: 1 / -1;
+}
+
+.rp-talks-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rp-talks-code-cell {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rp-talks-meta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.rp-talks-meta-sub {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.rp-talks-text-block {
+  max-width: 340px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.rp-talks-stats-cell {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rp-talks-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.rp-talks-small-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+@media (max-width: 960px) {
+  .rp-talks-filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .rp-talks-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rp-talks-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
