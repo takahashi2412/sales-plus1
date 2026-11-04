@@ -2,6 +2,33 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rp-seminar-page .panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rp-seminar-page .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rp-seminar-page .data-table {
+  min-width: 960px;
+}
+
+.rp-seminar-page .data-table td {
+  vertical-align: top;
+}
+
+.rp-seminar-page button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rp-seminar-header-row {
@@ -53,6 +80,28 @@
   margin-top: 12px;
 }
 
+.rp-seminar-col-date {
+  min-width: 130px;
+  white-space: nowrap;
+}
+
+.rp-seminar-col-theme {
+  min-width: 220px;
+}
+
+.rp-seminar-col-content {
+  min-width: 280px;
+}
+
+.rp-seminar-col-participants {
+  min-width: 250px;
+}
+
+.rp-seminar-col-actions {
+  min-width: 160px;
+  white-space: nowrap;
+}
+
 .rp-seminar-meta-stack {
   display: flex;
   flex-direction: column;
@@ -66,7 +115,8 @@
 }
 
 .rp-seminar-content-block {
-  max-width: 360px;
+  min-width: 220px;
+  max-width: 380px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
@@ -89,6 +139,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .rp-seminar-inline-remove-btn {
@@ -101,6 +152,8 @@
   font-size: 11px;
   padding: 1px 6px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rp-seminar-inline-remove-btn:disabled {
@@ -128,16 +181,23 @@
 .rp-seminar-small-btn {
   padding: 6px 10px;
   font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rp-seminar-row-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
+  .rp-seminar-page .panel {
+    padding: 16px 12px;
+  }
+
   .rp-seminar-form-grid {
     grid-template-columns: 1fr;
   }

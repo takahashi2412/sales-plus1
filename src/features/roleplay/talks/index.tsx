@@ -333,6 +333,7 @@ export function RoleplayTalksPage() {
     {
       key: 'code',
       header: 'コード・種類',
+      className: 'rp-talks-col-code',
       render: (row) => {
         const prefix = getTalkPrefix(row.code);
         return (
@@ -346,6 +347,7 @@ export function RoleplayTalksPage() {
     {
       key: 'status',
       header: '状態',
+      className: 'rp-talks-col-status',
       render: (row) => (
         <Tag tone={getStatusTagTone(row.status)}>{TALK_STATUS_LABELS[row.status]}</Tag>
       ),
@@ -353,6 +355,7 @@ export function RoleplayTalksPage() {
     {
       key: 'classification',
       header: '場面・業種・リスト',
+      className: 'rp-talks-col-classification',
       render: (row) => (
         <div className="rp-talks-meta-stack">
           <div>
@@ -369,6 +372,7 @@ export function RoleplayTalksPage() {
     {
       key: 'their_words',
       header: '相手の言葉・場面',
+      className: 'rp-talks-col-their-words',
       render: (row) => (
         <div className="rp-talks-text-block">{row.their_words || '－'}</div>
       ),
@@ -376,6 +380,7 @@ export function RoleplayTalksPage() {
     {
       key: 'wording',
       header: '言い方・ねらい',
+      className: 'rp-talks-col-wording',
       render: (row) => (
         <div className="rp-talks-meta-stack">
           <div className="rp-talks-text-block">{row.wording || '－'}</div>
@@ -386,6 +391,7 @@ export function RoleplayTalksPage() {
     {
       key: 'team_creator',
       header: 'チーム・作成者',
+      className: 'rp-talks-col-team',
       render: (row) => (
         <div className="rp-talks-meta-stack">
           <div>{formatTalkTeamDisplay(row.team_id, teamNameMap)}</div>
@@ -398,6 +404,7 @@ export function RoleplayTalksPage() {
     {
       key: 'stats',
       header: '練習回数・合格率',
+      className: 'rp-talks-col-stats',
       render: (row) => {
         const stats = getTalkStatsForId(statsMap, row.id);
         return (
@@ -411,6 +418,7 @@ export function RoleplayTalksPage() {
     {
       key: 'actions',
       header: '操作',
+      className: 'rp-talks-col-actions',
       render: (row) => {
         if (!viewer) return '－';
         const showToTrial =

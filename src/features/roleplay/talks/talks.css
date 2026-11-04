@@ -2,6 +2,33 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rp-talks-page .panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rp-talks-page .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rp-talks-page .data-table {
+  min-width: 1180px;
+}
+
+.rp-talks-page .data-table td {
+  vertical-align: top;
+}
+
+.rp-talks-page button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rp-talks-header-row {
@@ -52,6 +79,42 @@
   margin-top: 12px;
 }
 
+.rp-talks-col-code {
+  min-width: 150px;
+  white-space: nowrap;
+}
+
+.rp-talks-col-status {
+  min-width: 88px;
+  white-space: nowrap;
+}
+
+.rp-talks-col-classification {
+  min-width: 210px;
+}
+
+.rp-talks-col-their-words {
+  min-width: 240px;
+}
+
+.rp-talks-col-wording {
+  min-width: 300px;
+}
+
+.rp-talks-col-team {
+  min-width: 140px;
+}
+
+.rp-talks-col-stats {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.rp-talks-col-actions {
+  min-width: 170px;
+  white-space: nowrap;
+}
+
 .rp-talks-code-cell {
   font-family: var(--font-figure);
   font-weight: 700;
@@ -71,7 +134,8 @@
 }
 
 .rp-talks-text-block {
-  max-width: 340px;
+  min-width: 220px;
+  max-width: 380px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
@@ -85,14 +149,17 @@
 
 .rp-talks-row-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
+  white-space: nowrap;
 }
 
 .rp-talks-small-btn {
   padding: 6px 10px;
   font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 @media (max-width: 960px) {
@@ -102,8 +169,13 @@
 }
 
 @media (max-width: 760px) {
+  .rp-talks-page .panel {
+    padding: 16px 12px;
+  }
+
   .rp-talks-filter-grid {
     grid-template-columns: 1fr;
+    padding: 12px;
   }
 
   .rp-talks-form-grid {

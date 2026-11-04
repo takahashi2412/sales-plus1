@@ -291,6 +291,7 @@ export function RoleplaySeminarPage() {
     {
       key: 'date',
       header: '日付・時間',
+      className: 'rp-seminar-col-date',
       render: (row) => (
         <div className="rp-seminar-meta-stack">
           <DateText value={row.date} withWeekday />
@@ -301,6 +302,7 @@ export function RoleplaySeminarPage() {
     {
       key: 'theme',
       header: 'テーマ・講師',
+      className: 'rp-seminar-col-theme',
       render: (row) => (
         <div className="rp-seminar-meta-stack">
           <strong>{row.theme}</strong>
@@ -313,6 +315,7 @@ export function RoleplaySeminarPage() {
     {
       key: 'content',
       header: '内容',
+      className: 'rp-seminar-col-content',
       render: (row) => (
         <div className="rp-seminar-content-block">{row.content || '－'}</div>
       ),
@@ -320,6 +323,7 @@ export function RoleplaySeminarPage() {
     {
       key: 'participants',
       header: '参加者',
+      className: 'rp-seminar-col-participants',
       render: (row) => {
         const allRows = seminarMembersBySeminarMap.get(row.id) ?? [];
         const activeRows = allRows.filter((r) => r.removed_at === null);
@@ -402,6 +406,7 @@ export function RoleplaySeminarPage() {
     {
       key: 'actions',
       header: '操作',
+      className: 'rp-seminar-col-actions',
       render: (row) => {
         if (!viewer || !canEditSeminar(viewer, row.created_by)) {
           return '－';
