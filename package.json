@@ -12,6 +12,7 @@
     "fixtures:load": "node --env-file=.env fixtures/foundation/load.mjs",
     "fixtures:remove": "node --env-file=.env fixtures/foundation/remove.mjs",
     "fixtures:remove-ceo": "node --env-file=.env fixtures/foundation/remove-ceo.mjs",
+    "fixtures:dev-role": "node --env-file=.env fixtures/foundation/dev-role.mjs",
     "fixtures:cleanup-guard": "node --env-file=.env fixtures/foundation/cleanup-guard.mjs",
     "fixtures:roleplay:load": "node --env-file=.env fixtures/roleplay/load.mjs",
     "fixtures:roleplay:remove": "node --env-file=.env fixtures/roleplay/remove.mjs",
