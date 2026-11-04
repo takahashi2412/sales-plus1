@@ -1,6 +1,6 @@
 # 計画：土台（plan_foundation_v1）
 
-作成日：2026-10-27 ／ 更新：2026-10-28（安全の決まり・Supabase と Microsoft の設定）、2026-10-30（業務ごとに分ける・名前を plan_foundation に） ／ 作成：Claude Code ／ 作業：Antigravity
+作成日：2026-10-27 ／ 更新：2026-10-28（安全の決まり・Supabase と Microsoft の設定）、2026-10-30（業務ごとに分ける・名前を plan_foundation に）、2026-11-04（流し込みの方法・テスト代表・戻り先・区切りの点検の指摘） ／ 作成：Claude Code ／ 作業：Antigravity
 作業用ブランチ：task/foundation
 並列：なし
 作業するフォルダ：C:\Workspace\apps\sales-plus1-worktrees\foundation\（Claude Code が用意した、この計画専用の作業用フォルダ（ワークツリー）。作業用ブランチもできている）
@@ -14,11 +14,13 @@
   - 作るときの Security の設定：「データAPIを有効にする」＝オン、「新しいテーブルを自動的に公開する」＝オフ、「自動RLSを有効にする」＝オン。地域は東京（ap-northeast-1）
   - 「新しい利用者の登録を許す（Allow new users to sign up）」＝オン（Microsoft で初めてログインした人が利用者として作られるため。名簿にない人は RLS で何も読めない）
 - [x] Microsoft 365（Entra ID）にアプリを登録し（会社のアカウントだけ＝シングルテナント）、Supabase の Azure ログインの設定に、発行された値と会社のテナントの URL を入れる
-- [ ] Supabase の Authentication → URL Configuration で、Site URL を `http://localhost:5173`、Redirect URLs に `http://localhost:5173/**` を入れる（Microsoft でログインしたあと、手元の画面に戻るため）
+- [x] Supabase の Authentication → URL Configuration で、Site URL を `http://localhost:5173`、Redirect URLs に `http://localhost:5173/**` を入れる（Microsoft でログインしたあと、手元の画面に戻るため）
+- [ ] Microsoft 365（Entra ID）の登録したアプリの「トークン構成」で、オプションの要求（ID の種類）に `email` と `xms_edov` を足す（Supabase が Microsoft のメールアドレスを「確認済み」とみなすため。ないと初めてのログインが「メールが未確認」で止まることがある。止まったときは、開発用だけ Authentication の Confirm email をオフにする）
 - [ ] `.env` に次の値を入れる（中身はだれにも見せない。Antigravity にも表示させない）
+  - 鍵は Supabase の Project Settings → API Keys の、Legacy API Keys の `anon` と `service_role` にそろえる（新しい形の Publishable と Secret でも動くが、どちらか一方にそろえる）
   - `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`（画面が使う）
   - `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`（守りのテストが使う。架空のデータを作って消すため）
-  - `SUPABASE_DB_URL`（表を流し込むための接続の文字。Supabase の「Connect」で出るもの。パスワード入り。効くのは開発用のプロジェクトだけ）
+  - `SUPABASE_DB_URL`（表を流し込むための接続の文字。Supabase の「Connect」の **Session pooler**（`〜.pooler.supabase.com:5432`、ユーザー名が `postgres.〈プロジェクトの番号〉` のもの）を使う。`[YOUR-PASSWORD]` をデータベースのパスワードに置きかえる。パスワードに記号があるときは URL 用に書きかえる（Claude Code が案内する）。効くのは開発用のプロジェクトだけ）
   - `DEV_LOGIN_EMAIL`（本人の会社のメールアドレス。画面を確かめるとき、架空の名前「テスト代表」の行をこのメールで作るため。Git には入れない）
 - [ ] Claude Code が作業用フォルダ（上の「作業するフォルダ」）を用意し、.env を写したら、Antigravity でそのフォルダを開いてから、この計画を渡す
 
@@ -34,19 +36,25 @@
 
 ## 2. やること
 1. プロジェクトの土台を作る：React＋Vite（TypeScript）。テストの道具は Vitest。Supabase とつなぐ部品は `@supabase/supabase-js`。Supabase の道具（CLI）は `npx supabase` で使う（グローバルに入れない）
+   - 作業用フォルダは空ではない（CLAUDE.md・NOTES.md・README.md・.gitignore・docs/・tests/ がある）。Vite の雛形（`npm create vite`）をこのフォルダで直接作らない。雛形はフォルダの外で作って要るファイルだけ写すか、手で作る。既にあるファイル・フォルダを上書き・削除しない（特にルートの `.gitignore`。上書きされると `.env` が Git に入ってしまう）
+   - `package.json` の scripts の `test` は `vitest run`（監視モードにしない）。流し込み・架空の名簿の出し入れも scripts に置く（例：`db:push`・`fixtures:load`・`fixtures:remove`）。`.env` を読む補助のプログラムは `supabase/` か `fixtures/foundation/` に置き、`node --env-file=.env` で動かす（ライブラリを足さない）
    - `src/` は、土台（ログイン・名簿・権限。例：`src/foundation/`）と、業務ごとのフォルダ（`src/features/〈業務〉/`。ロープレ以降に足す）に分けられる形にする（7章「業務ごとに分ける」）。今回作るのは土台だけ
 2. 表と権限を、SQL のファイル（マイグレーション）で `supabase/migrations/` に書き、開発用のプロジェクトに流し込む（4章の表と権限）
    - 流し込みは `npx supabase db push --db-url` に、`.env` の `SUPABASE_DB_URL` の値を渡して行う（値は画面やログに出さない。コマンドに直接書かず、`.env` から読む）。`supabase login`（アカウントへのログイン）は使わない
+   - `npx supabase init` はしてよい（`supabase/config.toml` と `supabase/.gitignore` ができる。ルートの `.gitignore` は変えない）。流し込みの確認を聞かれたら、内容を報告書に書いてから進める
+   - このPCには Docker がない。Docker が要る道具（`supabase start`・手元での `db reset`・`db diff`・`gen types`）は使わない。型は手で書く
+   - 一度流し込んだマイグレーションのファイルは直さない。直しは新しいマイグレーションのファイルで行う
 3. 画面：Microsoft 365 でログインする画面と、ログインしたあとに「自分の名前・役割・今のチーム」と「自分が見られる名簿の一覧」を出す画面だけを作る
    - ログインは `supabase.auth.signInWithOAuth` の `provider: 'azure'` で、`scopes: 'email'` を付ける（メールアドレスを受け取るため）。戻り先は `window.location.origin`
    - 画面の開発用サーバーはポート 5173 に固定する（`strictPort`。Supabase の戻り先の設定と合わせるため）
    - ログインに使ったメールアドレスが名簿（members）にないときは、「名簿に登録されていません。管理者に連絡してください」と出して、何も見せない
 4. 守りのテスト `tests/guard/permissions.test.ts`（Claude Code が書いて本線に置いたもの）が通るようにする。テストは変えない
-   - このテストは `process.env` から `SUPABASE_URL`・`SUPABASE_ANON_KEY`・`SUPABASE_SERVICE_ROLE_KEY` を読む。Vitest の設定（`vitest.config.ts` など）で `.env` を読み込ませる（例：Vite の `loadEnv` を使い `test.env` に渡す）
+   - このテストは `process.env` から `SUPABASE_URL`・`SUPABASE_ANON_KEY`・`SUPABASE_SERVICE_ROLE_KEY` を読む。Vitest の設定（`vitest.config.ts` など）で `.env` を読み込ませる（例：Vite の `loadEnv(mode, process.cwd(), '')` の結果を `test.env` に渡す。3つ目を `''` にしないと `VITE_` の付いた値しか読まれない）
+   - テストは1回で8人がパスワードでログインする。Supabase のログインには回数の制限があるので、続けて何回も回して「429」（回数の超過）が出たら、5分ほど待ってから回し直す（作りの誤りと取り違えない）
    - テスト自体の書き間違い（読み込みの書き方・型など）で動かないときは、テストを直さずに止めて、どこがどう動かないかを報告する。Claude Code が直す
 5. 画面で確かめるための架空の名簿を `fixtures/foundation/` に置き、開発用のプロジェクトに入れる手順（またはプログラム）を用意する。名前は「メンバーA」のような架空のものだけ
    - 本人が自分の Microsoft のアカウントで確かめられるように、`.env` の `DEV_LOGIN_EMAIL` のメールアドレスで、架空の名前「テスト代表」・役割 `ceo` の行を1つ作る。メールアドレスはファイルに書かず、`.env` から読む
-   - その行だけを消す手順も用意する（消したあとに同じアカウントでログインすると「名簿に登録されていません」になることを、本人が確かめるため）
+   - その行だけを消す手順も用意する（消したあとに同じアカウントでログインすると「名簿に登録されていません」になることを、本人が確かめるため）。消したあと、もう一度作ればまた見えるようにする（結び付けは下の4章のとおり、ログインのたびに行う）
 6. `.env.example` に、要る値の名前だけを書く（値は書かない）
 
 ## 3. やらないこと
@@ -70,7 +78,9 @@
 | `mgr_assignments`（MGRの担当チーム） | `id`、`mgr_member_id`、`team_id`、`start_date`、`end_date`（空なら今も担当）、`assigned_by` |
 | `permissions`（役職とは別の権限） | `id`、`member_id`、`kind`（`admin`＝管理者／`talk_owner`＝トーク責任者）、`granted_by`、`granted_at`、`revoked_by`、`revoked_at`（空なら有効） |
 
-- ログインした人の `members` の行は、ログインのメールアドレスと `members.email` で結ぶ（初回のログインで `auth_user_id` を入れる。どう結ぶかは任せる。ただし、ほかの人の行に結び付かないこと）
+- ログインした人の `members` の行は、ログインのメールアドレスと `members.email` で結ぶ。比べるときは両方を小文字にする（`lower()`。Microsoft は大文字の混ざったアドレスを返すことがある）。ログインのたびに、`auth_user_id` が空の行にだけ結び付ける（初めてのログインのときだけ動く仕組みにしない。行を消して作り直したあとも結べるように）。ほかの人の行に結び付かないこと
+- 利用者の登録（`auth.users`）を、名簿にないからといって拒む仕組みは作らない（守りのテストは、利用者を作ってから名簿の行を作る）
+- 「今日」は日本時間の日付（`(now() at time zone 'Asia/Tokyo')::date`）。データベースの `current_date` は世界標準時なので使わない
 - 「今の所属」＝ `member_affiliations` のうち、今日が `start_date` 以上で、`end_date` が空か今日以上の行
 - 「今の担当」＝ `mgr_assignments` のうち、同じ条件の行
 - 「有効な権限」＝ `permissions` のうち、`revoked_at` が空の行
@@ -87,6 +97,9 @@
 | 管理者の権限がある人（`admin` が有効） | 全員 | `members`・`member_affiliations`・`mgr_assignments` の追加と変更 |
 
 - `permissions` の追加と取り消しは、代表と、管理者の権限がある人だけ
+- `permissions` を読めるのは、代表と管理者の権限がある人は全員分、ほかの人は自分の行だけ（2026-11-04 本人の選択）。守りのテストでは、代表が権限を足したあとにその行を読み返す
+- 役割と権限の判定は、毎回表を読んで行う。ログインの証明書（JWT）に役割を入れる作り（Custom Access Token Hook など）にしない（取り消しがすぐに効かなくなり、管理画面での設定も要るため）
+- 判定に使う関数は `security definer` にして、`set search_path = ''` を付ける。外から呼べる場所（`public`）に置かない（例：`private` のスキーマ）。`authenticated` に `execute` を明示して許可し、`anon` と `public` からは外す。決まり（RLS）の中で同じ表を直接読み返して、決まりが自分を呼び続けないようにする
 - `member_affiliations`・`mgr_assignments`・`teams` も、上の `members` と同じ範囲で読める（自分が読める人の所属・担当だけ）。迷ったら止めて質問する
 - 削除はしない（このあとの区切りで論理削除を入れる）
 
@@ -98,11 +111,11 @@
    - `service_role`（守りのテストが架空のデータを作って消すため）：読み書きと削除を許可する
    - `anon`（ログインしていない人）：何も許可しない
 3. `service_role` の鍵と `SUPABASE_DB_URL` は画面のコード（`src/`）で使わない。`VITE_` を付けた名前にしない（`VITE_` の付いた値は画面に埋め込まれ、だれでも見られるため）
-4. Supabase の管理画面の Security Advisor（安全の点検）は、本人のアカウントでしか開けない。報告書に「Security Advisor の確認が要る」と書く（本人が開いて写しを送り、Claude Code がレビューで確かめる。警告が出たら、直しを Claude Code から頼む）
+4. Supabase の管理画面の Security Advisor（安全の点検）は、本人のアカウントでしか開けない。報告書に「Security Advisor の確認が要る」と書く（本人が開いて写しを送り、Claude Code がレビューで確かめる。警告が出たら、直しを Claude Code から頼む）。無料枠では消せない警告（漏れたパスワードの確認 Leaked Password Protection など）は、残ってよい
 
 守りのテスト（変更禁止）：`tests/guard/permissions.test.ts`
 
-触ってよいファイル・フォルダ：`package.json`、`package-lock.json`、`vite.config.ts`、`vitest.config.ts`（要るなら）、`tsconfig*.json`、`index.html`、`src/`、`supabase/`、`fixtures/foundation/`、`tests/` の中で `tests/guard/` 以外、`.env.example`、`docs/reports/report_foundation_v1.md`
+触ってよいファイル・フォルダ：`package.json`、`package-lock.json`、`vite.config.ts`、`vitest.config.ts`（要るなら）、`tsconfig*.json`、`eslint.config.js`（要るなら）、`index.html`、`public/`（要るなら）、`src/`、`supabase/`（`supabase/.gitignore` を含む）、`fixtures/foundation/`、`tests/` の中で `tests/guard/` 以外、`.env.example`、`docs/reports/report_foundation_v1.md`
 触ってはいけないもの：`tests/guard/`、`docs/`（報告書を除く）、`CLAUDE.md`、`NOTES.md`、`README.md`、`.gitignore`、`samples/`
 
 ## 5. 決めてよいこと／決めてはいけないこと
@@ -121,6 +134,7 @@
 - [ ] 4章「安全の決まり」の1〜3を守っている（すべての表で RLS がオン、GRANT を明示し `anon` には許可なし、`service_role` の鍵が `src/` になく `VITE_` も付いていない）
 - [ ] 報告書に「Security Advisor の確認が要る」と書いた（警告が0件かは、本人と Claude Code がレビューで確かめる）
 - [ ] すべてのテストが通る
+- [ ] `git ls-files` に `.env` が出ない（Git に入っていない）。ルートの `.gitignore`・README.md・CLAUDE.md・NOTES.md・docs/ を変えていない
 - [ ] 守りのテストを変更・削除・スキップしていない
 - [ ] 報告書を書いてコミットした
 
@@ -131,6 +145,8 @@
 - samples/ には本物の見本データ（実名あり）が入っている。開かない・読まない・検索しない・コピーしない
 - APIキーは .env に置き、コードに書かない。.env の中身を表示・出力しない
 - .gitignore を変更しない
+- 雛形を作る道具（`npm create` など）で、既にあるファイル・フォルダ（ルートの `.gitignore`・README.md・CLAUDE.md・NOTES.md・docs/・tests/）を上書き・削除しない
+- コミットの前に `git status` を見て、`.env` が入っていないことを確かめる
 
 ### 安全の決まり（2026-10-28 本人の選択）
 - 表を足すときは、マイグレーションの中で RLS（行ごとの読み書きの決まり）をオンにする（`alter table ... enable row level security` を明示。自動の設定に頼らない）

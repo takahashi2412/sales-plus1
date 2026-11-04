@@ -56,6 +56,14 @@ let teamB = '';
 let adminPermissionId = '';
 const createdPermissionIds: string[] = [];
 
+// 名簿にない人（ログインはできるが members に行がない）。登録を許しているので、ここが安全の中心になる
+const outsider = {
+  email: `${RUN}-outsider@example.test`,
+  password: `${randomUUID()}Aa1!`,
+  authId: '',
+  client: undefined as SupabaseClient | undefined,
+};
+
 const ALL = PEOPLE.map((p) => p.key);
 const TEAM_A_NOW = ['leaderA', 'memberA1', 'memberA2', 'mover'];
 const TEAM_B_NOW = ['leaderB', 'memberB1'];
@@ -69,6 +77,21 @@ async function visibleKeys(client: SupabaseClient): Promise<string[]> {
 }
 
 const sorted = (xs: string[]) => [...xs].sort();
+
+// 指定した列の値が ids のどれかに当たる行を読む。読めないとき（許可がない・エラー）は空とみなす
+async function rowsOf(
+  client: SupabaseClient,
+  table: string,
+  column: string,
+  ids: string[],
+): Promise<Record<string, unknown>[]> {
+  const { data, error } = await client.from(table).select('*').in(column, ids);
+  if (error) return [];
+  return (data ?? []) as Record<string, unknown>[];
+}
+
+const memberIds = () => PEOPLE.map((p) => p.memberId!);
+const teamIds = () => [teamA, teamB];
 
 async function nameOf(memberId: string): Promise<string> {
   const { data, error } = await admin.from('members').select('name').eq('id', memberId).single();
@@ -153,10 +176,23 @@ beforeAll(async () => {
     if (error) throw error;
     p.client = c;
   }
+
+  const { data: od, error: oErr } = await admin.auth.admin.createUser({
+    email: outsider.email,
+    password: outsider.password,
+    email_confirm: true,
+  });
+  if (oErr) throw oErr;
+  outsider.authId = od.user!.id;
+  const oc = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { error: osErr } = await oc.auth.signInWithPassword({ email: outsider.email, password: outsider.password });
+  if (osErr) throw osErr;
+  outsider.client = oc;
 }, 120_000);
 
 afterAll(async () => {
   if (!admin) return;
+  if (outsider.authId) await admin.auth.admin.deleteUser(outsider.authId);
   const ids = PEOPLE.map((p) => p.memberId).filter(Boolean) as string[];
   if (ids.length) {
     await admin.from('permissions').delete().in('member_id', ids);
@@ -174,6 +210,46 @@ describe('名簿を読める範囲（members）', () => {
   it('ログインしていない人は、だれも読めない', async () => {
     const anon = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
     expect(await visibleKeys(anon)).toEqual([]);
+  });
+
+  it('ログインしていない人は、チーム・所属・担当・権限も読めない', async () => {
+    const anon = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
+    expect(await rowsOf(anon, 'teams', 'id', teamIds())).toHaveLength(0);
+    expect(await rowsOf(anon, 'member_affiliations', 'member_id', memberIds())).toHaveLength(0);
+    expect(await rowsOf(anon, 'mgr_assignments', 'mgr_member_id', memberIds())).toHaveLength(0);
+    expect(await rowsOf(anon, 'permissions', 'member_id', memberIds())).toHaveLength(0);
+  });
+
+  it('ログインしていても名簿にない人は、何も読めない', async () => {
+    const c = outsider.client!;
+    expect(await visibleKeys(c)).toEqual([]);
+    expect(await rowsOf(c, 'teams', 'id', teamIds())).toHaveLength(0);
+    expect(await rowsOf(c, 'member_affiliations', 'member_id', memberIds())).toHaveLength(0);
+    expect(await rowsOf(c, 'mgr_assignments', 'mgr_member_id', memberIds())).toHaveLength(0);
+    expect(await rowsOf(c, 'permissions', 'member_id', memberIds())).toHaveLength(0);
+  });
+
+  it('権限の表は、代表と管理者は全員分、ほかの人は自分の行だけ読める', async () => {
+    // ほかの人（memberA2）の権限の行を1つ用意する。管理者（leaderB）が、自分以外の行も読めるかを確かめるため
+    const { data: extra, error: exErr } = await admin
+      .from('permissions')
+      .insert({ member_id: P('memberA2').memberId, kind: 'talk_owner', granted_by: P('ceo').memberId, granted_at: new Date().toISOString() })
+      .select('id')
+      .single();
+    if (exErr) throw exErr;
+    const extraId = (extra as { id: string }).id;
+    createdPermissionIds.push(extraId);
+
+    const ceoRows = await rowsOf(P('ceo').client!, 'permissions', 'member_id', memberIds());
+    expect(ceoRows.map((r) => r.id)).toEqual(expect.arrayContaining([adminPermissionId, extraId]));
+    const adminRows = await rowsOf(P('leaderB').client!, 'permissions', 'member_id', memberIds());
+    expect(adminRows.map((r) => r.id)).toEqual(expect.arrayContaining([adminPermissionId, extraId]));
+    const ownRows = await rowsOf(P('memberA2').client!, 'permissions', 'member_id', memberIds());
+    expect(ownRows.map((r) => r.id)).toContain(extraId);
+    for (const key of ['memberA1', 'memberA2', 'leaderA', 'mgr1']) {
+      const rows = await rowsOf(P(key).client!, 'permissions', 'member_id', memberIds());
+      expect(rows.every((r) => r.member_id === P(key).memberId)).toBe(true);
+    }
   });
 
   it('メンバーは、自分と今の所属が同じチームの人だけ読める', async () => {
@@ -230,6 +306,51 @@ describe('名簿と権限を書ける範囲', () => {
       .eq('member_id', P('memberA1').memberId!)
       .eq('kind', 'admin')
       .is('revoked_at', null);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it('メンバーは、自分を別のチームの所属に足せず、自分の所属も書きかえられない', async () => {
+    await P('memberA1').client!.from('member_affiliations').insert({
+      member_id: P('memberA1').memberId,
+      team_id: teamB,
+      base: '架空の拠点',
+      start_date: '2025-04-01',
+      end_date: null,
+    });
+    const { data: added } = await admin
+      .from('member_affiliations')
+      .select('id')
+      .eq('member_id', P('memberA1').memberId!)
+      .eq('team_id', teamB);
+    expect(added ?? []).toHaveLength(0);
+
+    await P('memberA1').client!
+      .from('member_affiliations')
+      .update({ end_date: '2025-12-31' })
+      .eq('member_id', P('memberA1').memberId!);
+    const { data: own } = await admin
+      .from('member_affiliations')
+      .select('end_date')
+      .eq('member_id', P('memberA1').memberId!)
+      .eq('team_id', teamA)
+      .single();
+    expect((own as { end_date: string | null }).end_date).toBeNull();
+  });
+
+  it('リーダー（管理者の権限なし）は、MGRの担当を足せない', async () => {
+    await P('leaderA').client!.from('mgr_assignments').insert({
+      mgr_member_id: P('mgr1').memberId,
+      team_id: teamB,
+      start_date: '2025-04-01',
+      end_date: null,
+      assigned_by: P('leaderA').memberId,
+    });
+    const { data } = await admin
+      .from('mgr_assignments')
+      .select('id')
+      .eq('mgr_member_id', P('mgr1').memberId!)
+      .eq('team_id', teamB)
+      .is('end_date', null);
     expect(data ?? []).toHaveLength(0);
   });
 

@@ -50,6 +50,8 @@
 - samples/ には本物の見本データ（実名あり）が入っている。開かない・読まない・検索しない・コピーしない
 - APIキーは .env に置き、コードに書かない。.env の中身を表示・出力しない
 - .gitignore を変更しない
+- 雛形を作る道具（`npm create` など）で、既にあるファイル・フォルダ（ルートの `.gitignore`・README.md・CLAUDE.md・NOTES.md・docs/・tests/）を上書き・削除しない
+- コミットの前に `git status` を見て、`.env` が入っていないことを確かめる
 
 ### 安全の決まり（2026-10-28 本人の選択）
 - 表を足すときは、マイグレーションの中で RLS（行ごとの読み書きの決まり）をオンにする（`alter table ... enable row level security` を明示。自動の設定に頼らない）
