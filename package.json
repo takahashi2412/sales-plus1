@@ -1,0 +1,32 @@
+{
+  "name": "sales-plus1",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "db:push": "node --env-file=.env supabase/push.mjs",
+    "fixtures:load": "node --env-file=.env fixtures/foundation/load.mjs",
+    "fixtures:remove": "node --env-file=.env fixtures/foundation/remove.mjs",
+    "fixtures:remove-ceo": "node --env-file=.env fixtures/foundation/remove-ceo.mjs",
+    "fixtures:cleanup-guard": "node --env-file=.env fixtures/foundation/cleanup-guard.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "supabase": "^2.19.7",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  }
+}
