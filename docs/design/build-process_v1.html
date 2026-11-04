@@ -336,7 +336,7 @@
   <header class="doc-header">
     <div class="label">SALES +1 ／ 制作の手順 v1</div>
     <h1>制作の手順：決めて、別のフォルダで作り、1本ずつ確かめて本線へ</h1>
-    <p class="small" style="margin-top:var(--space-2)">2026年11月4日（水）時点 ／ v1：新しく作成。2026-10-27〜30 に決めた作る順番・並列の決まり・作業用フォルダ（ワークツリー）の使い方・決め方と直し方を、1枚にまとめた。正式な決まりは CLAUDE.md と設計書（企画ダッシュボード v26 の13・14章）にあり、この資料はそれを手順の形で見せるもの</p>
+    <p class="small" style="margin-top:var(--space-2)">2026年11月4日（水）時点 ／ v1：新しく作成。2026-10-27〜30 に決めた作る順番・並列の決まり・作業用フォルダ（ワークツリー）の使い方・決め方と直し方を、1枚にまとめた。正式な決まりは CLAUDE.md と設計書（企画ダッシュボード v27 の13・14章）にあり、この資料はそれを手順の形で見せるもの</p>
     <nav class="toc" aria-label="目次">
       <span class="grp">はじめに</span>
       <a href="#s0">0 完成度の表</a>
@@ -357,7 +357,7 @@
   </div>
 
   <div class="tiles">
-    <div class="tile"><span class="t-label">作る順番の区切り</span><span class="t-value">9<span class="unit">つ</span></span><span class="t-note">土台から自動化まで。いまは土台</span></div>
+    <div class="tile"><span class="t-label">作る順番の区切り</span><span class="t-value">9<span class="unit">つ</span></span><span class="t-note">土台から自動化まで。土台は済み、いまはロープレ</span></div>
     <div class="tile"><span class="t-label">並列</span><span class="t-value">2<span class="unit">本まで</span></span><span class="t-note">画面だけ。表とテストは1本</span></div>
     <div class="tile"><span class="t-label">1つの計画の手順</span><span class="t-value">12</span><span class="t-note">決める→作る→確かめる→片づける</span></div>
     <div class="tile"><span class="t-label">まだ決めていないこと</span><span class="t-value">1</span><span class="t-note">1業務ごとの回し方（次へ進む条件）</span></div>
@@ -400,11 +400,11 @@
     <p class="lead"><span class="tag tag--warn">変更</span> 2026-11-04：管理の画面のうち「名簿・所属・MGRの担当」と「権限」は、カルテ第1版で作ります。区切りは番号ではなく、中身の名前で呼びます（区切りの名前は、同じ時期に作るもののまとまりで、画面のまとまりではありません。例：「KPI・部下メモ」は、KPI の画面と部下メモの画面を同じ時期に作るという意味で、サイトでは別々の画面です）。表と<a class="term" href="#g-guardtest">守りのテスト</a>は1本で作り、画面だけを2本の<a class="term" href="#g-parallel">並列</a>で作ります。橙の3つは、数日触って確かめる<a class="term" href="#g-fushime">節目</a>です。</p>
     <div class="svg-wrap">
       <svg viewBox="0 0 880 250" role="img" aria-label="作る順番。上の段は土台、ロープレ、KPI・部下メモ、カルテ第1版、一般日報。下の段は週間教育、責任者日報・集める画面、AI、自動化。カルテ第1版・一般日報・AIが節目">
-        <rect class="s-core" x="8" y="36" width="160" height="60" rx="8"/>
+        <rect class="s-box" x="8" y="36" width="160" height="60" rx="8"/>
         <text class="t-title" x="88" y="61" text-anchor="middle">土台</text>
-        <text class="t-muted" x="88" y="82" text-anchor="middle">1本 ／ 今ここ</text>
-        <rect class="s-box" x="182" y="36" width="160" height="60" rx="8"/>
-        <text class="t-title" x="262" y="61" text-anchor="middle">ロープレ</text>
+        <text class="t-muted" x="88" y="82" text-anchor="middle">1本 ／ 済み</text>
+        <rect class="s-core" x="182" y="36" width="160" height="60" rx="8"/>
+        <text class="t-title" x="262" y="61" text-anchor="middle">ロープレ（今ここ）</text>
         <text class="t-muted" x="262" y="82" text-anchor="middle">共通1本 → 画面2本</text>
         <rect class="s-box" x="356" y="36" width="160" height="60" rx="8"/>
         <text class="t-title" x="436" y="61" text-anchor="middle">KPI・部下メモ</text>
@@ -440,7 +440,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>左上から右へ、下の段に折り返して、9つの区切りを順に作る</li><li>箱の下の小さい字は、その区切りを何本で作るか（「表1本 → 画面2本」は、表とテストを1本で作ってから、画面を2本の並列で作る）</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>土台（ログイン・名簿・権限）で、いちばん技術の不安が大きい所を先に小さく確かめる</li><li>集める画面（カルテ・ホーム・ダッシュボード）は、カルテ第1版と「責任者日報・集める画面」の2回だけ作る。ほかの区切りでは触らないので、並列でぶつからない</li><li>詳しい中身は設計書 v26 の13章</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>土台（ログイン・名簿・権限）で、いちばん技術の不安が大きい所を先に小さく確かめる</li><li>集める画面（カルテ・ホーム・ダッシュボード）は、カルテ第1版と「責任者日報・集める画面」の2回だけ作る。ほかの区切りでは触らないので、並列でぶつからない</li><li>詳しい中身は設計書 v27 の13章</li></ul></div>
     </div>
   </section>
 
@@ -687,7 +687,7 @@
     </div>
   </section>
 
-  <p class="small source">出典：CLAUDE.md（開発体制・決め方・直し方）、docs/tasks/plan_template.md、NOTES.md（2026-10-27〜30 の決定と記録）、設計書 project-dashboard_v26.html（13・14章）。2026年11月4日時点。</p>
+  <p class="small source">出典：CLAUDE.md（開発体制・決め方・直し方）、docs/tasks/plan_template.md、NOTES.md（2026-10-27〜30 の決定と記録）、設計書 project-dashboard_v27.html（13・14章）。2026年11月4日時点。</p>
 
 </main>
 </body>

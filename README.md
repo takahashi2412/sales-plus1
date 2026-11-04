@@ -1,6 +1,6 @@
 # SALES +1（sales-plus1）
 
-1DAY +1 ― 株式会社Rush up 営業部の管理アプリ（設計中・コードはまだない）
+1DAY +1 ― 株式会社Rush up 営業部の管理アプリ（設計はほぼ確定。2026-11-04 に土台＝Microsoft 365 ログイン・名簿・権限ができた。次はロープレ）
 
 ## 何をするアプリか
 営業部でExcelに分かれて管理している6つの業務を1つにまとめ、メンバー1人ひとりを「カルテ」で一元把握する。
@@ -40,7 +40,7 @@ KPIはプログラムが集計し、AIが原因の仮説と「今週の+1」（�
 ## 資料の場所
 | 資料 | 場所 |
 |---|---|
-| 設計書（企画ダッシュボード） | docs/design/project-dashboard_v26.html（ブラウザで開く。以前の版は docs/design/old/） |
+| 設計書（企画ダッシュボード） | docs/design/project-dashboard_v27.html（ブラウザで開く。以前の版は docs/design/old/） |
 | 資料の一覧 | docs/design/index.html（ブラウザで開く。設計書と確認用の図解を1画面で切り替えて読める） |
 | 作業メモ（現在の状況・決定事項） | NOTES.md |
 | 開発のルール | CLAUDE.md |

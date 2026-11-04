@@ -34,7 +34,7 @@
 - 表・権限の変更（①で作った。足りないときは止めて質問する）
 
 ## 4. 仕様
-参照：設計書 v26 の「ロープレの形（v15）」の talks と seminars、「9 画面と権限」、図解 `docs/design/roleplay_v1.html`、①の報告書 `docs/reports/report_roleplay-common_v1.md`
+参照：設計書 v27 の「ロープレの形（v15）」の talks と seminars、「9 画面と権限」、図解 `docs/design/roleplay_v1.html`、①の報告書 `docs/reports/report_roleplay-common_v1.md`
 
 ### この区切り全体の決まり
 - 業務ごとに分ける：ロープレの箱のプログラムは `src/features/roleplay/` の中に置き、記録とテーマ表は `record/`、トーク一覧は `talks/`、研修の記録は `seminar/`、ロープレの箱の中で共通に使うものは `shared/`（①だけが作る）に分ける（並列の2本がぶつからないように）。土台の `src/foundation/` は、この計画で触ってよいと書いた所だけ触る
