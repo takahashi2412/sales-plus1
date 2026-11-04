@@ -12,7 +12,10 @@
     "fixtures:load": "node --env-file=.env fixtures/foundation/load.mjs",
     "fixtures:remove": "node --env-file=.env fixtures/foundation/remove.mjs",
     "fixtures:remove-ceo": "node --env-file=.env fixtures/foundation/remove-ceo.mjs",
-    "fixtures:cleanup-guard": "node --env-file=.env fixtures/foundation/cleanup-guard.mjs"
+    "fixtures:cleanup-guard": "node --env-file=.env fixtures/foundation/cleanup-guard.mjs",
+    "fixtures:roleplay:load": "node --env-file=.env fixtures/roleplay/load.mjs",
+    "fixtures:roleplay:remove": "node --env-file=.env fixtures/roleplay/remove.mjs",
+    "fixtures:roleplay:cleanup-guard": "node --env-file=.env fixtures/roleplay/cleanup-guard.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

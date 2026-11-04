@@ -12,6 +12,10 @@ import type {
 } from './foundation/types';
 import { LoginView } from './foundation/LoginView';
 import { DirectoryView } from './foundation/DirectoryView';
+import { AppLayout, parseHashRoute, type RouteKey } from './components/layout/AppLayout';
+import { RoleplayRecordPage } from './features/roleplay/record';
+import { RoleplayTalksPage } from './features/roleplay/talks';
+import { RoleplaySeminarPage } from './features/roleplay/seminar';
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -19,6 +23,19 @@ export function App() {
   const [dataLoading, setDataLoading] = useState(false);
   const [selfEntry, setSelfEntry] = useState<DirectoryEntry | null>(null);
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
+  const [route, setRoute] = useState<RouteKey>(() =>
+    typeof window !== 'undefined' ? parseHashRoute(window.location.hash) : 'directory',
+  );
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setRoute(parseHashRoute(window.location.hash));
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -105,12 +122,26 @@ export function App() {
     return <LoginView />;
   }
 
+  if (!selfEntry) {
+    return (
+      <DirectoryView
+        selfEntry={null}
+        entries={[]}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
   return (
-    <DirectoryView
-      selfEntry={selfEntry}
-      entries={entries}
-      onSignOut={handleSignOut}
-    />
+    <AppLayout activeRoute={route} selfEntry={selfEntry} onSignOut={handleSignOut}>
+      {route === 'directory' && (
+        <DirectoryView selfEntry={selfEntry} entries={entries} onSignOut={handleSignOut} />
+      )}
+      {route === 'roleplay' && <RoleplayRecordPage mode="roleplay" />}
+      {route === 'themes' && <RoleplayRecordPage mode="themes" />}
+      {route === 'talks' && <RoleplayTalksPage />}
+      {route === 'seminar' && <RoleplaySeminarPage />}
+    </AppLayout>
   );
 }
 
