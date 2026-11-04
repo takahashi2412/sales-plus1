@@ -66,6 +66,7 @@ const ids = {
   rpA1Draft: '', // memberA1 のロープレ（書きかけ。実行者 leaderA）
   rpB1: '', // memberB1 のロープレ（送った記録。実行者 leaderB）
   mtA1: '', // memberA1 のテーマ表
+  mtLeaderA: '', // leaderA 自身のテーマ表（上席の判定から自分を外すことを確かめる）
   talkPendA: '', // チームAの確認待ち（作った人 memberA1）
   talkTrialA: '', // チームAの試行中（作った人 leaderA）
   talkPendB: '', // チームBの確認待ち（作った人 memberB1）
@@ -176,6 +177,15 @@ beforeAll(async () => {
     pass_line: '架空の合格ライン',
     status: 'practicing',
     created_by: P('leaderA').memberId,
+  });
+  ids.mtLeaderA = await insertOne('member_themes', {
+    member_id: P('leaderA').memberId,
+    theme_id: ids.theme,
+    kind: 'apo',
+    started_on: '2025-05-01',
+    pass_line: '架空の合格ライン',
+    status: 'practicing',
+    created_by: P('mgr1').memberId,
   });
 
   const talk = (code: string, team: string, creator: string, status: string) => ({
@@ -393,6 +403,14 @@ describe('書ける範囲', () => {
     const mgr = `${RUN}-by-mgr`;
     await P('mgr1').client!.from('roleplays').insert(newRp('mgr1', 'memberA1', mgr));
     expect(await rpByFixed(mgr)).toHaveLength(1);
+
+    // 実行者と課員は別の人（自分を課員にした記録は書けない）
+    const self = `${RUN}-self`;
+    await P('leaderA').client!.from('roleplays').insert(newRp('leaderA', 'leaderA', self));
+    expect(await rpByFixed(self)).toHaveLength(0);
+    const selfMember = `${RUN}-self-member`;
+    await P('memberA2').client!.from('roleplays').insert(newRp('memberA2', 'memberA2', selfMember));
+    expect(await rpByFixed(selfMember)).toHaveLength(0);
   });
 
   it('ロープレの記録：直せるのは書いた人だけ。実行者や課員を、ほかの人や読めない人に付けかえられない', async () => {
@@ -415,6 +433,18 @@ describe('書ける範囲', () => {
     expect(await statusOf()).toBe('practicing');
     await P('leaderA').client!.from('member_themes').update({ status: 'graduated', graduated_on: '2025-05-10' }).eq('id', ids.mtA1);
     expect(await statusOf()).toBe('graduated');
+  });
+
+  it('テーマ表：上席でも自分自身のテーマは足せず、卒業にもできない（自分の上席が行う）', async () => {
+    const statusOf = async () => (await adminRows('member_themes', (q) => q.eq('id', ids.mtLeaderA)))[0].status;
+    await P('leaderA').client!.from('member_themes').update({ status: 'graduated', graduated_on: '2025-05-10' }).eq('id', ids.mtLeaderA);
+    expect(await statusOf()).toBe('practicing');
+    await P('mgr1').client!.from('member_themes').update({ status: 'graduated', graduated_on: '2025-05-10' }).eq('id', ids.mtLeaderA);
+    expect(await statusOf()).toBe('graduated');
+
+    const own = await insertOne('roleplay_themes', { no: themeNo + 2, stage: 3, name: `${RUN}-theme3`, kind: 'sales', pass_example: '架空の例', is_active: true });
+    await P('leaderA').client!.from('member_themes').insert({ member_id: P('leaderA').memberId, theme_id: own, kind: 'sales', started_on: '2025-05-03', pass_line: '架空', status: 'practicing', created_by: P('leaderA').memberId });
+    expect(await adminRows('member_themes', (q) => q.eq('member_id', P('leaderA').memberId!).eq('theme_id', own))).toHaveLength(0);
   });
 
   it('テーマ表：課員本人は足せず、上席は足せる', async () => {
