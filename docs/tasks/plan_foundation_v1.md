@@ -15,7 +15,7 @@
   - 「新しい利用者の登録を許す（Allow new users to sign up）」＝オン（Microsoft で初めてログインした人が利用者として作られるため。名簿にない人は RLS で何も読めない）
 - [x] Microsoft 365（Entra ID）にアプリを登録し（会社のアカウントだけ＝シングルテナント）、Supabase の Azure ログインの設定に、発行された値と会社のテナントの URL を入れる
 - [x] Supabase の Authentication → URL Configuration で、Site URL を `http://localhost:5173`、Redirect URLs に `http://localhost:5173/**` を入れる（Microsoft でログインしたあと、手元の画面に戻るため）
-- [ ] Microsoft 365（Entra ID）の登録したアプリの「トークン構成」で、オプションの要求（ID の種類）に `email` と `xms_edov` を足す（Supabase が Microsoft のメールアドレスを「確認済み」とみなすため。ないと初めてのログインが「メールが未確認」で止まることがある。止まったときは、開発用だけ Authentication の Confirm email をオフにする）
+- [x] Microsoft 365（Entra ID）の登録したアプリの「トークン構成」で、オプションの要求（ID の種類）に `email` と `xms_edov` を足す（Supabase が Microsoft のメールアドレスを「確認済み」とみなすため。ないと初めてのログインが「メールが未確認」で止まることがある。止まったときは、開発用だけ Authentication の Confirm email をオフにする）
 - [ ] `.env` に次の値を入れる（中身はだれにも見せない。Antigravity にも表示させない）
   - 鍵は Supabase の Project Settings → API Keys の、Legacy API Keys の `anon` と `service_role` にそろえる（新しい形の Publishable と Secret でも動くが、どちらか一方にそろえる）
   - `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`（画面が使う）
