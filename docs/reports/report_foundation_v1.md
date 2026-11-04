@@ -34,6 +34,7 @@
 - `supabase/.gitignore`（`npx supabase init` で生成）
 - `supabase/push.mjs`（新規）
 - `supabase/migrations/20261104000001_foundation_schema_and_rls.sql`（新規）
+- `supabase/migrations/20261104000002_revoke_rls_auto_enable_execute.sql`（新規）
 - `fixtures/foundation/data.mjs`（新規）
 - `fixtures/foundation/load.mjs`（新規）
 - `fixtures/foundation/remove-ceo.mjs`（新規）
@@ -108,3 +109,4 @@
 
 ## 気になった点
 - `.env` の `SUPABASE_DB_URL` のパスワード部分に URL で特別な意味を持つ記号が含まれている場合でも `supabase db push` が接続文字列の解釈エラー（`DbConfigParseUrlError`）で止まらないよう、`supabase/push.mjs` の中でメモリ上でパスワード部分を URL エンコードして渡す処理を入れています（`.env` ファイル自体は変更せず、値も画面やログには一切出力していません）。
+- Security Advisor の確認で、Supabase が自動で作った関数 `public.rls_auto_enable()` について `anon` と `authenticated` が呼べるという注意が2件出たため、流し込み済みのマイグレーションは変更せず、新しいマイグレーション `supabase/migrations/20261104000002_revoke_rls_auto_enable_execute.sql`（`revoke execute on function public.rls_auto_enable() from public, anon, authenticated;`）を追加し、`npm run db:push -- --dry-run` で中身を確かめたうえで流し込みました。
