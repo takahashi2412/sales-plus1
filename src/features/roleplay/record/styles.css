@@ -1,0 +1,214 @@
+/* ロープレ②（記録・テーマ表・卒業の知らせ）専用スタイル（頭文字 rp-record-） */
+
+.rp-record-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rp-record-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.rp-record-form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.rp-record-auto-box {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.rp-record-auto-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rp-record-auto-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.rp-record-auto-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.rp-record-sub-panel {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+.rp-record-sub-title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--navy-text);
+}
+
+.rp-record-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.rp-record-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rp-record-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.rp-record-notice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rp-record-notice-card {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy-band);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rp-record-notice-card--good {
+  border-top-color: var(--good);
+  background: var(--good-soft);
+}
+
+.rp-record-notice-card--warn {
+  border-top-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.rp-record-notice-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rp-record-notice-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--navy-text);
+}
+
+.rp-record-notice-count {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.rp-record-notice-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rp-record-notice-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.rp-record-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rp-record-muted {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.rp-record-judge-group {
+  display: flex;
+  gap: 6px;
+}
+
+.rp-record-judge-btn {
+  min-width: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.rp-record-judge-btn--active {
+  background: var(--navy-band);
+  color: var(--on-dark);
+  border-color: var(--navy-band);
+}
+
+.rp-record-draft-status {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .rp-record-form-grid,
+  .rp-record-form-grid-2,
+  .rp-record-auto-box,
+  .rp-record-filter-grid,
+  .rp-record-notice-grid {
+    grid-template-columns: 1fr;
+  }
+}
