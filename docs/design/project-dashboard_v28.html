@@ -488,7 +488,7 @@
           <tr><td>10 画面の構図</td><td><span class="tag tag--warn">案</span></td><td>画面の中身はすべて確定（v21で書く画面・管理画面・目標の画面）。試作が残る</td><td>6</td></tr>
           <tr><td>11 1日・1週間</td><td><span class="tag tag--good">確定</span></td><td>－</td><td>－</td></tr>
           <tr><td>12 AIサイクル</td><td><span class="tag tag--good">確定</span></td><td>－（AIの連携先は技術構成で決める）</td><td>（7）</td></tr>
-          <tr><td>13 段階導入</td><td><span class="tag tag--warn">案</span></td><td>全体の作る順番（土台から自動化までの9つの区切り）と並列の場所は決定（v23）。区切りは中身の名前で呼ぶ（v24）。ロープレの範囲は設計書どおり全部（2026-11-04 決定）。管理の画面2つはカルテ第1版で作る（2026-11-04 決定）。日付は未決</td><td>作りながら</td></tr>
+          <tr><td>13 段階導入</td><td><span class="tag tag--warn">案</span></td><td>全体の作る順番（土台から自動化までの9つの区切り）と並列の場所は決定（v23）。土台とロープレは済み（2026-11-04。v27・v28）。区切りは中身の名前で呼ぶ（v24）。ロープレの範囲は設計書どおり全部（2026-11-04 決定）。管理の画面2つはカルテ第1版で作る（2026-11-04 決定）。日付は未決</td><td>作りながら</td></tr>
           <tr><td>14 開発の流れ</td><td><span class="tag tag--good">確定</span></td><td>－（v23で並列の決まりを追加）</td><td>－</td></tr>
         </tbody>
       </table>
@@ -1175,7 +1175,7 @@
         <tbody>
           <tr><td>roleplays（ロープレ）の入力</td><td>自動＝日付・実行者・時間帯・内容（アポ／営業）・テーマ・課題/目的（週間教育から）・前回の宿題・結果（翌日、ロープレ後の時間帯のア数と実率、参考）。選ぶ＝課員・使ったトーク・時間・宿題の○△×・くり返し回数・合格ラインの○△×・次回の宿題。書く＝今日直した点（毎回1つ）、申し送り・新しい言い方（ときどき）。<span class="tag tag--warn">変更</span> 2026-11-04：書きかけの間は時間と合格ラインの○△×を空でよく、送るときに今日直した点と合わせて必須。実行者と課員は別の人（自分を課員にした記録は書けない）</td><td>今の表は「詳細」を長文で書き、直した言い方がほとんど残っていない。毎回書くのを1つにしぼり、残したいものは選ぶ・自動にする</td></tr>
           <tr><td>roleplay_themes（テーマ一覧）</td><td>テーマ番号・段階（1 暗記〜6 営業、目安）・名前・アポ／営業・合格ラインの例</td><td>テーマの段階の順は目安だけ（決まりにしない）。中身は現場の責任者に確かめる</td></tr>
-          <tr><td>member_themes（テーマ表）</td><td>課員・テーマ・開始日・合格ライン・状態（練習中／卒業）・卒業日・確認の日</td><td>練習中はアポと営業で1つずつまで。○が2回続いたら卒業の候補を知らせ、上席（リーダー・担当MGR・代表）が卒業にする（<span class="tag tag--warn">変更</span> 2026-11-04：実行者から上席に。メンバー同士のロープレでは実行者が上席でないため）。卒業の2週間後に確認のロープレを知らせ、×なら練習中に戻す</td></tr>
+          <tr><td>member_themes（テーマ表）</td><td>課員・テーマ・開始日・合格ライン・状態（練習中／卒業）・卒業日・確認の日</td><td>練習中はアポと営業で1つずつまで。○が2回続いたら卒業の候補を知らせ、上席（リーダー・担当MGR・代表）が卒業にする（<span class="tag tag--warn">変更</span> 2026-11-04：実行者から上席に。メンバー同士のロープレでは実行者が上席でないため）。卒業の2週間後に確認のロープレを知らせ、×なら上席が練習中に戻す</td></tr>
           <tr><td>talks（トーク一覧）</td><td>返し（OUT-）とスクリプト（SC-）。場面・業種・リストの種類・相手の言葉・言い方・ねらい・作った人・状態（確認待ち／試行中／標準）。練習回数と合格率は自動（<span class="tag tag--warn">変更</span> 2026-11-04：見る人が読める記録の範囲で数え、その旨を添える。全社の数をだれにでも見せるかは使ってみてから）</td><td>新しい言い方はロープレから「確認待ち」で自動で入る（送るときに1回だけ）。トーク一覧の画面の「トークを足す」はリーダー・MGR・トーク責任者・代表だけ。チームは、メンバー・リーダーは今のチーム、MGR は担当のチームから、代表はチームなし（全体）でもよい（チームなしの確認待ちは代表が試行中にする。2026-11-04）。試行中にするのはそのチームのリーダー（担当MGRも可）、標準にするのは「トーク責任者」の権限を持つ人（判断の材料：ロープレの数字と週間教育の判定）。AIは場面・業種の候補と似たトークを示す。最初に、課員ごとの返し集・スクリプトと過去の記録から集めて入れる</td></tr>
           <tr><td>seminars・seminar_members（研修の記録と参加者）</td><td>日付・テーマ・講師・時間・内容、参加者（複数）</td><td>研修は1回に何人も参加する。参加した本人もカルテで見られる。参加者を足す・外すのは研修を作った人で、外すときは消さずに「外した印」を入れる（2026-11-04）</td></tr>
         </tbody>
@@ -1495,8 +1495,8 @@
         <tbody>
           <tr><td>メンバー</td><td>今日の日報（昨日の約束つき）／届いたもの（良かった・上席のひとこと）／今週（週の約束・ロープレの宿題・週間教育の行動）／金曜だけ：来週の約束を決める</td></tr>
           <tr><td>リーダー</td><td>業後すぐ：未達の一覧／返事・確認：返事がほしい日報・部下メモの確認日・ロープレの知らせ（卒業の候補・2週間後の確認）・トークの確認待ち／今日の締め：責任者日報／月曜だけ：AIの提案の判断</td></tr>
-          <tr><td>MGR</td><td>担当チームの未達の一覧（見るだけ）・返事がほしい日報・リーダーの週の要約の返事待ち・トークの確認待ち・自分の責任者日報</td></tr>
-          <tr><td>代表</td><td>MGRの週の要約の返事待ち・月末の組織MVPの報告・全体のダッシュボードへの入口</td></tr>
+          <tr><td>MGR</td><td>担当チームの未達の一覧（見るだけ）・返事がほしい日報・リーダーの週の要約の返事待ち・トークの確認待ち・自分の責任者日報・ロープレの知らせ（担当チームの卒業の候補・確認。リーダー自身のテーマを含む）<span class="tag tag--warn">2026-11-04 追加・要確認</span></td></tr>
+          <tr><td>代表</td><td>MGRの週の要約の返事待ち・月末の組織MVPの報告・全体のダッシュボードへの入口・チームなしのトークの確認待ち<span class="tag tag--warn">2026-11-04 追加・要確認</span></td></tr>
           <tr><td>管理者の権限</td><td>上の役割の項目に加えて、業後のCSV取り込みと承認</td></tr>
         </tbody>
       </table>
@@ -1512,8 +1512,8 @@
           <tr><td>一般日報</td><td><span class="cell"><i class="dot in"></i>自分を入力・届いた「良かった」を見る</span></td><td><span class="cell"><i class="dot in"></i>読んだ印・ひとこと</span></td><td><span class="cell"><i class="dot in"></i>読んだ印・ひとこと</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
           <tr><td>責任者日報</td><td><span class="none">－ 非表示</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
           <tr><td>部下メモ</td><td><span class="none">－ 非表示</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
-          <tr><td>ロープレ</td><td><span class="cell"><i class="dot in"></i>自分を見る・実行者として入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
-          <tr><td>トーク一覧</td><td><span class="cell"><i class="dot view"></i>標準・試行中</span></td><td><span class="cell"><i class="dot in"></i>試行中にする</span></td><td><span class="cell"><i class="dot in"></i>試行中にする</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>ロープレ</td><td><span class="cell"><i class="dot in"></i>自分を見る・実行者として入力</span></td><td><span class="cell"><i class="dot in"></i>入力・テーマ表・卒業にする</span></td><td><span class="cell"><i class="dot in"></i>入力・テーマ表・卒業にする</span></td><td><span class="cell"><i class="dot in"></i>入力・テーマ表・卒業にする</span></td><td><span class="tag tag--plain">なし</span></td></tr>
+          <tr><td>トーク一覧</td><td><span class="cell"><i class="dot view"></i>標準・試行中（トーク責任者の権限があれば、試行中を標準にする）</span></td><td><span class="cell"><i class="dot in"></i>トークを足す・試行中にする</span></td><td><span class="cell"><i class="dot in"></i>トークを足す・試行中にする</span></td><td><span class="cell"><i class="dot in"></i>トークを足す・チームなしの確認待ちを試行中にする</span></td><td><span class="tag tag--plain">なし</span></td></tr>
           <tr><td>研修の記録</td><td><span class="cell"><i class="dot view"></i>参加した分</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
           <tr><td>週間教育</td><td><span class="cell"><i class="dot view"></i>自分</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--plain">なし</span></td></tr>
           <tr><td>AIレポート 本人版</td><td><span class="cell"><i class="dot view"></i>自分</span></td><td><span class="cell"><i class="dot view"></i>全体を見る</span></td><td><span class="cell"><i class="dot view"></i>全体を見る</span></td><td><span class="cell"><i class="dot view"></i></span></td><td><span class="tag tag--good">あり</span></td></tr>
@@ -1574,7 +1574,7 @@
       <div><div class="g-label">図の見方</div><ul><li>最初の表は役割ごとのホーム。2つ目の表は、縦に画面、横にロール（役割）。塗りの丸は入力、輪の丸は閲覧</li><li>受注・見込み・週の約束は、別の画面にせず一般日報の中にある</li><li>「モック」は、見た目の試作がすでにあるかどうか</li><li>濃紺のタグは、役職ではなく「管理者」の権限を持つ人が行う仕事</li></ul></div>
       <div class="g-pt"><div class="g-label">ポイント</div><ul><li>ログインは会社のMicrosoft 365アカウント。退職でアカウントを止めれば、アプリにも入れなくなる</li><li>見える範囲は担当チームで決まる。リーダーは自チーム、MGRは担当チーム（チーム単位で期間つきで設定）、代表はすべて</li><li>メンバーにはチーム平均と、名前つきのチーム内の順位を見せる。順位の数字はアポ数・関わった受注・アポの達成率・粗利の達成率の4つ（v20）</li><li>AI本人版は担当リーダー・MGRも全体を見る。本人の画面に「担当リーダー・MGRも見ます」と表示する</li><li>権限を与えた・外した記録は<a class="term" href="#g-audit">監査ログ</a>に残す。記録を消すときは<a class="term" href="#g-softdelete">論理削除</a>にし、直す・消すのは書いた本人だけ</li><li>権限は画面に出さないだけでなく、データベースの段階で読めないようにする</li></ul></div>
     </div>
-    <h3 style="margin:var(--space-6) 0 var(--space-3)">ログインと安全の決まり（v24で決定・土台の準備で設定。2026-11-04 に土台で作って確かめた：守りのテスト22件・Security Advisor 0件）</h3>
+    <h3 style="margin:var(--space-6) 0 var(--space-3)">ログインと安全の決まり（v24で決定・土台の準備で設定。2026-11-04 に土台で作って確かめた：守りのテスト22件・Security Advisor 0件。ロープレのあとは守りのテスト47件・注意1件＝漏れたパスワードの確認がオフ）</h3>
     <div class="table-wrap">
       <table class="left">
         <thead><tr><th>決まり</th><th>中身</th><th>状態</th></tr></thead>
@@ -1586,12 +1586,12 @@
           <tr><td>表の守り</td><td>すべての表で<a class="term" href="#g-rls">行ごとの読み書きの決まり（RLS）</a>をオンにする。表ごとの許可は SQL のファイルに書き、ログインしていない人には何も許さない。新しい表は自動で公開しない設定にした</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>鍵の扱い</td><td>鍵は新しい形（Publishable key と Secret key）を使う（古い形の anon・service_role は2027年の初めに使えなくなるため。.env の名前はそのまま）。<a class="term" href="#g-servicerole">管理用の鍵（service_role。新しい形では Secret key）</a>は画面のコードに置かず、<a class="term" href="#g-env">.env</a> の画面用の名前（VITE_ で始まる名前）にもしない。チャットにも貼らない</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>作ったあとの点検</td><td>表や権限を変えたら、Supabase の安全の点検（<a class="term" href="#g-advisor">Security Advisor</a>）を、ご自身が管理画面で開いて写しを送り、Claude Code がレビューで確かめる（管理画面はご自身のアカウントでしか開けない。<span class="tag tag--warn">変更</span> v26）</td><td><span class="tag tag--good">決定</span></td></tr>
-          <tr><td>指導の記録を読める範囲</td><td>ロープレ・部下メモ・週間教育などの指導の記録は、役割どおりに読める（本人は自分の分、リーダー・MGR は担当の人の分、代表は全員）。管理者の権限は名簿・取り込み・担当の設定のためのもので、指導の記録を読める範囲は広げない（2026-11-04 決定）。上席の判定から自分自身は外す：リーダーも自分のテーマ表を足したり卒業にしたりできず、自分の上席（担当MGR・代表）が扱う（2026-11-04 決定）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>指導の記録を読める範囲</td><td>ロープレ・部下メモ・週間教育などの指導の記録は、役割どおりに読める（本人は自分の分、リーダー・MGR は担当の人の分、代表は全員）。管理者の権限は名簿・取り込み・担当の設定のためのもので、指導の記録を読める範囲は広げない（2026-11-04 決定）。退職日を過ぎた人は、ログインできても何も読めない（ロープレ①で作った。退職・異動した人の過去の記録をだれが読むかはカルテ第1版で決める）。上席の判定から自分自身は外す：リーダーも自分のテーマ表を足したり卒業にしたりできず、自分の上席（担当MGR・代表）が扱う（2026-11-04 決定）</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>権限の表を読める範囲</td><td>だれにどの権限（管理者・トーク責任者）があるかの表は、代表と管理者の権限がある人は全員分、ほかの人は自分の行だけ読める。取り消しは代表と管理者だけで、本人は自分の権限を取り消すことも元に戻すこともできない。v26</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>表の流し込み</td><td>作る係は、.env の SUPABASE_DB_URL（開発用のプロジェクトだけに効く接続の文字。パスワード入り）で表を流し込む。Supabase のアカウントの合鍵は使わない（ほかのプロジェクトまで操作できてしまうため）。v26</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>ログインのあとに戻る先</td><td>開発中は手元の画面 http://localhost:5173 に戻す（Supabase の Site URL と Redirect URLs に入れる。ご自身が設定）。Microsoft のログインではメールアドレスを受け取る設定（scopes に email）を付け、Microsoft 365 の登録したアプリに追加の要求（email と xms_edov）を足す（Supabase がメールを確認済みとみなすため）。v26</td><td><span class="tag tag--good">設定済み</span></td></tr>
-          <tr><td>ご自身のアカウントでの確かめ</td><td>.env に入れたご自身のメールアドレスで、架空の名前「テスト代表」（代表）の行を作って確かめる。その行を消すと「名簿に登録されていません」になることも確かめる。メールアドレスは Git に入れない。v26</td><td><span class="tag tag--good">決定</span></td></tr>
-          <tr><td>本物のデータを入れる前</td><td>権限の判定に退職日を入れる（今は退職した人もログインできれば読める。ロープレの区切りの先頭で直す。2026-11-04 決定）。本番では、メールのログインを止めて Microsoft だけにする。本番用と開発用のプロジェクトを分ける。バックアップを決める。管理用の鍵を作り直す。Microsoft の合言葉（シークレット）は180日（2027年4月ごろ）で切れるので、期限の管理を決める</td><td><span class="tag tag--warn">未決（カルテ第1版の節目まで）</span></td></tr>
+          <tr><td>ご自身のアカウントでの確かめ</td><td>.env に入れたご自身のメールアドレスで、架空の名前「テスト代表」（代表）の行を作って確かめる。その行を消すと「名簿に登録されていません」になることも確かめる。メールアドレスは Git に入れない。v26。リーダー・メンバー・MGR・トーク責任者の見え方は、`npm run fixtures:dev-role -- 〈leader／member／mgr／talk-owner〉` でテスト代表の役割を切り替えて確かめ、終わったら `ceo` に戻す（並列の作業中は流さない。2026-11-04）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>本物のデータを入れる前</td><td>本番では、メールのログインを止めて Microsoft だけにする。本番用と開発用のプロジェクトを分ける。バックアップを決める。管理用の鍵を作り直す。Microsoft の合言葉（シークレット）は180日（2027年4月ごろ）で切れるので、期限の管理を決める。漏れたパスワードを使わせない機能を入れるか、メールのログインを止める（Security Advisor の注意1件）。設定値の最初の行を入れる手順を決める（今は架空データの中にしかない）</td><td><span class="tag tag--warn">未決（カルテ第1版の節目まで）</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1834,7 +1834,7 @@
 
   <!-- 15 未決事項と次の一手 -->
   <section id="s15">
-    <h2><span class="section-num">15</span>未決事項と次の一手：土台ができ、次はロープレ</h2>
+    <h2><span class="section-num">15</span>未決事項と次の一手：土台とロープレができ、次はロープレを触ってもらう</h2>
     <div class="issues">
       <div class="iss done"><span class="no">1</span><b>現行Excelの見本</b><span class="tag tag--good" style="align-self:start">決定（6業務すべて受領・確定）</span></div>
       <div class="iss review"><span class="no">2</span><b>技術構成</b><span class="tag tag--navy" style="align-self:start">認証・作り方は決定、土台は Supabase で動いた</span></div>
@@ -1860,7 +1860,7 @@
       <div class="nx"><span class="n">3</span><b>土台を作る</b>Antigravity が作り、Claude Code がレビュー<span class="tag tag--good" style="align-self:start">済み（2026-11-04）</span></div>
       <div class="nx"><span class="n">4</span><b>ロープレ①</b>土台の追加・ロープレと研修の表・画面の枠と共通の部品<span class="tag tag--good" style="align-self:start">済み（2026-11-04）</span></div>
       <div class="nx"><span class="n">5</span><b>ロープレ②③</b>記録とテーマ表、トーク一覧と研修の記録を2本の並列で<span class="tag tag--good" style="align-self:start">済み（2026-11-04）</span></div>
-      <div class="nx first"><span class="n">6</span><b>ロープレを触ってもらう</b>リーダーに数日使ってもらい、直す所を集める。先に決めること：触ってもらう人、費用の上限と保守する人。そのあと KPI・部下メモ<span class="tag tag--warn" style="align-self:start">今ここ・未決あり</span></div>
+      <div class="nx first"><span class="n">6</span><b>ロープレを触ってもらう</b>リーダーに数日使ってもらい、直す所を集める。先に決めること：触ってもらう人、架空データのまま触ってもらうか本物の名簿を先に入れるか、費用の上限と保守する人。そのあと KPI・部下メモ<span class="tag tag--warn" style="align-self:start">今ここ・未決あり</span></div>
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>緑＝決定、濃紺＝検討中、橙＝待ち、白＝未着手。下の帯は件数の割合</li></ul></div>

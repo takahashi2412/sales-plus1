@@ -368,7 +368,7 @@
   <header class="doc-header">
     <div class="label">SALES +1 ／ 構成の全体図 v1</div>
     <h1>SALES +1 の構成：使う人には1つのサイト、中は「土台＋業務の箱」で作る</h1>
-    <p class="small" style="margin-top:var(--space-2)">2026年11月4日（水）時点 ／ v1：新しく作成。2026-10-30 に決めた作り方（土台は1つ、業務ごとに分ける）と作る手順（並列・作業用フォルダ）で「何が変わり、何が変わらないか」を、項目ごとに図・ツリー・表・チャートで見せる。正式な決まりは設計書（企画ダッシュボード v27）と CLAUDE.md。細かい手順は「制作の手順」（build-process_v1.html）</p>
+    <p class="small" style="margin-top:var(--space-2)">2026年11月4日（水）時点 ／ v1：新しく作成。2026-10-30 に決めた作り方（土台は1つ、業務ごとに分ける）と作る手順（並列・作業用フォルダ）で「何が変わり、何が変わらないか」を、項目ごとに図・ツリー・表・チャートで見せる。正式な決まりは設計書（企画ダッシュボード v28）と CLAUDE.md。細かい手順は「制作の手順」（build-process_v1.html）</p>
     <nav class="toc" aria-label="目次">
       <span class="grp">はじめに</span>
       <a href="#s0">0 完成度の表</a>
@@ -391,7 +391,7 @@
     <div class="tile"><span class="t-label">使う人から見たサイト</span><span class="t-value">1<span class="unit">つ</span></span><span class="t-note">入口・ログイン・メニューは1つ（変わらない）</span></div>
     <div class="tile"><span class="t-label">画面</span><span class="t-value">18</span><span class="t-note">ホーム1・書く7・見る5・管理5</span></div>
     <div class="tile"><span class="t-label">データの表</span><span class="t-value">37</span><span class="t-note">土台8・業務の箱29</span></div>
-    <div class="tile"><span class="t-label">作る区切り</span><span class="t-value">9</span><span class="t-note">土台から自動化まで。土台は済み、いまはロープレ</span></div>
+    <div class="tile"><span class="t-label">作る区切り</span><span class="t-value">9</span><span class="t-note">土台から自動化まで。土台とロープレは済み、いまはロープレを触ってもらう準備</span></div>
   </div>
 
   <div class="callout callout--point" style="margin-top:var(--space-6)">
@@ -639,7 +639,7 @@
             </li>
             <li><span class="nd k-site">sales-plus1-worktrees\</span><span class="why"><a class="term" href="#g-worktree">作業用フォルダ</a>の置き場所。Antigravity が使う</span>
               <ul>
-                <li><span class="nd">foundation\ ・ roleplay-common\</span><span class="why">土台とロープレ①を作ったときの作業用フォルダ（2026-11-04 に使い終えて片づけた）</span></li>
+                <li><span class="nd">foundation\ ・ roleplay-common\ ・ dev-role\ ・ roleplay-prep\ ・ roleplay-record\ ・ roleplay-talks\</span><span class="why">土台とロープレを作ったときの作業用フォルダ（2026-11-04 に使い終えて片づけた）</span></li>
                 <li><span class="nd k-out">〈計画の名前〉\</span><span class="why">ロープレなど、計画ごとに用意して、取り込んだら片づける</span></li>
               </ul>
             </li>
@@ -650,7 +650,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>いちばん上が Workspace の apps フォルダ。その中に、元のフォルダと作業用フォルダの置き場所が並ぶ</li><li>箱の右の小さい字は、そのフォルダの中身と、だれが使うか</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>4の箱の分け方が、そのまま src\ の中のフォルダの分け方になる。日報を直すときは features\daily-report\ の中だけを触る</li><li>作業用フォルダは、元のフォルダのコピーのようなもの。samples\ と .env は Git の外なので、作業用フォルダには入らない（.env だけ Claude Code が写す）</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>4の箱の分け方が、そのまま src\ の中のフォルダの分け方になる。日報を直すときは features\daily-report\ の中だけを触る</li><li>作業用フォルダは、元のフォルダのコピーのようなもの。samples\ と .env は Git の外なので、作業用フォルダには入らない（.env はご自身が写す。2026-11-04 から）</li></ul></div>
     </div>
   </section>
 

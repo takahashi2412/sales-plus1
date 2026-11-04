@@ -470,7 +470,7 @@
         <rect class="s-box" x="10" y="40" width="150" height="70" rx="10"/><text class="t-title" x="85" y="68" text-anchor="middle">テーマ一覧</text><text class="t-muted" x="85" y="90" text-anchor="middle">段階1〜6（目安）</text>
         <rect class="s-core" x="200" y="40" width="160" height="70" rx="10"/><text class="t-title" x="280" y="68" text-anchor="middle">練習中</text><text class="t-muted" x="280" y="90" text-anchor="middle">アポ1つ・営業1つ</text>
         <rect class="s-box" x="400" y="40" width="160" height="70" rx="10"/><text class="t-title" x="480" y="68" text-anchor="middle">○が2回続く</text><text class="t-muted" x="480" y="90" text-anchor="middle">卒業の候補を知らせる</text>
-        <rect class="s-box" x="600" y="40" width="130" height="70" rx="10"/><text class="t-title" x="665" y="68" text-anchor="middle">卒業</text><text class="t-muted" x="665" y="90" text-anchor="middle">実行者が決める</text>
+        <rect class="s-box" x="600" y="40" width="130" height="70" rx="10"/><text class="t-title" x="665" y="68" text-anchor="middle">卒業</text><text class="t-muted" x="665" y="90" text-anchor="middle">上席が決める</text>
         <rect class="s-box" x="600" y="170" width="270" height="70" rx="10"/><text class="t-title" x="735" y="198" text-anchor="middle">2週間後に確認のロープレ</text><text class="t-muted" x="735" y="220" text-anchor="middle">アプリが知らせる</text>
         <rect class="s-warn" x="200" y="170" width="300" height="70" rx="10"/><text class="t-title" x="350" y="198" text-anchor="middle">×なら練習中に戻す</text><text class="t-muted" x="350" y="220" text-anchor="middle">○なら卒業のまま</text>
         <path class="s-navy" d="M160,75 L198,75" marker-end="url(#ahn)"/>
@@ -521,7 +521,7 @@
           <tr><td>業種</td><td>共通／店舗／建設・リフォーム／不動産／士業／スクール／農業／その他</td></tr>
           <tr><td>リストの種類（任意）</td><td>予約・口コミサイトの掲載店／新設法人／差分など</td></tr>
           <tr><td>分類の言葉</td><td>上の案で始め、管理者が設定で足したり変えたりできる</td></tr>
-          <tr><td>見られる人</td><td>メンバーは標準と試行中を見られる。確認待ちはリーダー以上</td></tr>
+          <tr><td>見られる人</td><td>メンバーは標準と試行中を見られる。確認待ちは、作った人・そのチームのリーダーと担当MGR・トーク責任者・代表（2026-11-04）</td></tr>
         </tbody>
       </table>
     </div>
@@ -579,8 +579,8 @@
       <table>
         <thead><tr><th>画面</th><th>メンバー</th><th>リーダー</th><th>MGR</th><th>代表</th></tr></thead>
         <tbody>
-          <tr><td>ロープレ</td><td><span class="cell"><i class="dot in"></i>自分を見る・実行者として入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td></tr>
-          <tr><td>トーク一覧</td><td><span class="cell"><i class="dot view"></i>標準・試行中</span></td><td><span class="cell"><i class="dot in"></i>試行中にする</span></td><td><span class="cell"><i class="dot in"></i>試行中にする</span></td><td><span class="cell"><i class="dot view"></i></span></td></tr>
+          <tr><td>ロープレ</td><td><span class="cell"><i class="dot in"></i>自分を見る・実行者として入力</span></td><td><span class="cell"><i class="dot in"></i>入力・テーマ表・卒業にする</span></td><td><span class="cell"><i class="dot in"></i>入力・テーマ表・卒業にする</span></td><td><span class="cell"><i class="dot in"></i>入力・テーマ表・卒業にする</span></td></tr>
+          <tr><td>トーク一覧</td><td><span class="cell"><i class="dot view"></i>標準・試行中（トーク責任者の権限があれば、試行中を標準にする）</span></td><td><span class="cell"><i class="dot in"></i>トークを足す・試行中にする</span></td><td><span class="cell"><i class="dot in"></i>トークを足す・試行中にする</span></td><td><span class="cell"><i class="dot in"></i>トークを足す・チームなしの確認待ちを試行中にする</span></td></tr>
           <tr><td>研修の記録</td><td><span class="cell"><i class="dot view"></i>参加した分</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot in"></i>入力</span></td><td><span class="cell"><i class="dot view"></i></span></td></tr>
         </tbody>
       </table>
@@ -606,7 +606,7 @@
           <tr><td>注意</td><td>30分を超えたら確認、14日以上練習中なら注意（設定で変える）</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>トーク一覧</td><td>2段階の確認、標準はトーク責任者が数字を見て決める、最初にまとめて登録、分類は設定で変える、AIは整理の手伝い</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>週間教育とのつなぎ</td><td>週間教育でテーマを選び、自動で実行回数に数える</td><td><span class="tag tag--good">決定</span></td></tr>
-          <tr><td>過去の記録</td><td>120件を読むだけの形で移す（移す時期はまとまり8）</td><td><span class="tag tag--good">決定</span></td></tr>
+          <tr><td>過去の記録</td><td>120件を読むだけの形で移す（移す時期はカルテ第1版）</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>テーマ一覧の中身</td><td>15テーマと合格ラインの例が、現場の言葉に合っているかを現場の責任者に確かめる</td><td><span class="tag tag--warn">残り</span></td></tr>
           <tr><td>トーク一覧の中身</td><td>課員ごとの返し集・スクリプトを集めて、最初の一覧案を作る</td><td><span class="tag tag--warn">残り</span></td></tr>
         </tbody>
@@ -614,7 +614,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>「決定」は2026年10月8日に本人が選んだもの、「残り」は中身を確かめているもの</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>しくみの形はすべて決まっている。残っているのは、テーマとトークという「中身」の確認</li><li>正式な仕様は設計書（<a href="old/project-dashboard_v19.html">project-dashboard_v19.html</a>）の5章「ロープレの形」と9章</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント（要点）</div><ul><li>しくみの形はすべて決まっている。残っているのは、テーマとトークという「中身」の確認</li><li>正式な仕様は設計書（<a href="project-dashboard_v28.html">project-dashboard_v28.html</a>）の5章「ロープレの形」と9章。2026-11-04 の決定（書きかけ・実行者と課員は別の人・トークのチームと足すボタン・練習回数の数え方・研修の参加者）は設計書にある</li></ul></div>
     </div>
   </section>
 
@@ -626,7 +626,7 @@
     <div class="gl-group">
       <h3>ロープレのしくみ</h3>
       <div class="gl">
-        <dl id="g-jikko"><dt>実行者</dt><dd>ロープレで相手役をして教える側の人。リーダーやMGR、先輩のメンバー。</dd><dd class="ex">ロープレの記録を入力し、卒業の候補が出たら卒業にするかを決める。</dd></dl>
+        <dl id="g-jikko"><dt>実行者</dt><dd>ロープレで相手役をして教える側の人。リーダーやMGR、先輩のメンバー。</dd><dd class="ex">ロープレの記録を入力する。卒業にするかは上席（リーダー・担当MGR・代表）が決める（2026-11-04 変更）。</dd></dl>
         <dl id="g-theme"><dt>テーマ</dt><dd>1回のロープレで身につけるもの。会社で共通の一覧から選ぶ。</dd><dd class="ex">「アウト返し（時間切りの前）」など。段階1 暗記〜6 営業の目安がある。</dd></dl>
         <dl id="g-practice"><dt>練習中のテーマ</dt><dd>その人が今身につけようとしているテーマ。</dd><dd class="ex">アポと営業で1つずつまで。ロープレの記録のテーマは、ここから自動で入る。</dd></dl>
         <dl id="g-pass"><dt>合格ライン</dt><dd>テーマごとに決めた「ここまでできたら合格」の基準。○△×で評価する。</dd><dd class="ex">「1回目のアウトで、受け止めてから時間切りまで進める」など。○が2回続くと卒業の候補。</dd></dl>
