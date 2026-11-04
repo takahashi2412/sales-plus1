@@ -190,21 +190,40 @@ beforeAll(async () => {
   outsider.client = oc;
 }, 120_000);
 
+// 「権限の表を読める範囲」のテストで、memberA2 に足す talk_owner の行。あとのテスト（自分で取り消せない）でも使う
+let extraPermissionId = '';
+
+// 後片づけで消せなかったときは、黙らずに知らせる（架空の行や利用者が残らないように）
+function warnIf(label: string, error: { message: string } | null) {
+  if (error) console.warn(`後片づけで消せなかった：${label}：${error.message}`);
+}
+
 afterAll(async () => {
   if (!admin) return;
-  if (outsider.authId) await admin.auth.admin.deleteUser(outsider.authId);
+  if (outsider.authId) warnIf('名簿にない人', (await admin.auth.admin.deleteUser(outsider.authId)).error);
   const ids = PEOPLE.map((p) => p.memberId).filter(Boolean) as string[];
   if (ids.length) {
-    await admin.from('permissions').delete().in('member_id', ids);
-    await admin.from('mgr_assignments').delete().in('mgr_member_id', ids);
-    await admin.from('member_affiliations').delete().in('member_id', ids);
-    await admin.from('members').delete().in('id', ids);
+    warnIf('permissions', (await admin.from('permissions').delete().in('member_id', ids)).error);
+    warnIf('mgr_assignments', (await admin.from('mgr_assignments').delete().in('mgr_member_id', ids)).error);
+    warnIf('member_affiliations', (await admin.from('member_affiliations').delete().in('member_id', ids)).error);
+    warnIf('members', (await admin.from('members').delete().in('id', ids)).error);
   }
-  if (teamA || teamB) await admin.from('teams').delete().in('id', [teamA, teamB].filter(Boolean));
+  if (teamA || teamB) warnIf('teams', (await admin.from('teams').delete().in('id', [teamA, teamB].filter(Boolean))).error);
   for (const p of PEOPLE) {
-    if (p.authId) await admin.auth.admin.deleteUser(p.authId);
+    if (p.authId) warnIf(`利用者 ${p.key}`, (await admin.auth.admin.deleteUser(p.authId)).error);
   }
 }, 120_000);
+
+// 管理用の鍵で読み直す。読み直しがエラーなら、その場で失敗にする（エラーを「0件」と取り違えないため）
+async function adminRows(
+  table: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 絞り込みの書き方は表ごとに違うので、ここでは型を問わない
+  build: (q: any) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+): Promise<Record<string, unknown>[]> {
+  const { data, error } = await build(admin.from(table).select('*'));
+  expect(error).toBeNull();
+  return (data ?? []) as Record<string, unknown>[];
+}
 
 describe('名簿を読める範囲（members）', () => {
   it('ログインしていない人は、だれも読めない', async () => {
@@ -237,15 +256,15 @@ describe('名簿を読める範囲（members）', () => {
       .select('id')
       .single();
     if (exErr) throw exErr;
-    const extraId = (extra as { id: string }).id;
-    createdPermissionIds.push(extraId);
+    extraPermissionId = (extra as { id: string }).id;
+    createdPermissionIds.push(extraPermissionId);
 
     const ceoRows = await rowsOf(P('ceo').client!, 'permissions', 'member_id', memberIds());
-    expect(ceoRows.map((r) => r.id)).toEqual(expect.arrayContaining([adminPermissionId, extraId]));
-    const adminRows = await rowsOf(P('leaderB').client!, 'permissions', 'member_id', memberIds());
-    expect(adminRows.map((r) => r.id)).toEqual(expect.arrayContaining([adminPermissionId, extraId]));
+    expect(ceoRows.map((r) => r.id)).toEqual(expect.arrayContaining([adminPermissionId, extraPermissionId]));
+    const adminRowsSeen = await rowsOf(P('leaderB').client!, 'permissions', 'member_id', memberIds());
+    expect(adminRowsSeen.map((r) => r.id)).toEqual(expect.arrayContaining([adminPermissionId, extraPermissionId]));
     const ownRows = await rowsOf(P('memberA2').client!, 'permissions', 'member_id', memberIds());
-    expect(ownRows.map((r) => r.id)).toContain(extraId);
+    expect(ownRows.map((r) => r.id)).toContain(extraPermissionId);
     for (const key of ['memberA1', 'memberA2', 'leaderA', 'mgr1']) {
       const rows = await rowsOf(P(key).client!, 'permissions', 'member_id', memberIds());
       expect(rows.every((r) => r.member_id === P(key).memberId)).toBe(true);
@@ -276,21 +295,55 @@ describe('名簿を読める範囲（members）', () => {
   it('管理者の権限がある人は、全員を読める', async () => {
     expect(await visibleKeys(P('leaderB').client!)).toEqual(sorted(ALL));
   });
+
+  it('所属・担当・チームも、名簿と同じ範囲で読める（読めるべき人は読め、ほかのチームの人の分は読めない）', async () => {
+    const ownerKeys = (rows: Record<string, unknown>[], col: string) =>
+      PEOPLE.filter((p) => rows.some((r) => r[col] === p.memberId)).map((p) => p.key);
+
+    const a1Aff = await rowsOf(P('memberA1').client!, 'member_affiliations', 'member_id', memberIds());
+    expect(ownerKeys(a1Aff, 'member_id')).toEqual(expect.arrayContaining(['memberA1', 'memberA2']));
+    expect(ownerKeys(a1Aff, 'member_id')).not.toContain('memberB1');
+    expect(ownerKeys(a1Aff, 'member_id')).not.toContain('leaderB');
+
+    const a1Teams = await rowsOf(P('memberA1').client!, 'teams', 'id', teamIds());
+    expect(a1Teams.map((r) => r.id)).toContain(teamA);
+
+    const mgrAssign = await rowsOf(P('mgr1').client!, 'mgr_assignments', 'mgr_member_id', memberIds());
+    expect(mgrAssign.some((r) => r.mgr_member_id === P('mgr1').memberId && r.team_id === teamA)).toBe(true);
+    const mgrAff = await rowsOf(P('mgr1').client!, 'member_affiliations', 'member_id', memberIds());
+    expect(ownerKeys(mgrAff, 'member_id')).toContain('memberA1');
+    expect(ownerKeys(mgrAff, 'member_id')).not.toContain('memberB1');
+
+    const ceoAff = await rowsOf(P('ceo').client!, 'member_affiliations', 'member_id', memberIds());
+    expect(ownerKeys(ceoAff, 'member_id')).toEqual(expect.arrayContaining(['memberA1', 'memberB1']));
+  });
 });
 
 describe('名簿と権限を書ける範囲', () => {
-  it('メンバーは、自分の行でも名簿を書きかえられない', async () => {
+  it('メンバーは、自分の行でも名前も役割も書きかえられない（1つずつ試す）', async () => {
     const before = await nameOf(P('memberA1').memberId!);
-    await P('memberA1').client!.from('members').update({ name: `${RUN}-changed`, role: 'ceo' }).eq('id', P('memberA1').memberId!);
+    await P('memberA1').client!.from('members').update({ name: `${RUN}-changed` }).eq('id', P('memberA1').memberId!);
     expect(await nameOf(P('memberA1').memberId!)).toBe(before);
-    const { data } = await admin.from('members').select('role').eq('id', P('memberA1').memberId!).single();
-    expect((data as { role: string }).role).toBe('member');
+
+    await P('memberA1').client!.from('members').update({ role: 'ceo' }).eq('id', P('memberA1').memberId!);
+    const rows = await adminRows('members', (q) => q.eq('id', P('memberA1').memberId!));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].role).toBe('member');
   });
 
   it('リーダー（管理者の権限なし）は、自分のチームの人でも名簿を書きかえられない', async () => {
     const before = await nameOf(P('memberA2').memberId!);
     await P('leaderA').client!.from('members').update({ name: `${RUN}-changed` }).eq('id', P('memberA2').memberId!);
     expect(await nameOf(P('memberA2').memberId!)).toBe(before);
+  });
+
+  it('代表（今回は書く権限なし）とMGRも、名簿を書きかえられない', async () => {
+    const before = await nameOf(P('memberB1').memberId!);
+    await P('ceo').client!.from('members').update({ name: `${RUN}-by-ceo` }).eq('id', P('memberB1').memberId!);
+    expect(await nameOf(P('memberB1').memberId!)).toBe(before);
+    const beforeA1 = await nameOf(P('memberA1').memberId!);
+    await P('mgr1').client!.from('members').update({ name: `${RUN}-by-mgr` }).eq('id', P('memberA1').memberId!);
+    expect(await nameOf(P('memberA1').memberId!)).toBe(beforeA1);
   });
 
   it('メンバーは、権限を自分に与えられない', async () => {
@@ -300,13 +353,10 @@ describe('名簿と権限を書ける範囲', () => {
       granted_by: P('memberA1').memberId,
       granted_at: new Date().toISOString(),
     });
-    const { data } = await admin
-      .from('permissions')
-      .select('id')
-      .eq('member_id', P('memberA1').memberId!)
-      .eq('kind', 'admin')
-      .is('revoked_at', null);
-    expect(data ?? []).toHaveLength(0);
+    const rows = await adminRows('permissions', (q) =>
+      q.eq('member_id', P('memberA1').memberId!).eq('kind', 'admin').is('revoked_at', null),
+    );
+    expect(rows).toHaveLength(0);
   });
 
   it('メンバーは、自分を別のチームの所属に足せず、自分の所属も書きかえられない', async () => {
@@ -317,24 +367,16 @@ describe('名簿と権限を書ける範囲', () => {
       start_date: '2025-04-01',
       end_date: null,
     });
-    const { data: added } = await admin
-      .from('member_affiliations')
-      .select('id')
-      .eq('member_id', P('memberA1').memberId!)
-      .eq('team_id', teamB);
-    expect(added ?? []).toHaveLength(0);
+    const added = await adminRows('member_affiliations', (q) => q.eq('member_id', P('memberA1').memberId!).eq('team_id', teamB));
+    expect(added).toHaveLength(0);
 
     await P('memberA1').client!
       .from('member_affiliations')
       .update({ end_date: '2025-12-31' })
       .eq('member_id', P('memberA1').memberId!);
-    const { data: own } = await admin
-      .from('member_affiliations')
-      .select('end_date')
-      .eq('member_id', P('memberA1').memberId!)
-      .eq('team_id', teamA)
-      .single();
-    expect((own as { end_date: string | null }).end_date).toBeNull();
+    const own = await adminRows('member_affiliations', (q) => q.eq('member_id', P('memberA1').memberId!).eq('team_id', teamA));
+    expect(own).toHaveLength(1);
+    expect(own[0].end_date).toBeNull();
   });
 
   it('リーダー（管理者の権限なし）は、MGRの担当を足せない', async () => {
@@ -345,13 +387,20 @@ describe('名簿と権限を書ける範囲', () => {
       end_date: null,
       assigned_by: P('leaderA').memberId,
     });
-    const { data } = await admin
-      .from('mgr_assignments')
-      .select('id')
-      .eq('mgr_member_id', P('mgr1').memberId!)
-      .eq('team_id', teamB)
-      .is('end_date', null);
-    expect(data ?? []).toHaveLength(0);
+    const rows = await adminRows('mgr_assignments', (q) =>
+      q.eq('mgr_member_id', P('mgr1').memberId!).eq('team_id', teamB).is('end_date', null),
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it('だれも行を削除できない（管理者の権限がある人も。削除はのちに論理削除で入れる）', async () => {
+    await P('memberA1').client!.from('members').delete().eq('id', P('memberA1').memberId!);
+    await P('leaderB').client!.from('members').delete().eq('id', P('memberB1').memberId!);
+    await P('leaderB').client!.from('member_affiliations').delete().eq('member_id', P('memberB1').memberId!);
+    await P('ceo').client!.from('permissions').delete().eq('id', extraPermissionId);
+    expect(await adminRows('members', (q) => q.in('id', [P('memberA1').memberId!, P('memberB1').memberId!]))).toHaveLength(2);
+    expect(await adminRows('member_affiliations', (q) => q.eq('member_id', P('memberB1').memberId!))).toHaveLength(1);
+    expect(await adminRows('permissions', (q) => q.eq('id', extraPermissionId))).toHaveLength(1);
   });
 
   it('代表は、権限を与えられる', async () => {
@@ -369,13 +418,23 @@ describe('名簿と権限を書ける範囲', () => {
     createdPermissionIds.push((data as { id: string }).id);
   });
 
+  it('権限を持つ本人は、自分の権限を取り消せない（取り消しは代表と管理者だけ）', async () => {
+    await P('memberA2').client!
+      .from('permissions')
+      .update({ revoked_at: new Date().toISOString(), revoked_by: P('memberA2').memberId })
+      .eq('id', extraPermissionId);
+    const rows = await adminRows('permissions', (q) => q.eq('id', extraPermissionId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].revoked_at).toBeNull();
+  });
+
   it('管理者の権限がある人は、名簿を書きかえられる', async () => {
     const newName = `${RUN}-memberA2-renamed`;
     await P('leaderB').client!.from('members').update({ name: newName }).eq('id', P('memberA2').memberId!);
     expect(await nameOf(P('memberA2').memberId!)).toBe(newName);
   });
 
-  it('管理者の権限を取り消すと、全員は読めず、名簿も書きかえられなくなる', async () => {
+  it('管理者の権限を取り消すと、全員は読めず、名簿も書きかえられず、自分で元にも戻せない', async () => {
     const { error } = await admin
       .from('permissions')
       .update({ revoked_at: new Date().toISOString(), revoked_by: P('ceo').memberId })
@@ -387,5 +446,10 @@ describe('名簿と権限を書ける範囲', () => {
     const before = await nameOf(P('memberB1').memberId!);
     await P('leaderB').client!.from('members').update({ name: `${RUN}-changed-again` }).eq('id', P('memberB1').memberId!);
     expect(await nameOf(P('memberB1').memberId!)).toBe(before);
+
+    await P('leaderB').client!.from('permissions').update({ revoked_at: null, revoked_by: null }).eq('id', adminPermissionId);
+    const rows = await adminRows('permissions', (q) => q.eq('id', adminPermissionId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].revoked_at).not.toBeNull();
   });
 });

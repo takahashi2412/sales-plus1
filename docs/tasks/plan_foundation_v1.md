@@ -38,10 +38,13 @@
 1. プロジェクトの土台を作る：React＋Vite（TypeScript）。テストの道具は Vitest。Supabase とつなぐ部品は `@supabase/supabase-js`。Supabase の道具（CLI）は `npx supabase` で使う（グローバルに入れない）
    - 作業用フォルダは空ではない（CLAUDE.md・NOTES.md・README.md・.gitignore・docs/・tests/ がある）。Vite の雛形（`npm create vite`）をこのフォルダで直接作らない。雛形はフォルダの外で作って要るファイルだけ写すか、手で作る。既にあるファイル・フォルダを上書き・削除しない（特にルートの `.gitignore`。上書きされると `.env` が Git に入ってしまう）
    - `package.json` の scripts の `test` は `vitest run`（監視モードにしない）。流し込み・架空の名簿の出し入れも scripts に置く（例：`db:push`・`fixtures:load`・`fixtures:remove`）。`.env` を読む補助のプログラムは `supabase/` か `fixtures/foundation/` に置き、`node --env-file=.env` で動かす（ライブラリを足さない）
+   - 入れてよい部品は、2章に書いたものと、Vite の react-ts の雛形に入っている部品（`@vitejs/plugin-react`・`typescript`・`@types/react` など。`@types/node` も可）、`supabase`（CLI。開発用の部品＝devDependency として入れる。グローバルには入れない）だけ。ルーターなど、それ以外は入れない
    - `src/` は、土台（ログイン・名簿・権限。例：`src/foundation/`）と、業務ごとのフォルダ（`src/features/〈業務〉/`。ロープレ以降に足す）に分けられる形にする（7章「業務ごとに分ける」）。今回作るのは土台だけ
 2. 表と権限を、SQL のファイル（マイグレーション）で `supabase/migrations/` に書き、開発用のプロジェクトに流し込む（4章の表と権限）
    - 流し込みは `npx supabase db push --db-url` に、`.env` の `SUPABASE_DB_URL` の値を渡して行う（値は画面やログに出さない。コマンドに直接書かず、`.env` から読む）。`supabase login`（アカウントへのログイン）は使わない
-   - `npx supabase init` はしてよい（`supabase/config.toml` と `supabase/.gitignore` ができる。ルートの `.gitignore` は変えない）。流し込みの確認を聞かれたら、内容を報告書に書いてから進める
+   - `npx supabase init` を1回行う（`supabase/config.toml` と `supabase/.gitignore` ができる。ルートの `.gitignore` は変えない）。VS Code・IntelliJ の Deno の設定を作るかを聞かれたら、すべて N と答える
+   - 流し込みのやり方（例。Windows で接続の文字をコマンド行に出さないため）：`package.json` に `"db:push": "node --env-file=.env supabase/push.mjs"` を置く。`supabase/push.mjs` は、`SUPABASE_DB_URL` が空なら値を出さずに終わり、そうでなければ devDependency の `supabase` の実行ファイルを、シェルを通さずに（`child_process.spawnSync` の `shell: false`）`db push --db-url <値>` で呼び、終了コードをそのまま返す。実行ファイルが見つからないときは止めて報告する。値を `console.log` しない。`--debug` を付けない
+   - 先に `npm run db:push -- --dry-run` で流し込む中身を確かめて報告書に書き、それから `npm run db:push` を流す。「流し込みますか」と聞かれたら、dry-run で確かめた中身と同じなら進める
    - このPCには Docker がない。Docker が要る道具（`supabase start`・手元での `db reset`・`db diff`・`gen types`）は使わない。型は手で書く
    - 一度流し込んだマイグレーションのファイルは直さない。直しは新しいマイグレーションのファイルで行う
 3. 画面：Microsoft 365 でログインする画面と、ログインしたあとに「自分の名前・役割・今のチーム」と「自分が見られる名簿の一覧」を出す画面だけを作る
@@ -50,10 +53,13 @@
    - ログインに使ったメールアドレスが名簿（members）にないときは、「名簿に登録されていません。管理者に連絡してください」と出して、何も見せない
 4. 守りのテスト `tests/guard/permissions.test.ts`（Claude Code が書いて本線に置いたもの）が通るようにする。テストは変えない
    - このテストは `process.env` から `SUPABASE_URL`・`SUPABASE_ANON_KEY`・`SUPABASE_SERVICE_ROLE_KEY` を読む。Vitest の設定（`vitest.config.ts` など）で `.env` を読み込ませる（例：Vite の `loadEnv(mode, process.cwd(), '')` の結果を `test.env` に渡す。3つ目を `''` にしないと `VITE_` の付いた値しか読まれない）
-   - テストは1回で8人がパスワードでログインする。Supabase のログインには回数の制限があるので、続けて何回も回して「429」（回数の超過）が出たら、5分ほど待ってから回し直す（作りの誤りと取り違えない）
+   - Vitest の environment は `node` のままにする（`happy-dom` にすると、Supabase が Secret key をブラウザからの呼び出しとみなして断る）。画面の部品のテストを書くときは、そのファイルの先頭に `// @vitest-environment jsdom` を付ける。`testTimeout` は 30000（30秒）にする（1件で何回も通信するテストがあるため）
+   - `tests/guard/` は tsconfig の型の点検の対象に入れない（Vitest は型を見ないので動くのには影響しない）
+   - テストは1回で9人（架空の8人と名簿にない1人）がパスワードでログインする。Supabase のログインには回数の制限があるので、続けて何回も回して「429」（回数の超過）が出たら、5分ほど待ってから回し直す（作りの誤りと取り違えない）
    - テスト自体の書き間違い（読み込みの書き方・型など）で動かないときは、テストを直さずに止めて、どこがどう動かないかを報告する。Claude Code が直す
 5. 画面で確かめるための架空の名簿を `fixtures/foundation/` に置き、開発用のプロジェクトに入れる手順（またはプログラム）を用意する。名前は「メンバーA」のような架空のものだけ
    - 本人が自分の Microsoft のアカウントで確かめられるように、`.env` の `DEV_LOGIN_EMAIL` のメールアドレスで、架空の名前「テスト代表」・役割 `ceo` の行を1つ作る。メールアドレスはファイルに書かず、`.env` から読む
+   - 守りのテストが途中で止まって架空の人や行が残ったときのために、名前が `guard` で始まる行と `@example.test` の利用者を消す片づけのプログラムも用意してよい（`fixtures:remove` と並べる）
    - その行だけを消す手順も用意する（消したあとに同じアカウントでログインすると「名簿に登録されていません」になることを、本人が確かめるため）。消したあと、もう一度作ればまた見えるようにする（結び付けは下の4章のとおり、ログインのたびに行う）
 6. `.env.example` に、要る値の名前だけを書く（値は書かない）
 
@@ -79,6 +85,7 @@
 | `permissions`（役職とは別の権限） | `id`、`member_id`、`kind`（`admin`＝管理者／`talk_owner`＝トーク責任者）、`granted_by`、`granted_at`、`revoked_by`、`revoked_at`（空なら有効） |
 
 - ログインした人の `members` の行は、ログインのメールアドレスと `members.email` で結ぶ。比べるときは両方を小文字にする（`lower()`。Microsoft は大文字の混ざったアドレスを返すことがある）。ログインのたびに、`auth_user_id` が空の行にだけ結び付ける（初めてのログインのときだけ動く仕組みにしない。行を消して作り直したあとも結べるように）。ほかの人の行に結び付かないこと
+- 結び付けるのは、Microsoft（`azure`）でログインし、メールが確認済み（`email_confirmed_at` が空でない）の利用者だけ。利用者が作られた時点（`auth.users` への追加）では結び付けない（だれかが他人の会社のメールで登録しただけで、その人の名簿の行に結び付かないように）。置き場所は、`auth.users` のログイン時刻（`last_sign_in_at`）の更新で動く仕組みを `private` に置くか、`authenticated` だけが呼べる関数にする（後者で Security Advisor の警告が出たら報告書に書く）。守りのテストの人は最初から結び付けてあるので、この条件はテストに響かない
 - 利用者の登録（`auth.users`）を、名簿にないからといって拒む仕組みは作らない（守りのテストは、利用者を作ってから名簿の行を作る）
 - 「今日」は日本時間の日付（`(now() at time zone 'Asia/Tokyo')::date`）。データベースの `current_date` は世界標準時なので使わない
 - 「今の所属」＝ `member_affiliations` のうち、今日が `start_date` 以上で、`end_date` が空か今日以上の行
@@ -99,7 +106,7 @@
 - `permissions` の追加と取り消しは、代表と、管理者の権限がある人だけ
 - `permissions` を読めるのは、代表と管理者の権限がある人は全員分、ほかの人は自分の行だけ（2026-11-04 本人の選択）。守りのテストでは、代表が権限を足したあとにその行を読み返す
 - 役割と権限の判定は、毎回表を読んで行う。ログインの証明書（JWT）に役割を入れる作り（Custom Access Token Hook など）にしない（取り消しがすぐに効かなくなり、管理画面での設定も要るため）
-- 判定に使う関数は `security definer` にして、`set search_path = ''` を付ける。外から呼べる場所（`public`）に置かない（例：`private` のスキーマ）。`authenticated` に `execute` を明示して許可し、`anon` と `public` からは外す。決まり（RLS）の中で同じ表を直接読み返して、決まりが自分を呼び続けないようにする
+- 判定に使う関数は `security definer` にして、`set search_path = ''` を付ける。外から呼べる場所（`public`）に置かない（例：`private` のスキーマ）。`authenticated` に `execute` を明示して許可し、`anon` と `public` からは外す。`private` のスキーマを使う許可も `grant usage on schema private to authenticated;` で明示する（ないと決まりの中で関数を呼んだ時点でエラーになる。`private` には表を置かない）。決まり（RLS）の中で同じ表を直接読み返して、決まりが自分を呼び続けないようにする
 - `member_affiliations`・`mgr_assignments`・`teams` も、上の `members` と同じ範囲で読める（自分が読める人の所属・担当だけ）。迷ったら止めて質問する
 - 削除はしない（このあとの区切りで論理削除を入れる）
 
