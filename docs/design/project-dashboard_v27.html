@@ -1136,7 +1136,7 @@
       <span>点線＝言及メンバーで複数人につながる</span>
     </div>
     <div class="guide">
-      <div><div class="g-label">図の見方</div><ul><li>1つの箱が1つの表。濃紺の帯が表の名前、その下が項目</li><li>図の項目は中身を伝えるための書き方で、実際の列の名前（例：members の id・auth_user_id、mgr_assignments の mgr_member_id）は、土台の SQL（supabase/migrations/20261104000001_foundation_schema_and_rls.sql）が正</li><li>中央の members が名簿。ほかの表は member_id で名簿とつながる</li><li>1人のメンバーに、日報やKPIの記録がたくさんぶら下がる（1対多）</li><li>AIの提案が「採用」されると、週間教育の記録になる</li><li>名簿の上の「所属の履歴」は、いつからどのチーム・拠点にいたかの記録（v5で追加）</li></ul></div>
+      <div><div class="g-label">図の見方</div><ul><li>1つの箱が1つの表。濃紺の帯が表の名前、その下が項目</li><li>図の項目は中身を伝えるための書き方で、実際の列の名前（例：members の id・auth_user_id、mgr_assignments の mgr_member_id）は、土台の SQL のファイル（supabase/migrations/ の中の、20261104000001 で始まるもの）が正</li><li>中央の members が名簿。ほかの表は member_id で名簿とつながる</li><li>1人のメンバーに、日報やKPIの記録がたくさんぶら下がる（1対多）</li><li>AIの提案が「採用」されると、週間教育の記録になる</li><li>名簿の上の「所属の履歴」は、いつからどのチーム・拠点にいたかの記録（v5で追加）</li></ul></div>
       <div class="g-pt"><div class="g-label">ポイント</div><ul><li>表の名前は英語（プログラムで扱いやすいため）、画面には日本語で表示する</li><li><span class="tag tag--warn">変更</span> v25：今のチーム・拠点と担当リーダーは名簿（members）に持たず、所属の履歴とチームの一覧（teams）から出す。同じことを2か所に持つと、異動のときに片方だけ直して食い違うため。土台の計画ファイルと同じ形</li><li>項目は6業務と見込みまで、見本データ（今のExcel・Forms）で確定した</li><li>ロープレは合格ラインの○△×だけで、点数はつけない（v15で確定）</li><li>図に描いていない表（週間教育・部下メモ・ロープレ・責任者日報・一般日報に付く表）は、下の表で説明する</li><li>異動しても、過去の数字は当時のチーム・拠点で集計する。だから過去のチーム平均が変わらず、効果の確かめの比較が狂わない</li></ul></div>
     </div>
     <h3 style="margin-top:var(--space-6)">週間教育に付く表（v12で追加・見本データ3で確定）</h3>
