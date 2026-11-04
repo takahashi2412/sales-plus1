@@ -91,7 +91,7 @@
 </div>
 <script>
   // 資料を足したり版を上げたりしたら、ここを書き換える（新しい版の file と date、以前の版は old に足す）
-  const UPDATED = '2026-10-30';
+  const UPDATED = '2026-11-04';
   const PROGRESS = '設計：1〜6はほぼ確定。作り方は「土台は1つ、業務ごとに分ける」。作る順番は土台から自動化まで9つの区切りで、いまは土台の準備（.env の値が残り）';
   const DOCS = [
     { group: '設計書（正式な内容）', items: [
@@ -123,8 +123,12 @@
         old: [{ label: 'v1', file: 'old/effect-judgment_v1.html' }] }
     ]},
     { group: '作り方（開発の進め方）', items: [
+      { title: '制作の手順', file: 'build-process_v1.html', date: '2026-11-04', tag: ['good', '確定'],
+        sum: '作る順番（9つの区切り）、3者の役割、1つの計画の12の手順（レーン図）、元のフォルダと作業用フォルダ、並列の流れと決まり、決め方・直し方',
+        warn: '1業務ごとの回し方（次の区切りへ進む条件など）はまだ決めていないので入っていない' },
       { title: 'ルールの3層と2ツール', file: 'rule-layers_v2.html', date: '2026-10-06', tag: ['plain', '検討中'],
         sum: 'Claude Code と Antigravity にルールをどう伝えるか（AGENTS.md は未決）',
+        warn: '「Antigravity は Local で作業」は古い。2026-10-30 から、いつも別の作業用フォルダ（ワークツリー）で作る（制作の手順を参照）',
         old: [{ label: 'v1', file: 'old/rule-layers_v1.html' }] }
     ]}
   ];

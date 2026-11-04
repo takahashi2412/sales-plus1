@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALES +1 制作の手順</title>
+<style>
+  :root {
+    --paper: #F7F7F8;
+    --surface: #FFFFFF;
+    --surface-sunken: #F7F7F7;
+    --ink: #1A1A1A;
+    --ink-muted: #555555;
+    --line: #DDDDDD;
+    --brand: #FF0642;
+    --brand-strong: #CC003A;
+    --brand-soft: #FFE4EA;
+    --navy-text: #002459;
+    --navy-band: #002459;
+    --navy-soft: #E6EBF4;
+    --good: #047857;
+    --good-soft: #E3F4EC;
+    --warn: #B45309;
+    --warn-soft: #FEF3E2;
+    --bad-soft: #E8E8EA;
+    --chart-muted: #C8C8CC;
+    --on-dark: #FFFFFF;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 999px;
+    --doc-width: 940px;
+
+    --font-display: "Yu Gothic", "YuGothic", "游ゴシック", "Hiragino Sans", sans-serif;
+    --font-body: "Yu Gothic Medium", "游ゴシック Medium", "YuGothic", "Hiragino Sans", sans-serif;
+    --font-figure: "Segoe UI", "Yu Gothic Medium", sans-serif;
+    --font-code: Consolas, "Cascadia Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+      --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+      --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+      --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+      --good: #34B98A; --good-soft: #15302A;
+      --warn: #E0A04A; --warn-soft: #3A2A14;
+      --bad-soft: #2A2A2E; --chart-muted: #55565C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121316; --surface: #1C1D21; --surface-sunken: #24252A;
+    --ink: #EDEDEF; --ink-muted: #A8A8AE; --line: #3A3B40;
+    --brand-strong: #FF6B8A; --brand-soft: #3A1820;
+    --navy-text: #9DB3E0; --navy-band: #23407A; --navy-soft: #1E2638;
+    --good: #34B98A; --good-soft: #15302A;
+    --warn: #E0A04A; --warn-soft: #3A2A14;
+    --bad-soft: #2A2A2E; --chart-muted: #55565C;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+  .doc { max-width: var(--doc-width); margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.4; margin: 0; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin-bottom: var(--space-2); }
+  h3 { font-size: 15px; }
+  p { margin: 0; }
+  code { font-family: var(--font-code); font-size: 13px; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0 var(--space-1); }
+  .small { font-size: 13px; color: var(--ink-muted); }
+
+  /* 用語リンク */
+  a.term { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--navy-text); }
+  a.term:hover { background: var(--navy-soft); }
+  a.term:focus-visible, .toc a:focus-visible, .gl-back:focus-visible { outline: 2px solid var(--navy-band); outline-offset: 2px; }
+
+  .doc-header { margin-bottom: var(--space-6); }
+  .doc-header .label { font-size: 13px; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; margin-bottom: var(--space-2); }
+  .toc { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+  .toc a { font-size: 13px; color: var(--navy-text); text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 26px; }
+  .toc a:hover { background: var(--navy-soft); }
+  .toc .grp { width: 100%; font-size: 12px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; margin-top: var(--space-1); }
+
+  .callout { border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); border-left: 4px solid; }
+  .callout .kind { font-family: var(--font-display); font-weight: 700; font-size: 13px; margin-bottom: var(--space-1); }
+  .callout--conclusion { background: var(--brand-soft); border-color: var(--brand); }
+  .callout--conclusion .kind { color: var(--brand-strong); }
+  .callout--point { background: var(--navy-soft); border-color: var(--navy-band); }
+  .callout--point .kind { color: var(--navy-text); }
+
+  .part { margin-top: var(--space-16); padding: var(--space-2) 0; border-bottom: 2px solid var(--navy-band); display: flex; align-items: baseline; gap: var(--space-3); }
+  .part .p-no { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); font-size: 14px; }
+  .part h2 { margin: 0; font-size: 18px; color: var(--navy-text); }
+
+  section { margin-top: var(--space-12); scroll-margin-top: var(--space-4); }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-right: var(--space-2); vertical-align: 2px; }
+  .lead { margin-bottom: var(--space-4); color: var(--ink-muted); font-size: 14px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); }
+
+  /* 見方とポイント */
+  .guide { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-3); }
+  .guide > div { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .guide .g-pt { border-left-color: var(--good); }
+  .guide .g-label { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-1); }
+  .guide .g-pt .g-label { color: var(--good); }
+  .guide ul, .guide ol { margin: 0; padding-left: 1.3em; font-size: 14px; }
+  .guide li + li { margin-top: var(--space-1); }
+
+  .tag { display: inline-block; font-size: 12px; font-family: var(--font-display); font-weight: 700; border-radius: var(--radius-sm); padding: 0 var(--space-2); line-height: 22px; white-space: nowrap; }
+  .tag--navy { background: var(--navy-soft); color: var(--navy-text); }
+  .tag--good { background: var(--good-soft); color: var(--good); }
+  .tag--warn { background: var(--warn-soft); color: var(--warn); }
+  .tag--plain { background: var(--surface-sunken); color: var(--ink-muted); border: 1px solid var(--line); }
+  .chip-x { background: var(--bad-soft); color: var(--ink-muted); text-decoration: line-through; }
+
+  /* タイル */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+  .tile .t-label { font-size: 13px; color: var(--ink-muted); font-family: var(--font-display); font-weight: 700; }
+  .tile .t-value { font-family: var(--font-figure); font-weight: 700; font-size: 32px; line-height: 1.2; }
+  .tile .t-value .unit { font-family: var(--font-body); font-size: 14px; font-weight: 500; margin-left: 2px; }
+  .tile .t-value.text { font-family: var(--font-display); font-size: 22px; }
+  .tile .t-note { font-size: 13px; color: var(--ink-muted); }
+
+  /* SVG 共通 */
+  .svg-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); }
+  .svg-wrap svg { display: block; width: 100%; min-width: 800px; height: auto; }
+  svg text { font-family: var(--font-body); }
+  .s-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .s-src { fill: var(--surface-sunken); stroke: var(--ink-muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .s-core { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 2; }
+  .s-wrap { fill: var(--surface-sunken); stroke: var(--navy-band); stroke-width: 1.5; }
+  .s-band { fill: var(--navy-band); }
+  .s-warn { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+  .s-muted { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s-lane { fill: var(--surface-sunken); }
+  .s-lane2 { fill: var(--surface); }
+  .s-bar { fill: var(--navy-soft); stroke: var(--navy-band); stroke-width: 1; }
+  .s-bar-muted { fill: var(--bad-soft); }
+  .s-dot { fill: var(--surface); stroke: var(--navy-band); stroke-width: 2; }
+  .s-line { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+  .s-navy { stroke: var(--navy-band); stroke-width: 2; fill: none; }
+  .s-spoke { stroke: var(--line); stroke-width: 2; fill: none; }
+  .s-dash { stroke-dasharray: 5 4; }
+  .s-grid { stroke: var(--line); stroke-width: 1; }
+  .s-x { stroke: var(--ink); stroke-width: 3; }
+  .s-ah { fill: var(--ink-muted); }
+  .s-ahn { fill: var(--navy-band); }
+  .s-hl { fill: var(--navy-soft); }
+  .b-me { fill: var(--brand); }
+  .b-me-pre { fill: var(--brand-soft); stroke: var(--brand); stroke-width: 1.5; }
+  .b-cmp { fill: var(--chart-muted); }
+  .b-cmp-pre { fill: var(--bad-soft); stroke: var(--chart-muted); stroke-width: 1.5; }
+  .t-title { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+  .t-big { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .t-body { fill: var(--ink); font-size: 13px; }
+  .t-muted { fill: var(--ink-muted); font-size: 12px; }
+  .t-on { fill: var(--on-dark); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .t-navy { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-key { fill: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12.5px; }
+  .t-field { fill: var(--ink); font-size: 12.5px; }
+  .t-warn { fill: var(--warn); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .t-good { fill: var(--good); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .t-fig { fill: var(--ink-muted); font-family: var(--font-figure); font-size: 12px; }
+  .t-figb { fill: var(--ink); font-family: var(--font-figure); font-weight: 700; font-size: 14px; }
+
+  /* 表 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 660px; }
+  th { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; text-align: center; padding: var(--space-2) var(--space-3); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--line); text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; font-family: var(--font-display); font-weight: 700; }
+  table.left td { text-align: left; vertical-align: top; }
+  .cell { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+  .dot { width: 14px; height: 14px; border-radius: var(--radius-full); display: inline-block; flex: none; }
+  .dot.in { background: var(--navy-band); }
+  .dot.view { border: 2px solid var(--navy-band); }
+  .none { color: var(--chart-muted); font-family: var(--font-figure); font-weight: 700; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-2); font-size: 13px; color: var(--ink-muted); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* 必ず入れる設計 */
+  .musts { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); margin-top: var(--space-3); }
+  .must { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3); font-size: 13px; display: flex; flex-direction: column; gap: var(--space-1); }
+  .must b { font-family: var(--font-display); font-size: 14px; }
+  .must span { color: var(--ink-muted); }
+
+  /* ワイヤーフレーム */
+  .wf-row { display: grid; grid-template-columns: 1fr 240px; gap: var(--space-6); align-items: start; }
+  .wf-cap { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); margin-bottom: var(--space-2); }
+  .wf { border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; display: grid; grid-template-columns: 112px 1fr; min-height: 360px; }
+  .wf-side { background: var(--navy-band); padding: var(--space-3) var(--space-2); display: flex; flex-direction: column; gap: 6px; }
+  .wf-side .logo { color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 13px; margin-bottom: var(--space-2); }
+  .wf-side span { color: var(--on-dark); opacity: .75; font-size: 11px; padding: 2px 6px; border-radius: var(--radius-sm); }
+  .wf-side span.on { opacity: 1; background: rgba(255,255,255,.18); }
+  .wf-main { padding: var(--space-3); display: grid; gap: var(--space-2); grid-template-columns: repeat(4, 1fr); grid-auto-rows: min-content; background: var(--paper); }
+  .blk { background: var(--surface); border: 1px dashed var(--chart-muted); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 11px; color: var(--ink-muted); position: relative; min-height: 44px; }
+  .blk b { display: block; color: var(--ink); font-family: var(--font-display); font-size: 12px; }
+  .blk .mk { position: absolute; top: -8px; right: -6px; width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--navy-band); color: var(--on-dark); font-family: var(--font-figure); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .span4 { grid-column: span 4; } .span3 { grid-column: span 3; }
+  .mini-bars { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin-top: 4px; position: relative; }
+  .mini-bars i { flex: 1; background: var(--chart-muted); border-radius: 2px 2px 0 0; }
+  .mini-bars i.me { background: var(--navy-band); }
+  .mini-bars .mark { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--ink-muted); }
+  .hbars { display: grid; gap: 3px; margin-top: 4px; }
+  .hbars i { display: block; height: 6px; background: var(--navy-soft); border-radius: 2px; }
+  .hbars i.low { background: var(--warn); }
+  .tl { display: grid; gap: 4px; margin-top: 4px; }
+  .tl i { display: block; height: 8px; border-radius: 2px; background: var(--bad-soft); }
+  .phone { width: 240px; border: 2px solid var(--ink-muted); border-radius: 22px; padding: 14px 10px; background: var(--paper); }
+  .phone .bar { height: 6px; width: 60px; border-radius: 3px; background: var(--chart-muted); margin: 0 auto 10px; }
+  .phone .ph { display: grid; gap: 8px; }
+  .phone .k3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .phone .k3 .blk { min-height: 40px; padding: 4px; text-align: center; }
+  .phone .ta { min-height: 92px; }
+  .phone .btn { background: var(--navy-band); color: var(--on-dark); border-radius: var(--radius-sm); text-align: center; font-family: var(--font-display); font-size: 12px; padding: 8px; }
+
+  /* 1週間 */
+  .week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: var(--space-3); }
+  .wk { position: relative; background: var(--surface); border: 1px solid var(--line); padding: var(--space-2) var(--space-3); font-size: 13px; margin-right: 14px; border-radius: var(--radius-sm); }
+  .wk::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .wk:last-child { margin-right: 0; }
+  .wk:last-child::after { display: none; }
+  .wk b { display: block; font-family: var(--font-display); }
+  .wk .when { color: var(--navy-text); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+  .wk.human { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-4); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+
+  /* ロードマップ */
+  .road { display: grid; grid-template-columns: 110px repeat(4, 1fr); gap: 6px; align-items: center; }
+  .road .rh { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy-text); text-align: center; }
+  .road .rl { font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .road .seg { border-radius: var(--radius-sm); padding: 6px 8px; font-size: 12px; min-height: 36px; display: flex; align-items: center; }
+  .seg.now { background: var(--navy-band); color: var(--on-dark); font-family: var(--font-display); font-weight: 700; }
+  .seg.plan { background: var(--navy-soft); color: var(--navy-text); }
+  .seg.chg { background: var(--warn-soft); color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .c2 { grid-column: span 2; } .c3 { grid-column: span 3; }
+
+  /* 未決事項 */
+  .issues { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .iss { border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 13px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 2px; }
+  .iss .no { font-family: var(--font-figure); font-weight: 700; font-size: 12px; color: var(--ink-muted); }
+  .iss b { font-family: var(--font-display); font-size: 13px; }
+  .iss.done { background: var(--good-soft); border-color: var(--good); }
+  .iss.review { background: var(--navy-soft); border-color: var(--navy-band); }
+  .iss.wait { background: var(--warn-soft); border-color: var(--warn); }
+  .sbar { display: flex; height: 14px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--line); margin-top: var(--space-4); }
+  .sbar span { display: block; height: 100%; }
+  .next { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+  .nx { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-3); margin-right: 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+  .nx::after { content: ""; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink-muted); }
+  .nx:last-child { margin-right: 0; }
+  .nx:last-child::after { display: none; }
+  .nx.first { border: 2px solid var(--navy-band); }
+  .nx .n { font-family: var(--font-figure); font-weight: 700; color: var(--navy-text); }
+  .nx b { font-family: var(--font-display); }
+
+  /* 概要 */
+  .ov-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); }
+  .ov-role { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 14px; }
+  .ov-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .ov-head b { font-family: var(--font-display); font-size: 16px; }
+  .ov-role ul { margin: 0; padding-left: 1.2em; }
+  .ov-role li + li { margin-top: 2px; }
+  .ov-no { margin-top: var(--space-2) !important; font-size: 13px; color: var(--warn); font-family: var(--font-display); font-weight: 700; }
+  .ov-ideas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+  .ov-idea { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--navy-band); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+  .ov-idea b { font-family: var(--font-display); font-size: 15px; display: block; margin-bottom: var(--space-1); }
+  .ov-idea p { font-size: 13px; color: var(--ink-muted); }
+
+  /* 完成度 */
+  .groups { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .grp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+  .grp-card .g-no { font-family: var(--font-figure); font-weight: 700; color: var(--ink-muted); font-size: 12px; }
+  .grp-card b { font-family: var(--font-display); font-size: 14px; }
+  .grp-card .tag { align-self: flex-start; }
+  .grp-card.done { background: var(--good-soft); border-color: var(--good); }
+  .grp-card.next { background: var(--navy-soft); border: 2px solid var(--navy-band); }
+  .grp-card.wait { background: var(--warn-soft); border-color: var(--warn); }
+  table.left.nw td:nth-child(2), table.left.nw td:nth-child(4) { white-space: nowrap; }
+
+  /* 用語集 */
+  .gl-group { margin-top: var(--space-6); }
+  .gl-group h3 { font-size: 15px; color: var(--navy-text); margin-bottom: var(--space-3); padding-bottom: var(--space-1); border-bottom: 1px solid var(--line); }
+  .gl { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .gl dl { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); scroll-margin-top: var(--space-6); }
+  .gl dl:target { border: 2px solid var(--navy-band); background: var(--navy-soft); }
+  .gl dt { font-family: var(--font-display); font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+  .gl dt small { font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--ink-muted); }
+  .gl dd { margin: var(--space-1) 0 0; font-size: 14px; }
+  .gl dd.ex { font-size: 13px; color: var(--ink-muted); }
+  .gl dd.ex::before { content: "このアプリでは："; color: var(--navy-text); font-family: var(--font-display); font-weight: 700; }
+  .gl-back { font-size: 12px; color: var(--navy-text); text-decoration: none; }
+
+  .source { margin-top: var(--space-12); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .doc { padding-top: var(--space-8); }
+    h1 { font-size: 22px; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .guide, .two, .gl { grid-template-columns: 1fr; }
+    .musts { grid-template-columns: 1fr 1fr; }
+    .wf-row { grid-template-columns: 1fr; }
+    .wf { grid-template-columns: 84px 1fr; }
+    .phone { margin: 0 auto; }
+    .week, .next { grid-template-columns: 1fr; gap: 14px; }
+    .wk, .nx { margin-right: 0; }
+    .wk::after, .nx::after { right: 50%; top: auto; bottom: -14px; transform: translateX(50%); border-left-color: transparent; border-top-color: var(--ink-muted); }
+    .issues, .groups, .ov-ideas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .iss .tag { white-space: normal; line-height: 1.5; }
+    .road { grid-template-columns: 76px repeat(4, minmax(64px, 1fr)); }
+    .panel.road-wrap { overflow-x: auto; }
+  }
+  @media (max-width: 420px) {
+    .tiles, .musts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ah" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <marker id="ahn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="s-ahn" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header class="doc-header">
+    <div class="label">SALES +1 ／ 制作の手順 v1</div>
+    <h1>制作の手順：決めて、別のフォルダで作り、1本ずつ確かめて本線へ</h1>
+    <p class="small" style="margin-top:var(--space-2)">2026年11月4日（水）時点 ／ v1：新しく作成。2026-10-27〜30 に決めた作る順番・並列の決まり・作業用フォルダ（ワークツリー）の使い方・決め方と直し方を、1枚にまとめた。正式な決まりは CLAUDE.md と設計書（企画ダッシュボード v25 の13・14章）にあり、この資料はそれを手順の形で見せるもの</p>
+    <nav class="toc" aria-label="目次">
+      <span class="grp">はじめに</span>
+      <a href="#s0">0 完成度の表</a>
+      <span class="grp">PART 1 全体</span>
+      <a href="#s1">1 作る順番</a><a href="#s2">2 3者の役割</a>
+      <span class="grp">PART 2 1つの計画を作る</span>
+      <a href="#s3">3 12の手順</a><a href="#s4">4 2つのフォルダ</a>
+      <span class="grp">PART 3 並列で作る</span>
+      <a href="#s5">5 並列の流れ</a><a href="#s6">6 並列の決まり</a>
+      <span class="grp">PART 4 漏れを防ぐ</span>
+      <a href="#s7">7 決め方・直し方</a><a href="#glossary">用語集</a>
+    </nav>
+  </header>
+
+  <div class="callout callout--conclusion">
+    <div class="kind">結論</div>
+    <p>Antigravity はいつも別のフォルダで作り、そのあいだ Claude Code は次の計画を作ります。できたものは Claude Code が1本ずつレビューし、ご自身が画面で確かめて OK を出してから本線に入ります。</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="t-label">作る順番の区切り</span><span class="t-value">9<span class="unit">つ</span></span><span class="t-note">土台から自動化まで。いまは土台</span></div>
+    <div class="tile"><span class="t-label">並列</span><span class="t-value">2<span class="unit">本まで</span></span><span class="t-note">画面だけ。表とテストは1本</span></div>
+    <div class="tile"><span class="t-label">1つの計画の手順</span><span class="t-value">12</span><span class="t-note">決める→作る→確かめる→片づける</span></div>
+    <div class="tile"><span class="t-label">まだ決めていないこと</span><span class="t-value">1</span><span class="t-note">1業務ごとの回し方（次へ進む条件）</span></div>
+  </div>
+
+  <div class="callout callout--point" style="margin-top:var(--space-6)">
+    <div class="kind">この資料の読み方</div>
+    <p>各図の下に「図の見方」と「ポイント」を置いています。点線の下線がある言葉（例：<a class="term" href="#g-worktree">ワークツリー</a>）は、押すと最後の用語集に移動します。図の中の名前や数字は手順の説明で、本物のデータは使っていません。</p>
+  </div>
+
+  <!-- 0 完成度 -->
+  <section id="s0">
+    <h2><span class="section-num">0</span>完成度の表：手順はほぼ決まった。1業務ごとの回し方だけが残る</h2>
+    <div class="table-wrap">
+      <table class="left nw">
+        <thead><tr><th>図・表</th><th>状態</th><th>残っていること</th><th>どこで決めるか</th></tr></thead>
+        <tbody>
+          <tr><td>1 作る順番</td><td><span class="tag tag--good">確定</span></td><td>それぞれの日付は未決（作りながら決める）</td><td>作りながら</td></tr>
+          <tr><td>2 3者の役割</td><td><span class="tag tag--good">確定</span></td><td>－</td><td>－</td></tr>
+          <tr><td>3 12の手順</td><td><span class="tag tag--good">確定</span></td><td>ご自身の確認の長さ（5〜10分の目安）は、使ってみて見直す</td><td>土台のあと</td></tr>
+          <tr><td>4 2つのフォルダ</td><td><span class="tag tag--good">確定</span></td><td>このPCで試して確かめ済み。本物の作業での動きは土台で確かめる</td><td>土台</td></tr>
+          <tr><td>5 並列の流れ</td><td><span class="tag tag--good">確定</span></td><td>実際に2本で作るのはロープレが初めて。動きを見て見直す</td><td>ロープレのあと</td></tr>
+          <tr><td>6 並列の決まり</td><td><span class="tag tag--good">確定</span></td><td>－</td><td>－</td></tr>
+          <tr><td>7 決め方・直し方</td><td><span class="tag tag--good">確定</span></td><td>－</td><td>－</td></tr>
+          <tr><td>1業務ごとの回し方</td><td><span class="tag tag--warn">未決</span></td><td>だれが何をいつするか、何を確かめたら次の区切りへ進むか（この資料にはまだ入っていない）</td><td>次にご自身と決める</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>緑の「確定」は決めたこと、橙の「未決」はまだ決めていないこと</li><li>「残っていること」は、確定していても使ってみて見直す点</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>手順の決まりは、CLAUDE.md（Claude Code が読む）と<a class="term" href="#g-plan">計画ファイル</a>のひな形（Antigravity が読む）の両方に書いてある。この資料はそれを1枚で見るためのもの</li><li>決まりが変わったら、この資料も版を上げて直す（<a class="term" href="#g-impact">影響表</a>に入れてある）</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 1 ============ -->
+  <div class="part"><span class="p-no">PART 1</span><h2>全体：何を、どの順番で、だれが作るか</h2></div>
+
+  <section id="s1">
+    <h2><span class="section-num">1</span>作る順番：土台から自動化まで、9つの<a class="term" href="#g-kugiri">区切り</a>で1つずつ作る</h2>
+    <p class="lead">区切りは番号ではなく、中身の名前で呼びます。表と<a class="term" href="#g-guardtest">守りのテスト</a>は1本で作り、画面だけを2本の<a class="term" href="#g-parallel">並列</a>で作ります。橙の3つは、数日触って確かめる<a class="term" href="#g-fushime">節目</a>です。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 250" role="img" aria-label="作る順番。上の段は土台、ロープレ、KPI・部下メモ、カルテ第1版、一般日報。下の段は週間教育、責任者日報・集める画面、AI、自動化。カルテ第1版・一般日報・AIが節目">
+        <rect class="s-core" x="8" y="36" width="160" height="60" rx="8"/>
+        <text class="t-title" x="88" y="61" text-anchor="middle">土台</text>
+        <text class="t-muted" x="88" y="82" text-anchor="middle">1本 ／ 今ここ</text>
+        <rect class="s-box" x="182" y="36" width="160" height="60" rx="8"/>
+        <text class="t-title" x="262" y="61" text-anchor="middle">ロープレ</text>
+        <text class="t-muted" x="262" y="82" text-anchor="middle">共通1本 → 画面2本</text>
+        <rect class="s-box" x="356" y="36" width="160" height="60" rx="8"/>
+        <text class="t-title" x="436" y="61" text-anchor="middle">KPI・部下メモ</text>
+        <text class="t-muted" x="436" y="82" text-anchor="middle">表1本 → 画面2本</text>
+        <rect class="s-warn" x="530" y="36" width="160" height="60" rx="8"/>
+        <text class="t-title" x="610" y="61" text-anchor="middle">カルテ第1版</text>
+        <text class="t-muted" x="610" y="82" text-anchor="middle">1本 ／ 節目①</text>
+        <rect class="s-warn" x="704" y="36" width="160" height="60" rx="8"/>
+        <text class="t-title" x="784" y="61" text-anchor="middle">一般日報</text>
+        <text class="t-muted" x="784" y="82" text-anchor="middle">1本 ／ 節目②</text>
+        <path class="s-line" d="M168,66 L180,66" marker-end="url(#ah)"/>
+        <path class="s-line" d="M342,66 L354,66" marker-end="url(#ah)"/>
+        <path class="s-line" d="M516,66 L528,66" marker-end="url(#ah)"/>
+        <path class="s-line" d="M690,66 L702,66" marker-end="url(#ah)"/>
+        <path class="s-line" d="M784,96 L784,124 L88,124 L88,148" marker-end="url(#ah)"/>
+        <rect class="s-box" x="8" y="150" width="160" height="60" rx="8"/>
+        <text class="t-title" x="88" y="175" text-anchor="middle">週間教育</text>
+        <text class="t-muted" x="88" y="196" text-anchor="middle">表1本 → 画面2本</text>
+        <rect class="s-box" x="182" y="150" width="160" height="60" rx="8"/>
+        <text class="t-body" x="262" y="175" text-anchor="middle">責任者日報・集める画面</text>
+        <text class="t-muted" x="262" y="196" text-anchor="middle">1本ずつ</text>
+        <rect class="s-warn" x="356" y="150" width="160" height="60" rx="8"/>
+        <text class="t-title" x="436" y="175" text-anchor="middle">AI</text>
+        <text class="t-muted" x="436" y="196" text-anchor="middle">1本 ／ 節目③</text>
+        <rect class="s-box" x="530" y="150" width="160" height="60" rx="8"/>
+        <text class="t-title" x="610" y="175" text-anchor="middle">自動化</text>
+        <text class="t-muted" x="610" y="196" text-anchor="middle">1本</text>
+        <path class="s-line" d="M168,180 L180,180" marker-end="url(#ah)"/>
+        <path class="s-line" d="M342,180 L354,180" marker-end="url(#ah)"/>
+        <path class="s-line" d="M516,180 L528,180" marker-end="url(#ah)"/>
+        <text class="t-muted" x="8" y="240">濃紺＝今いる所、白＝これから、橙＝数日触って確かめる節目</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左上から右へ、下の段に折り返して、9つの区切りを順に作る</li><li>箱の下の小さい字は、その区切りを何本で作るか（「表1本 → 画面2本」は、表とテストを1本で作ってから、画面を2本の並列で作る）</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>土台（ログイン・名簿・権限）で、いちばん技術の不安が大きい所を先に小さく確かめる</li><li>集める画面（カルテ・ホーム・ダッシュボード）は、カルテ第1版と「責任者日報・集める画面」の2回だけ作る。ほかの区切りでは触らないので、並列でぶつからない</li><li>詳しい中身は設計書 v25 の13章</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="section-num">2</span>3者の役割：決めるのはご自身、考えて確かめるのは Claude Code、作るのは Antigravity</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>だれ</th><th>すること</th><th>しないこと</th></tr></thead>
+        <tbody>
+          <tr><td>ご自身</td><td>選択式の質問で決める。作業用フォルダを Antigravity で開いて計画を渡す。画面で確かめて OK を出す。GitHub に送る（<a class="term" href="#g-push">push</a>）。管理画面の設定（Supabase・Microsoft 365）</td><td>コードを書く・レビューする</td></tr>
+          <tr><td>Claude Code</td><td>設計・案を出す・記録する。計画ファイルを作る。作業用フォルダを用意して片づける。<a class="term" href="#g-diff">差分</a>を<a class="term" href="#g-review">レビュー</a>する。<a class="term" href="#g-main">本線（main）</a>に取り込む。守りのテストを書く</td><td>アプリのコードを書く。ご自身の OK の前に本線へ入れる</td></tr>
+          <tr><td>Antigravity</td><td>計画ファイルどおりにアプリを作る。テストを通す。<a class="term" href="#g-report">報告書</a>を書く。作業用ブランチにコミットする</td><td>本線への取り込み・push。守りのテストを変える。計画にないことを決める</td></tr>
+          <tr><td>別のエージェント（別の目）</td><td>区切りごとに、決定の一覧と資料だけを読んで、反映の漏れを探す（<a class="term" href="#g-betsume">別の目の点検</a>）</td><td>ファイルを変える。実名の入った資料や .env を開く</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>1行が1人（1つの役）。右の列は、その役がしてはいけないこと</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>作る係（Antigravity）と確かめる係（Claude Code）を分けて、作る係の誤りを別の目で見つける</li><li>Antigravity は CLAUDE.md を読まないので、守らせたい決まりは毎回計画ファイルに書く</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 2 ============ -->
+  <div class="part"><span class="p-no">PART 2</span><h2>1つの計画を作る：決めてから片づけるまで</h2></div>
+
+  <section id="s3">
+    <h2><span class="section-num">3</span>12の手順：作るのは⑦だけ。その前後に、漏れと誤りを止める所を4つ置く</h2>
+    <p class="lead">縦が手順の順番、横がだれの番かを表すレーン図です。⑦で Antigravity が作っている間、Claude Code は同時に次の計画を作ります（点線の箱）。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 590" role="img" aria-label="1つの計画を作る12の手順のレーン図。列はご自身、Claude Code、別の目、Antigravity、GitHub">
+        <rect class="s-lane" x="5" y="0" width="170" height="590"/>
+        <rect class="s-lane2" x="180" y="0" width="170" height="590"/>
+        <rect class="s-lane" x="355" y="0" width="170" height="590"/>
+        <rect class="s-lane2" x="530" y="0" width="170" height="590"/>
+        <rect class="s-lane" x="705" y="0" width="170" height="590"/>
+        <text class="t-navy" x="90" y="24" text-anchor="middle">ご自身</text>
+        <text class="t-navy" x="265" y="24" text-anchor="middle">Claude Code</text>
+        <text class="t-navy" x="440" y="24" text-anchor="middle">別の目（別のエージェント）</text>
+        <text class="t-navy" x="615" y="24" text-anchor="middle">Antigravity</text>
+        <text class="t-navy" x="790" y="24" text-anchor="middle">GitHub</text>
+
+        <rect class="s-core" x="10" y="40" width="160" height="34" rx="6"/><text class="t-body" x="90" y="62" text-anchor="middle">① 選択式で決める</text>
+        <rect class="s-box" x="185" y="40" width="160" height="34" rx="6"/><text class="t-body" x="265" y="62" text-anchor="middle">① 案を出し記録する</text>
+        <rect class="s-box" x="185" y="84" width="160" height="34" rx="6"/><text class="t-body" x="265" y="106" text-anchor="middle">② 計画ファイルを作る</text>
+        <rect class="s-box" x="360" y="128" width="160" height="34" rx="6"/><text class="t-body" x="440" y="150" text-anchor="middle">③ 漏れを独立に点検</text>
+        <rect class="s-core" x="10" y="172" width="160" height="34" rx="6"/><text class="t-body" x="90" y="194" text-anchor="middle">④ GitHub に送る</text>
+        <rect class="s-box" x="710" y="172" width="160" height="34" rx="6"/><text class="t-body" x="790" y="194" text-anchor="middle">本線を保管</text>
+        <rect class="s-box" x="185" y="216" width="160" height="34" rx="6"/><text class="t-body" x="265" y="238" text-anchor="middle">⑤ 作業用フォルダを用意</text>
+        <rect class="s-core" x="10" y="260" width="160" height="34" rx="6"/><text class="t-body" x="90" y="282" text-anchor="middle">⑥ フォルダを開いて渡す</text>
+        <rect class="s-bar" x="535" y="304" width="160" height="34" rx="6"/><text class="t-body" x="615" y="326" text-anchor="middle">⑦ 作る・テスト・報告書</text>
+        <rect class="s-muted" x="185" y="304" width="160" height="34" rx="6"/><text class="t-muted" x="265" y="326" text-anchor="middle">同時に次の計画を作る</text>
+        <rect class="s-box" x="185" y="348" width="160" height="34" rx="6"/><text class="t-body" x="265" y="370" text-anchor="middle">⑧ 差分をレビュー</text>
+        <rect class="s-core" x="10" y="392" width="160" height="34" rx="6"/><text class="t-body" x="90" y="414" text-anchor="middle">⑨ 画面で確かめて OK</text>
+        <rect class="s-box" x="185" y="436" width="160" height="34" rx="6"/><text class="t-body" x="265" y="458" text-anchor="middle">⑩ 本線に取り込む</text>
+        <rect class="s-core" x="10" y="480" width="160" height="34" rx="6"/><text class="t-body" x="90" y="502" text-anchor="middle">⑪ GitHub に送る</text>
+        <rect class="s-box" x="710" y="480" width="160" height="34" rx="6"/><text class="t-body" x="790" y="502" text-anchor="middle">本線に反映</text>
+        <rect class="s-box" x="185" y="524" width="160" height="34" rx="6"/><text class="t-body" x="265" y="546" text-anchor="middle">⑫ フォルダを片づける</text>
+
+        <path class="s-line" d="M265,74 L265,82" marker-end="url(#ah)"/>
+        <path class="s-line" d="M265,118 L440,126" marker-end="url(#ah)"/>
+        <path class="s-line" d="M440,162 L90,170" marker-end="url(#ah)"/>
+        <path class="s-line" d="M170,189 L708,189" marker-end="url(#ah)"/>
+        <path class="s-line" d="M90,206 L265,214" marker-end="url(#ah)"/>
+        <path class="s-line" d="M265,250 L90,258" marker-end="url(#ah)"/>
+        <path class="s-line" d="M90,294 L615,302" marker-end="url(#ah)"/>
+        <path class="s-line" d="M615,338 L265,346" marker-end="url(#ah)"/>
+        <path class="s-line" d="M265,382 L90,390" marker-end="url(#ah)"/>
+        <path class="s-line" d="M90,426 L265,434" marker-end="url(#ah)"/>
+        <path class="s-line" d="M265,470 L90,478" marker-end="url(#ah)"/>
+        <path class="s-line" d="M170,497 L708,497" marker-end="url(#ah)"/>
+        <path class="s-line" d="M90,514 L265,522" marker-end="url(#ah)"/>
+        <text class="t-muted" x="10" y="580">濃紺の箱＝ご自身の番、薄い青＝作る、点線＝同時に進める準備</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>上から①〜⑫の順に、矢印をたどる。箱がある列が、その手順をする人</li><li>①は、ご自身が選び、Claude Code が<a class="term" href="#g-impact">影響表</a>から直す場所をたどって記録する（7章）</li><li>⑤は、作業用フォルダ（<a class="term" href="#g-worktree">ワークツリー</a>）と作業用<a class="term" href="#g-branch">ブランチ</a>を作り、<a class="term" href="#g-env">.env</a> を写すこと（4章）</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>誤りを止める所は4つ：③別の目の点検、⑧レビュー（守りのテストが変わっていないかも見る）、⑨ご自身の確認、Antigravity のテスト</li><li>⑨は、報告書に書かせた「本人が画面で確かめる手順（3〜5行）」で、5〜10分で済むようにする</li><li>1つ作るごとに、かかった日数・差し戻しの回数・レビューの指摘の数を測る</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="section-num">4</span>2つのフォルダ：元のフォルダで考え、作業用フォルダで作る</h2>
+    <p class="lead">作業用フォルダは、同じアプリのファイル一式をもう1部開いたものです。2026-10-30 にこのPCで、作る・確かめる・片づけるを試して確かめました。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 330" role="img" aria-label="元のフォルダと作業用フォルダの中身の比べ。.env は元のフォルダから写す。作業用ブランチの差分は元のフォルダから見える">
+        <rect class="s-wrap" x="10" y="10" width="380" height="290" rx="8"/>
+        <rect class="s-band" x="11" y="11" width="378" height="32" rx="7"/>
+        <text class="t-on" x="200" y="32" text-anchor="middle">元のフォルダ（apps\sales-plus1）</text>
+        <text class="t-navy" x="30" y="66">Claude Code が使う ／ 本線（main）</text>
+        <rect class="s-box" x="30" y="80" width="340" height="40" rx="6"/><text class="t-body" x="44" y="105">Git で共有するもの（設計書・計画・コード）</text>
+        <rect class="s-box" x="30" y="130" width="340" height="40" rx="6"/><text class="t-body" x="44" y="155">.env（鍵の値を入れる元）</text>
+        <rect class="s-box" x="30" y="180" width="340" height="40" rx="6"/><text class="t-body" x="44" y="205">samples/（実名の見本。ここにだけある）</text>
+        <text class="t-muted" x="30" y="250">Antigravity はここでは作業しない</text>
+
+        <rect class="s-wrap" x="490" y="10" width="380" height="290" rx="8"/>
+        <rect class="s-band" x="491" y="11" width="378" height="32" rx="7"/>
+        <text class="t-on" x="680" y="32" text-anchor="middle">作業用フォルダ（sales-plus1-worktrees\〈名前〉）</text>
+        <text class="t-navy" x="510" y="66">Antigravity が使う ／ 作業用ブランチ</text>
+        <rect class="s-bar" x="510" y="80" width="340" height="40" rx="6"/><text class="t-body" x="524" y="105">Git で共有するもの（作業用ブランチの中身）</text>
+        <rect class="s-bar" x="510" y="130" width="340" height="40" rx="6"/><text class="t-body" x="524" y="155">.env（写し。中身は開かない）</text>
+        <rect class="s-bar" x="510" y="180" width="340" height="40" rx="6"/><text class="t-body" x="524" y="205">部品（node_modules。ここで入れる）</text>
+        <rect class="s-muted" x="510" y="230" width="340" height="40" rx="6"/><text class="t-muted" x="524" y="255">samples/ はない（Git の外なので、できない）</text>
+
+        <path class="s-navy" d="M370,150 L508,150" marker-end="url(#ahn)"/>
+        <text class="t-navy" x="440" y="142" text-anchor="middle">⑤ 写す</text>
+        <path class="s-line" d="M510,100 L372,100" marker-end="url(#ah)"/>
+        <text class="t-muted" x="440" y="92" text-anchor="middle">⑧ 差分を見る</text>
+        <text class="t-muted" x="10" y="322">⑫ 片づけ：作業用フォルダは中の .env・部品ごと消え、作業用ブランチは別に消す（取り込み済みを確かめてから）</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左が元のフォルダ、右が作業用フォルダ。矢印は、⑤で .env を写すことと、⑧で作業用フォルダの記録（コミット）を元のフォルダから見ること</li><li>左の3つ目の箱（samples/）は、元のフォルダにだけある、実名の入った見本</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>フォルダが違うので、Claude Code と Antigravity が同時に作業してもぶつからない</li><li>samples/ は作業用フォルダにできないので、Antigravity が誤って実名を読むことがない</li><li>作業用フォルダでは本線に切り替えられない。だから計画ファイルの最後は「作業用ブランチのまま終える」にしてある</li><li>置き場所はいつも <code>C:\Workspace\apps\sales-plus1-worktrees\〈計画の名前〉\</code>。用意と片づけは Claude Code</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 3 ============ -->
+  <div class="part"><span class="p-no">PART 3</span><h2>並列で作る：2本まで、表は先に1本で</h2></div>
+
+  <section id="s5">
+    <h2><span class="section-num">5</span>並列の流れ：共通の部分を1本で作ってから、画面を2本同時に作る（ロープレの例）</h2>
+    <p class="lead">ロープレの区切りを例にした流れです。左から右へ時間が進みます。作るのは同時でも、レビューとご自身の確認は1本ずつです。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 290" role="img" aria-label="ロープレの区切りの並列の流れ。Antigravity の1本目が共通の部品とロープレの表を作り、レビューとご自身の OK のあと、1本目が記録の画面、2本目がトーク一覧を同時に作る。そのあいだ Claude Code は次の計画を作り、できたら1本ずつレビューする">
+        <rect class="s-lane" x="0" y="34" width="880" height="48"/>
+        <rect class="s-lane2" x="0" y="82" width="880" height="48"/>
+        <rect class="s-lane" x="0" y="130" width="880" height="48"/>
+        <rect class="s-lane2" x="0" y="178" width="880" height="48"/>
+        <text class="t-navy" x="170" y="22">時間 →</text>
+        <text class="t-title" x="10" y="63">Antigravity 1本目</text>
+        <text class="t-title" x="10" y="111">Antigravity 2本目</text>
+        <text class="t-title" x="10" y="159">Claude Code</text>
+        <text class="t-title" x="10" y="207">ご自身</text>
+
+        <rect class="s-box" x="170" y="40" width="200" height="36" rx="6"/><text class="t-body" x="182" y="63">共通の部品＋表（1本）</text>
+        <rect class="s-box" x="373" y="136" width="134" height="36" rx="6"/><text class="t-body" x="381" y="159">レビュー・取り込み</text>
+        <rect class="s-core" x="375" y="184" width="130" height="36" rx="6"/><text class="t-body" x="387" y="207">確かめて OK</text>
+        <rect class="s-bar" x="510" y="40" width="180" height="36" rx="6"/><text class="t-body" x="522" y="63">記録の画面</text>
+        <rect class="s-bar" x="510" y="88" width="180" height="36" rx="6"/><text class="t-body" x="522" y="111">トーク一覧</text>
+        <rect class="s-muted" x="510" y="136" width="180" height="36" rx="6"/><text class="t-muted" x="522" y="159">次の区切りの計画を作る</text>
+        <rect class="s-box" x="695" y="136" width="175" height="36" rx="6"/><text class="t-body" x="707" y="159">1本ずつレビュー</text>
+        <rect class="s-core" x="695" y="184" width="175" height="36" rx="6"/><text class="t-body" x="707" y="207">1本ずつ確かめて OK</text>
+        <text class="t-muted" x="170" y="252">共通の部品＝左メニュー・画面の枠・共通の型・パッケージ、表＝マイグレーション、架空データ、守りのテスト</text>
+        <text class="t-muted" x="170" y="274">2本とも本線に取り込んでから、次の並列（KPI・部下メモ）を始める</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>横の帯が人、箱がその人の作業。箱の左右の位置が時間</li><li>薄い青の2本（記録の画面・トーク一覧）が並列の部分。それぞれ別の作業用フォルダ・別のブランチで作る</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>表の定義（<a class="term" href="#g-migration">マイグレーション</a>）と<a class="term" href="#g-common">共通の部品</a>は、2本が同時に触るとぶつかるので、先に1本で作って本線に入れる</li><li>並列で速くなるのは「作る」だけ。レビューと確認は1本ずつなので、本数はご自身が確かめられる量（2本）に合わせた</li><li>開発用の Supabase は1つを共有するので、表を変える作業は1本だけ</li></ul></div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="section-num">6</span>並列の決まり：同時に進めてよいのは、3つの条件がすべてそろうときだけ</h2>
+    <div class="table-wrap">
+      <table class="left">
+        <thead><tr><th>決まり</th><th>中身</th></tr></thead>
+        <tbody>
+          <tr><td>作業の場所</td><td>Antigravity は、並列でないときもいつも別の作業用フォルダで作る。並列の2本は、それぞれ別の作業用フォルダ・別のブランチ。「1つの計画ファイル＝1つのブランチ＝1つの報告書」</td></tr>
+          <tr><td>本数</td><td>最大2本。2本とも本線に取り込むまで、次の並列は始めない</td></tr>
+          <tr><td>並列にしないもの</td><td>表の定義（マイグレーション）・架空データ・守りのテスト・共通の部品。その区切りの先頭で1本で作る</td></tr>
+          <tr><td>同時に進めてよい条件</td><td>①ほかの作業の結果が要らない ②同じファイルを触らない ③1つの変更として一緒に出さない、の3つがすべて当てはまるとき</td></tr>
+          <tr><td>触ってよい範囲</td><td>計画ファイルに「触ってよいファイル・フォルダ」と「触ってはいけないもの」を書く。範囲の外が要るときは止めて質問させる</td></tr>
+          <tr><td>業務ごとの分け方</td><td>業務ごとに表・画面・フォルダ（<code>src/features/〈業務〉/</code>）を分け、ほかの業務の表は書きかえない。だから2本が別の業務の画面なら、ぶつかりにくい</td></tr>
+          <tr><td>見た目のそろえ方</td><td>最初の1画面（または共通の部品）でデザインのお手本を固めてから、並列の画面に参照させる</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>1行が1つの決まり。CLAUDE.md の「開発体制」と、計画ファイルのひな形にも同じことを書いている</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>Antigravity との壁打ち（2026-10-27）で、両方の AI がほぼ同じ結論を出した決まり</li><li>並列に入る前の「ワークツリーの試し」は 2026-10-30 に済んだ</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ PART 4 ============ -->
+  <div class="part"><span class="p-no">PART 4</span><h2>漏れを防ぐ：決めたことを、全部の資料に確実に届ける</h2></div>
+
+  <section id="s7">
+    <h2><span class="section-num">7</span>決め方・直し方：一覧を先に作り、機械で毎回、別の目で区切りごとに確かめる</h2>
+    <p class="lead">2026-10-30 に、Claude Code 自身の点検を2回しても反映の漏れが残り、別のエージェントの点検で14件が見つかりました。その反省から決めた5つの手順です。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 150" role="img" aria-label="決め方・直し方の5つの手順。決めたら記録、直す場所の一覧、機械の点検、別の目の点検、版は区切りで">
+        <rect class="s-box" x="8" y="20" width="160" height="64" rx="8"/>
+        <text class="t-title" x="88" y="46" text-anchor="middle">1 決めたら記録</text>
+        <text class="t-muted" x="88" y="68" text-anchor="middle">決めたことの表へ</text>
+        <rect class="s-box" x="182" y="20" width="160" height="64" rx="8"/>
+        <text class="t-title" x="262" y="46" text-anchor="middle">2 直す場所の一覧</text>
+        <text class="t-muted" x="262" y="68" text-anchor="middle">影響表から作って直す</text>
+        <rect class="s-box" x="356" y="20" width="160" height="64" rx="8"/>
+        <text class="t-title" x="436" y="46" text-anchor="middle">3 機械の点検</text>
+        <text class="t-muted" x="436" y="68" text-anchor="middle">毎回プログラムで</text>
+        <rect class="s-core" x="530" y="20" width="160" height="64" rx="8"/>
+        <text class="t-title" x="610" y="46" text-anchor="middle">4 別の目の点検</text>
+        <text class="t-muted" x="610" y="68" text-anchor="middle">区切りごとに</text>
+        <rect class="s-box" x="704" y="20" width="160" height="64" rx="8"/>
+        <text class="t-title" x="784" y="46" text-anchor="middle">5 版は区切りで</text>
+        <text class="t-muted" x="784" y="68" text-anchor="middle">資料の一覧も直す</text>
+        <path class="s-line" d="M168,52 L180,52" marker-end="url(#ah)"/>
+        <path class="s-line" d="M342,52 L354,52" marker-end="url(#ah)"/>
+        <path class="s-line" d="M516,52 L528,52" marker-end="url(#ah)"/>
+        <path class="s-line" d="M690,52 L702,52" marker-end="url(#ah)"/>
+        <text class="t-muted" x="8" y="114">「区切り」＝ Antigravity に計画ファイルを渡す前と、GitHub に送る前（12の手順の③）</text>
+        <text class="t-muted" x="8" y="136">報告では、直す場所の一覧の各行に「済」を付けて見せる。大きな書き換え（構成の変更・半分以上）は先に確認する</text>
+      </svg>
+    </div>
+    <div class="guide">
+      <div><div class="g-label">図の見方</div><ul><li>左から順に、1つの決定を資料に反映する流れ。濃紺の4だけが区切りごと、ほかは決定のたび</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>漏れの多くは、直す場所の一覧を最初に作らなかったことから来ていた。だから2で<a class="term" href="#g-impact">影響表</a>から一覧を作る</li><li>3では、古い言葉・版の番号・リンク切れ・用語集・図の文字のはみ出し・横はみ出し・文字化けを確かめる。<code>\</code> を含む書き込みは、書いたあとに読み返す（実際に2回、文字化けを見つけた）</li><li>4（別の目）は1回に約4分・約20万トークンかかるので、毎回ではなく区切りごと</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 用語集 -->
+  <section id="glossary">
+    <div class="part" style="margin-top:0"><span class="p-no">用語集</span><h2>この資料で使った言葉</h2></div>
+    <p class="lead" style="margin-top:var(--space-3)">本文の点線の下線から移動してきた場合、その言葉の枠が濃紺で囲まれます。「この案件での例」は、SALES +1 での具体例です。</p>
+
+    <div class="gl-group">
+      <h3>作る場所と道具</h3>
+      <div class="gl">
+        <dl id="g-worktree"><dt>ワークツリー<small>作業用フォルダ</small></dt><dd>同じリポジトリ（Git で管理しているフォルダ）を、別のフォルダにもう1つ開いたもの。フォルダごとに別のブランチで作業できるので、同時に作業しても上書きし合わない。</dd><dd class="ex">C:\Workspace\apps\sales-plus1-worktrees\〈計画の名前〉\。Antigravity はいつもここで作る。用意と片づけは Claude Code。</dd></dl>
+        <dl id="g-branch"><dt>ブランチ</dt><dd>本線から分けた作業用の枝。枝の上で作業すれば、OK が出るまで本線を変えずにすむ。</dd><dd class="ex">作業用ブランチは task/〈計画の名前〉（例：task/foundation）。作業用フォルダと一緒に作る。</dd></dl>
+        <dl id="g-main"><dt>本線<small>main</small></dt><dd>正式な最新版を置くブランチ。</dd><dd class="ex">元のフォルダ（apps\sales-plus1）が使っている。ご自身の OK のあとに、Claude Code が取り込む。</dd></dl>
+        <dl id="g-diff"><dt>差分</dt><dd>2つの版のあいだで、どこが変わったか。</dd><dd class="ex">⑧のレビューで、本線と作業用ブランチの差分を、元のフォルダから見る。</dd></dl>
+        <dl id="g-review"><dt>レビュー</dt><dd>できあがった変更を、取り込む前に別の目で確かめること。</dd><dd class="ex">Claude Code が、計画ファイルと「守ること」に沿っているか、守りのテストが変わっていないかを確かめる。</dd></dl>
+        <dl id="g-push"><dt>push</dt><dd>手元の Git の記録を GitHub へ送ること。</dd><dd class="ex">ご自身のターミナルで行う（④と⑪）。送る前に、別の目の点検をする。</dd></dl>
+        <dl id="g-env"><dt>.env</dt><dd>パスワードや API キーなどの秘密の値を置くファイル。Git に入れない。</dd><dd class="ex">Supabase の URL と鍵を入れる。作業用フォルダには、Claude Code が中身を開かずに写す。</dd></dl>
+        <dl id="g-migration"><dt>マイグレーション</dt><dd>データベースの表の作り方や変え方を書いた SQL のファイル。順に流し込むと、同じ表がいつでも作り直せる。</dd><dd class="ex">supabase/migrations/ に置く。2本が同時に変えるとぶつかるので、並列にしない。</dd></dl>
+        <dl id="g-guardtest"><dt>守りのテスト</dt><dd>絶対に崩してはいけない決まりを、プログラムが毎回自動で確かめるテスト。作る係は変更・削除・スキップしてはいけない。</dd><dd class="ex">tests/guard/ に置く。今は権限のテスト（役割ごとに読める範囲・書ける範囲）。担当は Claude Code。</dd></dl>
+        <dl id="g-common"><dt>共通の部品</dt><dd>どの画面でも使う部品。左メニュー・画面の枠・共通の型・パッケージ（入れた道具の一覧）など。</dd><dd class="ex">ロープレの区切りの先頭で1本で作り、本線に入れてから、画面を2本の並列で作る。</dd></dl>
+      </div>
+    </div>
+
+    <div class="gl-group">
+      <h3>進め方</h3>
+      <div class="gl">
+        <dl id="g-plan"><dt>計画ファイル</dt><dd>作る係に渡す作業の指示書。目的、やること、触ってよい範囲、完了の条件、守ることを書く。</dd><dd class="ex">docs/tasks/plan_〈内容〉_v1.md。ひな形は plan_template.md。土台は plan_foundation_v1.md。</dd></dl>
+        <dl id="g-report"><dt>報告書</dt><dd>作る係が作業のあとに書く、やったこと・テストの結果・質問のまとめ。</dd><dd class="ex">docs/reports/report_〈内容〉_v1.md。「本人が画面で確かめる手順（3〜5行）」も書かせる。</dd></dl>
+        <dl id="g-kugiri"><dt>区切り</dt><dd>作る順番の1つのまとまり。番号ではなく中身の名前で呼ぶ。</dd><dd class="ex">土台・ロープレ・KPI・部下メモ・カルテ第1版・一般日報・週間教育・責任者日報・集める画面・AI・自動化の9つ。</dd></dl>
+        <dl id="g-parallel"><dt>並列</dt><dd>複数の作業を同時に進めること。</dd><dd class="ex">Antigravity のエージェントを2本まで同時に動かし、別々の画面を作らせる。</dd></dl>
+        <dl id="g-fushime"><dt>節目</dt><dd>次へ進む前に、ご自身や現場の人が数日触って確かめる時点。</dd><dd class="ex">①カルテ第1版（リーダー層に数日）②一般日報（スマホで1日分）③AI（1週間の輪を通して）。</dd></dl>
+        <dl id="g-betsume"><dt>別の目の点検</dt><dd>決めたことを反映し終えたあと、別のエージェントに決定の一覧と資料だけを渡し、独立に漏れを探させること。</dd><dd class="ex">区切りごと（計画ファイルを渡す前と、GitHub に送る前）。読むだけで、実名の資料と .env は開かせない。</dd></dl>
+        <dl id="g-impact"><dt>影響表</dt><dd>ある決定を変えたときに、どのファイルのどこを直すかの一覧。</dd><dd class="ex">NOTES.md の「決定を変えたときに直すファイル」。この資料も、作業の場所・作る順番・決め方の行に入っている。</dd></dl>
+      </div>
+    </div>
+  </section>
+
+  <p class="small source">出典：CLAUDE.md（開発体制・決め方・直し方）、docs/tasks/plan_template.md、NOTES.md（2026-10-27〜30 の決定と記録）、設計書 project-dashboard_v25.html（13・14章）。2026年11月4日時点。</p>
+
+</main>
+</body>
+</html>
