@@ -1816,7 +1816,7 @@
         <thead><tr><th>決まり</th><th>中身</th></tr></thead>
         <tbody>
           <tr><td>作業の場所</td><td>Antigravity のエージェントごとに、別の<a class="term" href="#g-worktree">ワークツリー</a>（別フォルダ）・別のブランチ。「1つの計画ファイル＝1つのブランチ＝1つの報告書」。Claude Code が1本ずつレビューし、本人のOKのあと本線へ。<span class="tag tag--warn">変更</span> 2026-10-30：並列でないとき（土台など）も、Antigravity はいつも別のワークツリーで作る。そのあいだ Claude Code は元のフォルダで次の計画ファイルを作る</td></tr>
-          <tr><td>作業用フォルダの用意と片づけ</td><td>Claude Code が <code>C:\Workspace\apps\sales-plus1-worktrees\〈計画の名前〉\</code> に作業用ブランチごと作り、.env を写す（中身は開かない）。本人は Antigravity でそのフォルダを開いて計画ファイルを渡す。本線に取り込んだら Claude Code が片づける（2026-10-30 決定）</td></tr>
+          <tr><td>作業用フォルダの用意と片づけ</td><td>Claude Code が <code>C:\Workspace\apps\sales-plus1-worktrees\〈計画の名前〉\</code> に作業用ブランチごと作る。.env は本人が自分のターミナルで写す（<span class="tag tag--warn">変更</span> 2026-11-04：Claude Code の実行環境の決まりで、Claude Code からは写せないため。中身は開かない）。本人は Antigravity でそのフォルダを開いて計画ファイルを渡す。本線に取り込んだら Claude Code が片づける（2026-10-30 決定）</td></tr>
           <tr><td>本数</td><td>最大2本。2本とも本線に取り込むまで、次の並列は始めない</td></tr>
           <tr><td>並列にしないもの</td><td>表の定義（マイグレーション）・架空データ・守りのテスト・共通の部品（左メニュー・画面の枠・共通の型・パッケージ）。その区切りの先頭で1本で作る</td></tr>
           <tr><td>同時に進めてよい条件</td><td>①ほかの作業の結果が要らない ②同じファイルを触らない ③1つの変更として一緒に出さない、の3つがすべて当てはまるときだけ</td></tr>

@@ -70,7 +70,7 @@
 - Claude Code と Antigravity は、同じフォルダで同時に作業させない。Antigravity は、並列でないときもいつも別の作業用フォルダ（ワークツリー）で作る。そのあいだ Claude Code は元のフォルダで次の設計・計画ファイルを進めてよい（2026-10-30 本人の選択）
 - 作業用フォルダの用意と片づけは Claude Code が行う（2026-10-30 本人の選択。このPCで試して確かめ済み）
   - 置き場所：`C:\Workspace\apps\sales-plus1-worktrees\〈計画の名前〉\`（例：土台なら `foundation`）。アプリのフォルダの中には置かない
-  - 用意：本線（main）が最新でコミット済みなことを確かめ、`git worktree add ../sales-plus1-worktrees/〈名前〉 -b task/〈名前〉` で作業用ブランチごと作る。`.env` はGitに入らないので、元のフォルダから写す（中身は開かない・表示しない）。`samples/` はGitの対象外なので作業用フォルダにはできない（Antigravity が誤って読むこともない）
+  - 用意：本線（main）が最新でコミット済みなことを確かめ、`git worktree add ../sales-plus1-worktrees/〈名前〉 -b task/〈名前〉` で作業用ブランチごと作る。`.env` はGitに入らないので、元のフォルダから写す。写すのは本人（Claude Code が `Copy-Item` の1行を渡し、本人が自分のターミナルで実行する。Claude Code の実行環境の決まりで、Claude Code からは .env を写せないため。2026-11-04 本人の選択）。Claude Code は、あるかどうかだけを確かめる（中身は開かない・表示しない）。`samples/` はGitの対象外なので作業用フォルダにはできない（Antigravity が誤って読むこともない）
   - 本人は Antigravity でその作業用フォルダを開き、計画ファイルを渡す。部品（npm install）は作業用フォルダごとに入れる
   - レビューは元のフォルダから、本線と作業用ブランチの差分を見る（作業用フォルダのコミットは、元のフォルダからブランチとして見える）
   - 本線に取り込んだら、`git worktree remove` で作業用フォルダを片づけ（中の .env や node_modules も消える）、作業用ブランチも消す。消す前に、取り込み済みでコミットの残りがないことを確かめる

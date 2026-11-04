@@ -488,6 +488,7 @@
         <rect class="s-box" x="360" y="128" width="160" height="34" rx="6"/><text class="t-body" x="440" y="150" text-anchor="middle">③ 漏れを独立に点検</text>
         <rect class="s-core" x="10" y="172" width="160" height="34" rx="6"/><text class="t-body" x="90" y="194" text-anchor="middle">④ GitHub に送る</text>
         <rect class="s-box" x="710" y="172" width="160" height="34" rx="6"/><text class="t-body" x="790" y="194" text-anchor="middle">本線を保管</text>
+        <rect class="s-core" x="10" y="216" width="160" height="34" rx="6"/><text class="t-body" x="90" y="238" text-anchor="middle">⑤ .env を写す</text>
         <rect class="s-box" x="185" y="216" width="160" height="34" rx="6"/><text class="t-body" x="265" y="238" text-anchor="middle">⑤ 作業用フォルダを用意</text>
         <rect class="s-core" x="10" y="260" width="160" height="34" rx="6"/><text class="t-body" x="90" y="282" text-anchor="middle">⑥ フォルダを開いて渡す</text>
         <rect class="s-bar" x="535" y="304" width="160" height="34" rx="6"/><text class="t-body" x="615" y="326" text-anchor="middle">⑦ 作る・テスト・報告書</text>
@@ -545,14 +546,14 @@
         <rect class="s-muted" x="510" y="230" width="340" height="40" rx="6"/><text class="t-muted" x="524" y="255">samples/ はない（Git の外なので、できない）</text>
 
         <path class="s-navy" d="M370,150 L508,150" marker-end="url(#ahn)"/>
-        <text class="t-navy" x="440" y="142" text-anchor="middle">⑤ 写す</text>
+        <text class="t-navy" x="440" y="142" text-anchor="middle">⑤ ご自身が写す</text>
         <path class="s-line" d="M510,100 L372,100" marker-end="url(#ah)"/>
         <text class="t-muted" x="440" y="92" text-anchor="middle">⑧ 差分を見る</text>
         <text class="t-muted" x="10" y="322">⑫ 片づけ：作業用フォルダは中の .env・部品ごと消え、作業用ブランチは別に消す（取り込み済みを確かめてから）</text>
       </svg>
     </div>
     <div class="guide">
-      <div><div class="g-label">図の見方</div><ul><li>左が元のフォルダ、右が作業用フォルダ。矢印は、⑤で .env を写すことと、⑧で作業用フォルダの記録（コミット）を元のフォルダから見ること</li><li>左の3つ目の箱（samples/）は、元のフォルダにだけある、実名の入った見本</li></ul></div>
+      <div><div class="g-label">図の見方</div><ul><li>左が元のフォルダ、右が作業用フォルダ。矢印は、⑤で .env を写すこと（写すのはご自身。2026-11-04 から。Claude Code の実行環境の決まりで、Claude Code からは写せないため）と、⑧で作業用フォルダの記録（コミット）を元のフォルダから見ること</li><li>左の3つ目の箱（samples/）は、元のフォルダにだけある、実名の入った見本</li></ul></div>
       <div class="g-pt"><div class="g-label">ポイント</div><ul><li>フォルダが違うので、Claude Code と Antigravity が同時に作業してもぶつからない</li><li>samples/ は作業用フォルダにできないので、Antigravity が誤って実名を読むことがない</li><li>作業用フォルダでは本線に切り替えられない。だから計画ファイルの最後は「作業用ブランチのまま終える」にしてある</li><li>置き場所はいつも <code>C:\Workspace\apps\sales-plus1-worktrees\〈計画の名前〉\</code>。用意と片づけは Claude Code</li></ul></div>
     </div>
   </section>
@@ -666,7 +667,7 @@
         <dl id="g-diff"><dt>差分</dt><dd>2つの版のあいだで、どこが変わったか。</dd><dd class="ex">⑧のレビューで、本線と作業用ブランチの差分を、元のフォルダから見る。</dd></dl>
         <dl id="g-review"><dt>レビュー</dt><dd>できあがった変更を、取り込む前に別の目で確かめること。</dd><dd class="ex">Claude Code が、計画ファイルと「守ること」に沿っているか、守りのテストが変わっていないかを確かめる。</dd></dl>
         <dl id="g-push"><dt>push</dt><dd>手元の Git の記録を GitHub へ送ること。</dd><dd class="ex">ご自身のターミナルで行う（④と⑪）。送る前に、別の目の点検をする。</dd></dl>
-        <dl id="g-env"><dt>.env</dt><dd>パスワードや API キーなどの秘密の値を置くファイル。Git に入れない。</dd><dd class="ex">Supabase の URL と鍵を入れる。作業用フォルダには、Claude Code が中身を開かずに写す。</dd></dl>
+        <dl id="g-env"><dt>.env</dt><dd>パスワードや API キーなどの秘密の値を置くファイル。Git に入れない。</dd><dd class="ex">Supabase の URL と鍵を入れる。作業用フォルダには、ご自身が中身を開かずに写す（Claude Code が渡す Copy-Item の1行を、ご自身のターミナルで実行する）。</dd></dl>
         <dl id="g-migration"><dt>マイグレーション</dt><dd>データベースの表の作り方や変え方を書いた SQL のファイル。順に流し込むと、同じ表がいつでも作り直せる。</dd><dd class="ex">supabase/migrations/ に置く。2本が同時に変えるとぶつかるので、並列にしない。</dd></dl>
         <dl id="g-guardtest"><dt>守りのテスト</dt><dd>絶対に崩してはいけない決まりを、プログラムが毎回自動で確かめるテスト。作る係は変更・削除・スキップしてはいけない。</dd><dd class="ex">tests/guard/ に置く。今は権限のテスト（役割ごとに読める範囲・書ける範囲）。担当は Claude Code。</dd></dl>
         <dl id="g-common"><dt>共通の部品</dt><dd>どの画面でも使う部品。左メニュー・画面の枠・共通の型・パッケージ（入れた道具の一覧）など。</dd><dd class="ex">ロープレの区切りの先頭で1本で作り、本線に入れてから、画面を2本の並列で作る。</dd></dl>
