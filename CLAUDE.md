@@ -49,6 +49,7 @@
   - `npm run db:push -- --dry-run` のあと `npm run db:push`：表と権限を開発用のプロジェクトに流し込む
   - `npm run fixtures:load`／`fixtures:remove`／`fixtures:remove-ceo`／`fixtures:cleanup-guard`：架空の名簿と「テスト代表」を入れる・消す、守りのテストの残りを片づける
   - `npm run fixtures:roleplay:load`／`fixtures:roleplay:remove`／`fixtures:roleplay:cleanup-guard`：ロープレの架空データを入れる・消す、守りのテストの残りを片づける。入れるときは土台が先、消すときはロープレが先（ロープレの表が名簿を参照しているため）
+  - `npm run fixtures:dev-role -- 〈leader／member／mgr／talk-owner／ceo〉`：本人の Microsoft 365 につながった「テスト代表」の役割と所属を、架空チームAのリーダー・メンバー・担当MGR、架空チームBのトーク責任者、代表に切り替える（画面を読み込み直すと反映。終わったら ceo に戻す。並列の作業中は Antigravity に流させない）
 - このPCには Docker がないので、Supabase の手元の道具（`supabase start` など）は使わない。表と権限の直しは、新しいマイグレーションのファイルで足す
 
 ## 守ること
