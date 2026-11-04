@@ -39,6 +39,17 @@
 - 表示名：SALES +1 ／ スローガン：1DAY +1
 - 識別名（URL・リポジトリ・フォルダ・ファイル）：sales-plus1（「+」は使えないため）
 
+## 技術構成と動かし方（2026-11-04 土台で作った）
+
+- 画面：React 19＋Vite（TypeScript）。テスト：Vitest。データベース・ログイン・権限：Supabase（開発用プロジェクト sales-plus1-dev・東京。Microsoft 365 でログイン）
+- 置き場所：`src/foundation/`（土台）、`src/features/〈業務〉/`（業務の箱。ロープレから）、`supabase/migrations/`（表と権限の SQL）、`tests/guard/`（守りのテスト）、`tests/〈業務〉/`（そのほかのテスト）、`fixtures/〈業務〉/`（架空データと補助のプログラム）
+- 動かし方（作業用フォルダで。部品は `npm install` で入れる。`.env` は `.env.example` の名前に本人が値を入れる）
+  - `npm run dev`：画面を `http://localhost:5173` で開く
+  - `npm test`：テスト（守りのテストを含む）
+  - `npm run db:push -- --dry-run` のあと `npm run db:push`：表と権限を開発用のプロジェクトに流し込む
+  - `npm run fixtures:load`／`fixtures:remove`／`fixtures:remove-ceo`／`fixtures:cleanup-guard`：架空の名簿と「テスト代表」を入れる・消す、守りのテストの残りを片づける
+- このPCには Docker がないので、Supabase の手元の道具（`supabase start` など）は使わない。表と権限の直しは、新しいマイグレーションのファイルで足す
+
 ## 守ること
 
 - 未決事項（技術構成、KPI指標名など）は勝手に決めず、選択肢を示して確認する

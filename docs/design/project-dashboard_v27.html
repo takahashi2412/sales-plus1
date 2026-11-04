@@ -466,14 +466,14 @@
       <div class="grp-card done"><span class="g-no">4</span><b>運用</b><span class="tag tag--good">確定</span></div>
       <div class="grp-card done"><span class="g-no">5</span><b>データの項目</b><span class="tag tag--good">確定</span></div>
       <div class="grp-card next"><span class="g-no">6</span><b>画面</b><span class="tag tag--navy">試作を残して確定</span></div>
-      <div class="grp-card"><span class="g-no">7</span><b>技術構成</b><span class="tag tag--plain">作りながら（土台で試す）</span></div>
+      <div class="grp-card"><span class="g-no">7</span><b>技術構成</b><span class="tag tag--plain">作りながら（土台で動いた）</span></div>
       <div class="grp-card"><span class="g-no">8</span><b>段階導入の日付</b><span class="tag tag--plain">作りながら</span></div>
     </div>
     <div class="table-wrap" style="margin-top:var(--space-4)">
       <table class="left nw">
         <thead><tr><th>図</th><th>状態</th><th>残っていること</th><th>決めるまとまり</th></tr></thead>
         <tbody>
-          <tr><td>1 システム構成</td><td><span class="tag tag--warn">案</span></td><td>土台（データベース・ログイン）は Supabase で試す（v22）。開発用は東京に作成し、Microsoft 365 は会社のアカウントだけに絞って登録済み（v24）。画面を置く場所・AIの連携先・自動操作の場所は未決。使う人の規模とログイン方法（Microsoft 365）は確定</td><td>7</td></tr>
+          <tr><td>1 システム構成</td><td><span class="tag tag--warn">案</span></td><td>土台（データベース・ログイン）は Supabase で試し、2026-11-04 に土台が動いた（v22・v27）。開発用は東京に作成し、Microsoft 365 は会社のアカウントだけに絞って登録済み（v24）。画面を置く場所・AIの連携先・自動操作の場所は未決。使う人の規模とログイン方法（Microsoft 365）は確定</td><td>7</td></tr>
           <tr><td>1-2 作り方の形</td><td><span class="tag tag--good">確定</span></td><td>－（v24で決定：土台は1つ、業務ごとに分ける）</td><td>－</td></tr>
           <tr><td>2 データの流れ</td><td><span class="tag tag--good">確定</span></td><td>－（取り込みのチェック内容は見本のCSVで確定）</td><td>－</td></tr>
           <tr><td>3 KPIの取り込み</td><td><span class="tag tag--good">確定</span></td><td>自動操作で取得すると本人が回答（2026-10-19）。電話システムの製品名だけ残る</td><td>（7）</td></tr>
@@ -1136,7 +1136,7 @@
       <span>点線＝言及メンバーで複数人につながる</span>
     </div>
     <div class="guide">
-      <div><div class="g-label">図の見方</div><ul><li>1つの箱が1つの表。濃紺の帯が表の名前、その下が項目</li><li>図の項目は中身を伝えるための書き方で、実際の列の名前（例：members の id・auth_user_id、mgr_assignments の mgr_member_id）は、土台の計画ファイル（docs/tasks/plan_foundation_v1.md）の4章が正</li><li>中央の members が名簿。ほかの表は member_id で名簿とつながる</li><li>1人のメンバーに、日報やKPIの記録がたくさんぶら下がる（1対多）</li><li>AIの提案が「採用」されると、週間教育の記録になる</li><li>名簿の上の「所属の履歴」は、いつからどのチーム・拠点にいたかの記録（v5で追加）</li></ul></div>
+      <div><div class="g-label">図の見方</div><ul><li>1つの箱が1つの表。濃紺の帯が表の名前、その下が項目</li><li>図の項目は中身を伝えるための書き方で、実際の列の名前（例：members の id・auth_user_id、mgr_assignments の mgr_member_id）は、土台の SQL（supabase/migrations/20261104000001_foundation_schema_and_rls.sql）が正</li><li>中央の members が名簿。ほかの表は member_id で名簿とつながる</li><li>1人のメンバーに、日報やKPIの記録がたくさんぶら下がる（1対多）</li><li>AIの提案が「採用」されると、週間教育の記録になる</li><li>名簿の上の「所属の履歴」は、いつからどのチーム・拠点にいたかの記録（v5で追加）</li></ul></div>
       <div class="g-pt"><div class="g-label">ポイント</div><ul><li>表の名前は英語（プログラムで扱いやすいため）、画面には日本語で表示する</li><li><span class="tag tag--warn">変更</span> v25：今のチーム・拠点と担当リーダーは名簿（members）に持たず、所属の履歴とチームの一覧（teams）から出す。同じことを2か所に持つと、異動のときに片方だけ直して食い違うため。土台の計画ファイルと同じ形</li><li>項目は6業務と見込みまで、見本データ（今のExcel・Forms）で確定した</li><li>ロープレは合格ラインの○△×だけで、点数はつけない（v15で確定）</li><li>図に描いていない表（週間教育・部下メモ・ロープレ・責任者日報・一般日報に付く表）は、下の表で説明する</li><li>異動しても、過去の数字は当時のチーム・拠点で集計する。だから過去のチーム平均が変わらず、効果の確かめの比較が狂わない</li></ul></div>
     </div>
     <h3 style="margin-top:var(--space-6)">週間教育に付く表（v12で追加・見本データ3で確定）</h3>
@@ -1574,7 +1574,7 @@
       <div><div class="g-label">図の見方</div><ul><li>最初の表は役割ごとのホーム。2つ目の表は、縦に画面、横にロール（役割）。塗りの丸は入力、輪の丸は閲覧</li><li>受注・見込み・週の約束は、別の画面にせず一般日報の中にある</li><li>「モック」は、見た目の試作がすでにあるかどうか</li><li>濃紺のタグは、役職ではなく「管理者」の権限を持つ人が行う仕事</li></ul></div>
       <div class="g-pt"><div class="g-label">ポイント</div><ul><li>ログインは会社のMicrosoft 365アカウント。退職でアカウントを止めれば、アプリにも入れなくなる</li><li>見える範囲は担当チームで決まる。リーダーは自チーム、MGRは担当チーム（チーム単位で期間つきで設定）、代表はすべて</li><li>メンバーにはチーム平均と、名前つきのチーム内の順位を見せる。順位の数字はアポ数・関わった受注・アポの達成率・粗利の達成率の4つ（v20）</li><li>AI本人版は担当リーダー・MGRも全体を見る。本人の画面に「担当リーダー・MGRも見ます」と表示する</li><li>権限を与えた・外した記録は<a class="term" href="#g-audit">監査ログ</a>に残す。記録を消すときは<a class="term" href="#g-softdelete">論理削除</a>にし、直す・消すのは書いた本人だけ</li><li>権限は画面に出さないだけでなく、データベースの段階で読めないようにする</li></ul></div>
     </div>
-    <h3 style="margin:var(--space-6) 0 var(--space-3)">ログインと安全の決まり（v24で決定・土台の準備で設定）</h3>
+    <h3 style="margin:var(--space-6) 0 var(--space-3)">ログインと安全の決まり（v24で決定・土台の準備で設定。2026-11-04 に土台で作って確かめた：守りのテスト22件・Security Advisor 0件）</h3>
     <div class="table-wrap">
       <table class="left">
         <thead><tr><th>決まり</th><th>中身</th><th>状態</th></tr></thead>
@@ -1590,7 +1590,7 @@
           <tr><td>表の流し込み</td><td>作る係は、.env の SUPABASE_DB_URL（開発用のプロジェクトだけに効く接続の文字。パスワード入り）で表を流し込む。Supabase のアカウントの合鍵は使わない（ほかのプロジェクトまで操作できてしまうため）。v26</td><td><span class="tag tag--good">決定</span></td></tr>
           <tr><td>ログインのあとに戻る先</td><td>開発中は手元の画面 http://localhost:5173 に戻す（Supabase の Site URL と Redirect URLs に入れる。ご自身が設定）。Microsoft のログインではメールアドレスを受け取る設定（scopes に email）を付け、Microsoft 365 の登録したアプリに追加の要求（email と xms_edov）を足す（Supabase がメールを確認済みとみなすため）。v26</td><td><span class="tag tag--good">設定済み</span></td></tr>
           <tr><td>ご自身のアカウントでの確かめ</td><td>.env に入れたご自身のメールアドレスで、架空の名前「テスト代表」（代表）の行を作って確かめる。その行を消すと「名簿に登録されていません」になることも確かめる。メールアドレスは Git に入れない。v26</td><td><span class="tag tag--good">決定</span></td></tr>
-          <tr><td>本物のデータを入れる前</td><td>本番では、メールのログインを止めて Microsoft だけにする。本番用と開発用のプロジェクトを分ける。バックアップを決める。管理用の鍵を作り直す。Microsoft の合言葉（シークレット）は180日（2027年4月ごろ）で切れるので、期限の管理を決める</td><td><span class="tag tag--warn">未決（カルテ第1版の節目まで）</span></td></tr>
+          <tr><td>本物のデータを入れる前</td><td>権限の判定に退職日を入れる（今は退職した人もログインできれば読める。カルテ第1版で名簿の画面と一緒に直す）。本番では、メールのログインを止めて Microsoft だけにする。本番用と開発用のプロジェクトを分ける。バックアップを決める。管理用の鍵を作り直す。Microsoft の合言葉（シークレット）は180日（2027年4月ごろ）で切れるので、期限の管理を決める</td><td><span class="tag tag--warn">未決（カルテ第1版の節目まで）</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1762,7 +1762,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>上から下へ1つずつ進む。左の白い箱を1本で作ってから、右の薄い青の2本を同時に作る</li><li>橙の行は、次に進む前に数日触って確かめる節目</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>土台では、一番の技術の不安（Microsoft ログインと、データベースの段階での権限の絞り込み）を小さく先に確かめる。<a class="term" href="#g-supabase">Supabase</a> でうまくいかなければ Firebase に切り替える</li><li>集める画面（カルテ・ホーム・ダッシュボード）はカルテ第1版と「責任者日報・集める画面」の2回だけ作り、ほかの区切りでは触らない。カルテ（中心の価値）をカルテ第1版で早く見せる</li><li>研修の記録はロープレと一緒に作る（一般日報が「今日の研修」を並べるため）。過去の記録の取り込みは AI より前に前倒しする（取り込む前に名前→名簿の番号の対応表を本人が確認）</li><li>危ない所と備え：一般日報の欄の多さ（2段階で確かめる）／集計のルール（計算だけの部品を分け、異動・アポだけの人・アポ絡みの架空データで先にテスト）／AIの判定（計算と除外のテストを先に）／ログインと権限（土台で先に）</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>土台では、一番の技術の不安（Microsoft ログインと、データベースの段階での権限の絞り込み）を小さく先に確かめる。<a class="term" href="#g-supabase">Supabase</a> で、2026-11-04 に土台が動いた（Firebase への切り替えは要らなくなった）</li><li>集める画面（カルテ・ホーム・ダッシュボード）はカルテ第1版と「責任者日報・集める画面」の2回だけ作り、ほかの区切りでは触らない。カルテ（中心の価値）をカルテ第1版で早く見せる</li><li>研修の記録はロープレと一緒に作る（一般日報が「今日の研修」を並べるため）。過去の記録の取り込みは AI より前に前倒しする（取り込む前に名前→名簿の番号の対応表を本人が確認）</li><li>危ない所と備え：一般日報の欄の多さ（2段階で確かめる）／集計のルール（計算だけの部品を分け、異動・アポだけの人・アポ絡みの架空データで先にテスト）／AIの判定（計算と除外のテストを先に）／ログインと権限（土台で先に）</li></ul></div>
     </div>
     <p class="small" style="margin-top:var(--space-4)">下の図は、もとの段階導入の計画です。どの機能をどの段階で使い始めるかの目安として残します（日付は未決）。</p>
     <div class="panel road-wrap">
@@ -1833,7 +1833,7 @@
 
   <!-- 15 未決事項と次の一手 -->
   <section id="s15">
-    <h2><span class="section-num">15</span>未決事項と次の一手：まず土台</h2>
+    <h2><span class="section-num">15</span>未決事項と次の一手：土台ができ、次はロープレ</h2>
     <div class="issues">
       <div class="iss done"><span class="no">1</span><b>現行Excelの見本</b><span class="tag tag--good" style="align-self:start">決定（6業務すべて受領・確定）</span></div>
       <div class="iss review"><span class="no">2</span><b>技術構成</b><span class="tag tag--navy" style="align-self:start">認証・作り方は決定、土台は Supabase で動いた</span></div>
@@ -1862,7 +1862,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>緑＝決定、濃紺＝検討中、橙＝待ち、白＝未着手。下の帯は件数の割合</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>見本データで決まるものは、すべて決まった（6業務と見込み）</li><li>技術構成は土台を試してから、画面を置く場所・AI連携・ブラウザ自動操作の場所・費用を順に決める（v22）</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>見本データで決まるものは、すべて決まった（6業務と見込み）</li><li>技術構成は土台で Supabase が動いたので（2026-11-04）、画面を置く場所・AI連携・ブラウザ自動操作の場所・費用を順に決める（v22）</li></ul></div>
     </div>
   </section>
 
