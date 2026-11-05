@@ -14,6 +14,7 @@ import {
 import { getTodayJstDateString } from '../../foundation/directory';
 import {
   buildReadableMemberMap,
+  createSequentialTaskQueue,
   fetchMemoPageDataset,
   filterAndSortSubmittedMemos,
   filterSelectableTargetsBySelected,
@@ -74,12 +75,13 @@ export function SubordinateMemoPage() {
   const [formResultCheck, setFormResultCheck] = useState<MemoCheckValue | ''>('');
   const [formCheckedOn, setFormCheckedOn] = useState(todayJst);
 
-  // 自動下書き保存用の状態
+  // 自動下書き保存用の状態（保存処理は saveQueueRef で1本ずつ順番に行う）
   const [autoSaveStatus, setAutoSaveStatus] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHydratingFormRef = useRef(false);
   const draftCreatedIdRef = useRef<string | null>(null);
+  const saveQueueRef = useRef(createSequentialTaskQueue());
 
   const reloadData = async () => {
     try {
@@ -210,6 +212,10 @@ export function SubordinateMemoPage() {
     memo: SubordinateMemoRow | null,
     options?: { presetCheckOnToday?: boolean },
   ) => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
     isHydratingFormRef.current = true;
     setErrorMessage(null);
     setStatusMessage(null);
@@ -277,50 +283,57 @@ export function SubordinateMemoPage() {
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    autoSaveTimerRef.current = setTimeout(async () => {
-      try {
-        setAutoSaveStatus('下書きを保存中...');
-        const currentDraftId = selectedMemoId ?? draftCreatedIdRef.current;
+    const snapDate = formDate || todayJst;
+    const snapThemeId = formThemeId || null;
+    const snapKindId = formKindId || null;
+    const snapNoticed = formNoticed;
+    const snapGuidance = formGuidance;
+    const snapNextCheckOn = formNextCheckOn || null;
+    const snapTargetIds = [...formTargetIds];
 
-        if (!currentDraftId) {
-          const inserted = await insertDraftMemoRow({
-            date: formDate || todayJst,
-            created_by: viewer.memberId,
-            theme_id: formThemeId || null,
-            kind_id: formKindId || null,
-            noticed: formNoticed,
-            guidance: formGuidance,
-            next_check_on: formNextCheckOn || null,
-          });
-          draftCreatedIdRef.current = inserted.id;
-          setSelectedMemoId(inserted.id);
+    autoSaveTimerRef.current = setTimeout(() => {
+      void saveQueueRef.current(async () => {
+        try {
+          setAutoSaveStatus('下書きを保存中...');
+          const currentDraftId = selectedMemoId ?? draftCreatedIdRef.current;
 
-          if (formTargetIds.length > 0) {
-            await syncMemoTargets(inserted.id, [], formTargetIds, false);
+          if (!currentDraftId) {
+            const inserted = await insertDraftMemoRow({
+              date: snapDate,
+              created_by: viewer.memberId,
+              theme_id: snapThemeId,
+              kind_id: snapKindId,
+              noticed: snapNoticed,
+              guidance: snapGuidance,
+              next_check_on: snapNextCheckOn,
+            });
+            draftCreatedIdRef.current = inserted.id;
+            setSelectedMemoId(inserted.id);
+
+            if (snapTargetIds.length > 0) {
+              await syncMemoTargets(inserted.id, snapTargetIds, false);
+            }
+          } else {
+            await updateMemoRow(currentDraftId, {
+              date: snapDate,
+              theme_id: snapThemeId,
+              kind_id: snapKindId,
+              noticed: snapNoticed,
+              guidance: snapGuidance,
+              next_check_on: snapNextCheckOn,
+            });
+            await syncMemoTargets(currentDraftId, snapTargetIds, false);
           }
-        } else {
-          await updateMemoRow(currentDraftId, {
-            date: formDate || todayJst,
-            theme_id: formThemeId || null,
-            kind_id: formKindId || null,
-            noticed: formNoticed,
-            guidance: formGuidance,
-            next_check_on: formNextCheckOn || null,
-          });
-          const existingTargets = dataset.targetRows.filter(
-            (t) => t.memo_id === currentDraftId,
-          );
-          await syncMemoTargets(currentDraftId, existingTargets, formTargetIds, false);
-        }
 
-        const fresh = await fetchMemoPageDataset();
-        if (fresh) setDataset(fresh);
-        setAutoSaveStatus('下書きを自動保存しました');
-      } catch (err) {
-        setAutoSaveStatus(
-          err instanceof Error ? `下書き保存エラー：${err.message}` : '下書き保存に失敗しました',
-        );
-      }
+          const fresh = await fetchMemoPageDataset();
+          if (fresh) setDataset(fresh);
+          setAutoSaveStatus('下書きを自動保存しました');
+        } catch (err) {
+          setAutoSaveStatus(
+            err instanceof Error ? `下書き保存エラー：${err.message}` : '下書き保存に失敗しました',
+          );
+        }
+      });
     }, 500);
 
     return () => {
@@ -358,43 +371,46 @@ export function SubordinateMemoPage() {
 
   const handleSaveDraftManually = async () => {
     if (!viewer || !dataset) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
     setSubmitting(true);
     setErrorMessage(null);
     setStatusMessage(null);
+
     try {
-      const currentDraftId = selectedMemoId ?? draftCreatedIdRef.current;
-      if (!currentDraftId) {
-        const inserted = await insertDraftMemoRow({
-          date: formDate || todayJst,
-          created_by: viewer.memberId,
-          theme_id: formThemeId || null,
-          kind_id: formKindId || null,
-          noticed: formNoticed,
-          guidance: formGuidance,
-          next_check_on: formNextCheckOn || null,
-        });
-        draftCreatedIdRef.current = inserted.id;
-        setSelectedMemoId(inserted.id);
-        if (formTargetIds.length > 0) {
-          await syncMemoTargets(inserted.id, [], formTargetIds, false);
+      await saveQueueRef.current(async () => {
+        const currentDraftId = selectedMemoId ?? draftCreatedIdRef.current;
+        if (!currentDraftId) {
+          const inserted = await insertDraftMemoRow({
+            date: formDate || todayJst,
+            created_by: viewer.memberId,
+            theme_id: formThemeId || null,
+            kind_id: formKindId || null,
+            noticed: formNoticed,
+            guidance: formGuidance,
+            next_check_on: formNextCheckOn || null,
+          });
+          draftCreatedIdRef.current = inserted.id;
+          setSelectedMemoId(inserted.id);
+          if (formTargetIds.length > 0) {
+            await syncMemoTargets(inserted.id, formTargetIds, false);
+          }
+        } else {
+          await updateMemoRow(currentDraftId, {
+            date: formDate || todayJst,
+            theme_id: formThemeId || null,
+            kind_id: formKindId || null,
+            noticed: formNoticed,
+            guidance: formGuidance,
+            next_check_on: formNextCheckOn || null,
+          });
+          await syncMemoTargets(currentDraftId, formTargetIds, false);
         }
-      } else {
-        await updateMemoRow(currentDraftId, {
-          date: formDate || todayJst,
-          theme_id: formThemeId || null,
-          kind_id: formKindId || null,
-          noticed: formNoticed,
-          guidance: formGuidance,
-          next_check_on: formNextCheckOn || null,
-        });
-        const existingTargets = dataset.targetRows.filter(
-          (t) => t.memo_id === currentDraftId,
-        );
-        await syncMemoTargets(currentDraftId, existingTargets, formTargetIds, false);
-      }
-      await reloadData();
-      setStatusMessage('書きかけとして保存しました（送るまでほかの上席には見えません）。');
+        await reloadData();
+        setStatusMessage('書きかけとして保存しました（送るまでほかの上席には見えません）。');
+      });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '保存に失敗しました。');
     } finally {
@@ -404,7 +420,10 @@ export function SubordinateMemoPage() {
 
   const handleSubmitOrUpdateMemo = async () => {
     if (!viewer || !dataset) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
 
     const validation = validateMemoForSubmit({
       date: formDate,
@@ -427,56 +446,55 @@ export function SubordinateMemoPage() {
     setStatusMessage(null);
 
     try {
-      let targetMemoId = selectedMemoId ?? draftCreatedIdRef.current;
+      await saveQueueRef.current(async () => {
+        let targetMemoId = selectedMemoId ?? draftCreatedIdRef.current;
 
-      if (!targetMemoId) {
-        // 先に下書き行を insert し、対象者を入れてから submitted_at を入れて更新する（DBの制約どおり）
-        const inserted = await insertDraftMemoRow({
+        if (!targetMemoId) {
+          // 先に下書き行を insert し、対象者を入れてから submitted_at を入れて更新する（DBの制約どおり）
+          const inserted = await insertDraftMemoRow({
+            date: formDate,
+            created_by: viewer.memberId,
+            theme_id: formThemeId,
+            kind_id: formKindId,
+            noticed: formNoticed,
+            guidance: formGuidance,
+            next_check_on: formNextCheckOn || null,
+          });
+          targetMemoId = inserted.id;
+          draftCreatedIdRef.current = inserted.id;
+          await syncMemoTargets(targetMemoId, formTargetIds, false);
+        } else {
+          await syncMemoTargets(
+            targetMemoId,
+            formTargetIds,
+            isSubmittedSelected,
+          );
+        }
+
+        const hasCheckSelection = Boolean(formActionCheck || formResultCheck);
+        await updateMemoRow(targetMemoId, {
           date: formDate,
-          created_by: viewer.memberId,
           theme_id: formThemeId,
           kind_id: formKindId,
           noticed: formNoticed,
           guidance: formGuidance,
           next_check_on: formNextCheckOn || null,
+          action_check: (formActionCheck || null) as MemoCheckValue | null,
+          result_check: (formResultCheck || null) as MemoCheckValue | null,
+          checked_on: hasCheckSelection ? formCheckedOn || todayJst : null,
+          ...(isSubmittedSelected ? {} : { submitted_at: new Date().toISOString() }),
         });
-        targetMemoId = inserted.id;
-        await syncMemoTargets(targetMemoId, [], formTargetIds, false);
-      } else {
-        const existingTargets = dataset.targetRows.filter(
-          (t) => t.memo_id === targetMemoId,
-        );
-        await syncMemoTargets(
-          targetMemoId,
-          existingTargets,
-          formTargetIds,
-          isSubmittedSelected,
-        );
-      }
 
-      const hasCheckSelection = Boolean(formActionCheck || formResultCheck);
-      await updateMemoRow(targetMemoId, {
-        date: formDate,
-        theme_id: formThemeId,
-        kind_id: formKindId,
-        noticed: formNoticed,
-        guidance: formGuidance,
-        next_check_on: formNextCheckOn || null,
-        action_check: (formActionCheck || null) as MemoCheckValue | null,
-        result_check: (formResultCheck || null) as MemoCheckValue | null,
-        checked_on: hasCheckSelection ? formCheckedOn || todayJst : null,
-        ...(isSubmittedSelected ? {} : { submitted_at: new Date().toISOString() }),
+        const fresh = await fetchMemoPageDataset();
+        if (fresh) {
+          setDataset(fresh);
+          const updated = fresh.memos.find((m) => m.id === targetMemoId) ?? null;
+          loadMemoIntoForm(updated);
+        }
+        setStatusMessage(
+          isSubmittedSelected ? '部下メモの内容を更新しました。' : '部下メモを送りました。',
+        );
       });
-
-      const fresh = await fetchMemoPageDataset();
-      if (fresh) {
-        setDataset(fresh);
-        const updated = fresh.memos.find((m) => m.id === targetMemoId) ?? null;
-        loadMemoIntoForm(updated);
-      }
-      setStatusMessage(
-        isSubmittedSelected ? '部下メモの内容を更新しました。' : '部下メモを送りました。',
-      );
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '送信に失敗しました。');
     } finally {
@@ -486,16 +504,21 @@ export function SubordinateMemoPage() {
 
   const handleHideMemo = async () => {
     if (!selectedMemo || !isWriterOfSelected) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
     setSubmitting(true);
     setErrorMessage(null);
     setStatusMessage(null);
 
     try {
-      await hideMemoRow(selectedMemo.id);
-      await reloadData();
-      loadMemoIntoForm(null);
-      setStatusMessage('部下メモを見えなくしました。');
+      await saveQueueRef.current(async () => {
+        await hideMemoRow(selectedMemo.id);
+        await reloadData();
+        loadMemoIntoForm(null);
+        setStatusMessage('部下メモを見えなくしました。');
+      });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '操作に失敗しました。');
     } finally {

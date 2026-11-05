@@ -615,17 +615,51 @@ export async function hideMemoRow(
 }
 
 /**
+ * 保存を1本ずつ順番に行うための直列実行キューを作る（純粋関数）。
+ * 実行中の保存があれば、それが終わるのを待ってから次の処理を実行する。
+ * 前の処理がエラーで終わっても、次の処理は止めずに順番に実行する。
+ */
+export function createSequentialTaskQueue(): <T>(task: () => Promise<T>) => Promise<T> {
+  let tail: Promise<unknown> = Promise.resolve();
+  return <T>(task: () => Promise<T>): Promise<T> => {
+    const next = tail.catch(() => undefined).then(() => task());
+    tail = next;
+    return next;
+  };
+}
+
+/**
+ * 指定したメモの対象者の行（subordinate_memo_targets）をデータベースから読み直す。
+ */
+export async function fetchMemoTargetRowsByMemoId(
+  memoId: string,
+  client: SupabaseClient = supabase,
+): Promise<SubordinateMemoTargetRow[]> {
+  const { data, error } = await client
+    .from('subordinate_memo_targets')
+    .select('*')
+    .eq('memo_id', memoId);
+
+  if (error) {
+    throw new Error('この操作はできません');
+  }
+  return (data ?? []) as SubordinateMemoTargetRow[];
+}
+
+/**
  * 対象者の変更をデータベースに反映する。
+ * 画面が持っている古い一覧は使わず、変更を計算する直前にデータベースからそのメモの対象者の行を読み直す。
  * 同じチーム制約のトリガーに引っかからないよう、先に外す人（removed_at 設定）を行ってから、
  * 戻す人（removed_at = null）・足す人（insert）の順で処理する。
  */
 export async function syncMemoTargets(
   memoId: string,
-  existingTargetRowsForMemo: SubordinateMemoTargetRow[],
   nextTargetMemberIds: string[],
   isSubmittedMemo: boolean,
   client: SupabaseClient = supabase,
 ): Promise<void> {
+  const existingTargetRowsForMemo = await fetchMemoTargetRowsByMemoId(memoId, client);
+
   const { toInsert, toRestore, toRemove } = planMemoTargetChanges(
     existingTargetRowsForMemo,
     nextTargetMemberIds,

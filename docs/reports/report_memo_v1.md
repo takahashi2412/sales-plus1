@@ -11,9 +11,9 @@
 ## 変更したファイルの一覧
 4章の「触ってよいファイル・フォルダ」（`src/features/memo/`・`tests/memo/`・`docs/reports/report_memo_v1.md`）の範囲内のみを作成・変更しました。
 
-- `src/features/memo/memo-logic.ts`（新規：確認待ちの選び出し、対象者の選べる人と同じチームでの絞り込み、送る前の必須チェック、対象者の追加・戻す・外す計画、表示補助関数、Supabase データ取得・保存）
+- `src/features/memo/memo-logic.ts`（新規：確認待ちの選び出し、対象者の選べる人と同じチームでの絞り込み、送る前の必須チェック、対象者の追加・戻す・外す計画、保存の直列実行キュー、表示補助関数、Supabase データ取得・保存）
 - `src/features/memo/index.tsx`（更新：部下メモの画面。確認待ち一覧、新規・編集・閲覧の切り替え、自動下書き保存、対象者の選択・注意書き、自分の書きかけ一覧、絞り込みつき一覧）
-- `tests/memo/memo-logic.test.ts`（新規：部下メモの計算部品の単体テスト10件）
+- `tests/memo/memo-logic.test.ts`（新規：部下メモの計算部品の単体テスト11件）
 - `docs/reports/report_memo_v1.md`（新規：本報告書）
 
 ## 本人が画面で確かめる手順
@@ -41,13 +41,17 @@
    - 送ったメモを書きかけに戻す操作、および送ったメモの対象者を全員外す操作（最後の1人のチェック解除）は出さないようにしました。
 4. **単体テストの作成と検証（`tests/memo/memo-logic.test.ts`）**
    - 確認待ちの抽出、対象者の候補と同一チーム絞り込み・リーダー＋メンバー同時選択の判定、送信前の必須チェック、外した対象者を戻す計画と最後の1人の保護、一覧の絞り込み・表示補助・DB拒否時のエラー処理のテストを作成し、`npx vitest run tests/memo tests/foundation tests/roleplay` と `npm run build` がすべて通ることを確かめました。
+5. **レビュー指摘への対応（自動保存の直列化と対象者行の再取得）**
+   - 保存処理を1本ずつ順番に行う直列実行キュー（`createSequentialTaskQueue`）を `src/features/memo/memo-logic.ts` に追加し、自動保存・手動の下書き保存・送信・非表示化がすべて実行中の保存が終わるのを待ってから順番に走るようにして、書きかけのメモが二重に作られることを防ぎました。
+   - `syncMemoTargets` で対象者の追加・戻す・外すを計算する前に、画面が持っている古い一覧を使わず毎回データベースからそのメモの対象者の行（`fetchMemoTargetRowsByMemoId`）を読み直すようにし、連続入力時に対象者を二重に追加しようとするエラーを防ぎました。
+   - `tests/memo/memo-logic.test.ts` に保存が重なったときの直列実行と対象者のDB再取得の単体テストを追加しました。
 
 ## 決められずに止めたこと・質問
 - ありません（計画書の仕様どおりにすべて実装・確認できました）。
 
 ## テストの結果（通った数／全体）
-- **65 / 65 件通過**（テストファイル 7 / 7 件通過。0-6 の決まりにより `npx vitest run tests/memo tests/foundation tests/roleplay` を実行）
-  - 部下メモの単体テスト `tests/memo/memo-logic.test.ts`：10 / 10 件通過
+- **66 / 66 件通過**（テストファイル 7 / 7 件通過。0-6 の決まりにより `npx vitest run tests/memo tests/foundation tests/roleplay` を実行）
+  - 部下メモの単体テスト `tests/memo/memo-logic.test.ts`：11 / 11 件通過
   - 土台の単体テスト `tests/foundation/dev-role.test.ts`：8 / 8 件通過
   - 土台の単体テスト `tests/foundation/directory.test.ts`：3 / 3 件通過
   - 画面切り替え・左メニューの単体テスト `tests/foundation/ui-and-routing.test.ts`：4 / 4 件通過

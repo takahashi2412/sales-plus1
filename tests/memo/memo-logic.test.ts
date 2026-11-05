@@ -8,6 +8,7 @@ import type {
 import type { ViewerContext } from '../../src/foundation/viewer';
 import {
   buildReadableMemberMap,
+  createSequentialTaskQueue,
   filterAndSortSubmittedMemos,
   filterSelectableTargetsBySelected,
   formatMemoCheckLabel,
@@ -512,6 +513,12 @@ describe('一覧の並び順・絞り込み・表示補助（filterAndSortSubmit
   it('データベースが操作を断ったときは「この操作はできません」を投げる', async () => {
     const deniedClient = {
       from: () => ({
+        select: () => ({
+          eq: async () => ({
+            data: [] as SubordinateMemoTargetRow[],
+            error: null,
+          }),
+        }),
         insert: () => ({
           select: () => ({
             maybeSingle: async () => ({ data: null, error: new Error('rls denied') }),
@@ -554,7 +561,107 @@ describe('一覧の並び順・絞り込み・表示補助（filterAndSortSubmit
     await expect(hideMemoRow('memo-1', deniedClient)).rejects.toThrow('この操作はできません');
 
     await expect(
-      syncMemoTargets('memo-1', [], ['member-a1'], false, deniedClient),
+      syncMemoTargets('memo-1', ['member-a1'], false, deniedClient),
     ).rejects.toThrow('この操作はできません');
+  });
+
+  it('createSequentialTaskQueue と syncMemoTargets：保存が重なっても1本ずつ順番に行い、対象者は毎回データベースから読み直して二重追加を防ぐ', async () => {
+    const enqueue = createSequentialTaskQueue();
+    const events: string[] = [];
+
+    let draftId: string | null = null;
+    const dbTargets: SubordinateMemoTargetRow[] = [];
+    const insertedMembersLog: string[] = [];
+
+    const mockClient = {
+      from: (table: string) => {
+        if (table !== 'subordinate_memo_targets') {
+          throw new Error(`unexpected table: ${table}`);
+        }
+        return {
+          select: () => ({
+            eq: async (_col: string, memoId: string) => ({
+              data: dbTargets.filter((r) => r.memo_id === memoId).map((r) => ({ ...r })),
+              error: null,
+            }),
+          }),
+          insert: (row: { memo_id: string; member_id: string }) => ({
+            select: () => ({
+              maybeSingle: async () => {
+                // もし同じ memo_id と member_id がすでにあれば主キー重複エラーになる（本番のDBと同じ動き）
+                if (
+                  dbTargets.some(
+                    (r) => r.memo_id === row.memo_id && r.member_id === row.member_id,
+                  )
+                ) {
+                  return { data: null, error: new Error('duplicate key value') };
+                }
+                dbTargets.push({
+                  memo_id: row.memo_id,
+                  member_id: row.member_id,
+                  removed_at: null,
+                });
+                insertedMembersLog.push(row.member_id);
+                return { data: { memo_id: row.memo_id }, error: null };
+              },
+            }),
+          }),
+          update: (patch: { removed_at: string | null }) => ({
+            eq: (_c1: string, memoId: string) => ({
+              eq: (_c2: string, memberId: string) => ({
+                select: () => ({
+                  maybeSingle: async () => {
+                    const found = dbTargets.find(
+                      (r) => r.memo_id === memoId && r.member_id === memberId,
+                    );
+                    if (!found) return { data: null, error: null };
+                    found.removed_at = patch.removed_at;
+                    return { data: { memo_id: memoId }, error: null };
+                  },
+                }),
+              }),
+            }),
+          }),
+        };
+      },
+    } as unknown as SupabaseClient;
+
+    // 1回目の保存（まだ draftId が空の状態で始まり、少し時間がかかる）
+    const save1 = enqueue(async () => {
+      events.push('save1:start');
+      await new Promise((r) => setTimeout(r, 20));
+      if (!draftId) {
+        draftId = 'draft-created-1';
+        events.push('save1:created-draft');
+      }
+      await syncMemoTargets(draftId, ['member-a1'], false, mockClient);
+      events.push('save1:end');
+    });
+
+    // 1回目の保存が終わらないうちに2回目の保存（同じ member-a1 に加えて member-a2 を選択）がキューに入る
+    const save2 = enqueue(async () => {
+      events.push('save2:start');
+      if (!draftId) {
+        draftId = 'draft-created-2';
+        events.push('save2:created-draft');
+      }
+      // 画面の古い targetRows ではなく DB から読み直すため、member-a1 は再 insert されず member-a2 だけが insert される
+      await syncMemoTargets(draftId, ['member-a1', 'member-a2'], false, mockClient);
+      events.push('save2:end');
+    });
+
+    await Promise.all([save1, save2]);
+
+    // 1本ずつ順番に実行され、メモが2つ作られないこと
+    expect(events).toEqual([
+      'save1:start',
+      'save1:created-draft',
+      'save1:end',
+      'save2:start',
+      'save2:end',
+    ]);
+    expect(draftId).toBe('draft-created-1');
+    // member-a1 が二重に insert されず、1回ずつだけ insert されていること
+    expect(insertedMembersLog).toEqual(['member-a1', 'member-a2']);
   });
 });
