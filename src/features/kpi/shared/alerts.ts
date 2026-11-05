@@ -1,0 +1,263 @@
+import {
+  countBusinessDaysElapsed,
+  getMonthFirstDate,
+  getPreviousBusinessDayInMonth,
+  isBusinessDay,
+  listBusinessDaysInMonth,
+} from './businessDays';
+import { calculateKpiTargets, resolveTargetValuesAtDate } from './targets';
+import type {
+  AlertCompare,
+  AlertItem,
+  KpiEntryRow,
+  KpiSlotMetrics,
+  KpiTargetRow,
+} from './types';
+
+export interface GeneratedAlertDraft {
+  import_log_id: string;
+  member_id: string;
+  date: string;
+  compare: AlertCompare;
+  item: AlertItem;
+  target: number | null;
+  actual: number | null;
+  needs_response: boolean;
+}
+
+export interface EvaluateMemberAlertsInput {
+  importLogId: string;
+  memberId: string;
+  targetDate: string;
+  holidays: readonly string[];
+  /** その人のその月の目標（未入力なら null） */
+  monthlyTarget: KpiTargetRow | null;
+  /** その人のその月の承認済みの日々のKPI（当日の取り込み分を含む、すべて承認済みの行） */
+  approvedMonthEntries: Pick<
+    KpiEntryRow,
+    'date' | 'total' | 'connected' | 'recall' | 'owner' | 'prospect' | 'apo'
+  >[];
+}
+
+function sumEntriesUpToDate(
+  entries: EvaluateMemberAlertsInput['approvedMonthEntries'],
+  upToDate: string,
+  exactDateOnly = false,
+): KpiSlotMetrics {
+  const sum: KpiSlotMetrics = {
+    total: 0,
+    connected: 0,
+    recall: 0,
+    owner: 0,
+    prospect: 0,
+    apo: 0,
+  };
+
+  for (const e of entries) {
+    const match = exactDateOnly ? e.date === upToDate : e.date <= upToDate;
+    if (match) {
+      sum.total += e.total;
+      sum.connected += e.connected;
+      sum.recall += e.recall;
+      sum.owner += e.owner;
+      sum.prospect += e.prospect;
+      sum.apo += e.apo;
+    }
+  }
+  return sum;
+}
+
+interface PaceItemCheck {
+  item: Exclude<AlertItem, 'target_missing'>;
+  shouldBe: number;
+  actual: number;
+  isUnmet: boolean;
+}
+
+function evaluatePaceItemsAtDate(
+  monthlyTarget: KpiTargetRow,
+  approvedMonthEntries: EvaluateMemberAlertsInput['approvedMonthEntries'],
+  asOfDate: string,
+  businessDaysInMonth: readonly string[],
+): Map<Exclude<AlertItem, 'target_missing'>, PaceItemCheck> {
+  const totalBusDays = businessDaysInMonth.length;
+  const elapsedBusDays = countBusinessDaysElapsed(asOfDate, businessDaysInMonth);
+  const ratio = totalBusDays > 0 ? elapsedBusDays / totalBusDays : 0;
+
+  const effectiveValues = resolveTargetValuesAtDate(monthlyTarget, asOfDate);
+  const calc = calculateKpiTargets(monthlyTarget.goes_to_sales, effectiveValues);
+  const cum = sumEntriesUpToDate(approvedMonthEntries, asOfDate, false);
+
+  const map = new Map<Exclude<AlertItem, 'target_missing'>, PaceItemCheck>();
+
+  const countItems: Array<{
+    item: 'total' | 'connected' | 'owner' | 'apo';
+    monthlyGoal: number;
+    actualVal: number;
+  }> = [
+    { item: 'total', monthlyGoal: calc.monthlyTotal, actualVal: cum.total },
+    { item: 'connected', monthlyGoal: calc.monthlyConnected, actualVal: cum.connected },
+    { item: 'owner', monthlyGoal: calc.monthlyOwner, actualVal: cum.owner },
+    { item: 'apo', monthlyGoal: calc.monthlyApo, actualVal: cum.apo },
+  ];
+
+  for (const ci of countItems) {
+    const shouldBe = ci.monthlyGoal * ratio;
+    const isUnmet = elapsedBusDays > 0 && ci.actualVal < shouldBe - 1e-9;
+    map.set(ci.item, {
+      item: ci.item,
+      shouldBe,
+      actual: ci.actualVal,
+      isUnmet,
+    });
+  }
+
+  // ア/オ（月のペース）：あるべき＝ア/オの目標 × 経過営業日 ÷ 月の営業日 ？
+  // 仕様（2-1）：「月のペース：総・実・オ・ア・ア/オ。あるべき＝月次の目標×その月の1日から対象の日までの営業日の数÷その月の営業日の数。実績は、その月の1日から対象の日までの承認済みの日々のKPIの合計（ア/オは、合計のア÷合計のオ）。「実績 < あるべき」なら未達。」
+  // ア/オは率（%）なので、月次の目標（rate_apo_owner）そのものがあるべきか、それとも経過割合を掛けるか確認：
+  // 率は日数に比例して積み上がる量ではなく割合なので、rate_apo_owner と比較するか、あるいは仕様文面通りか。
+  const apoOwnerTarget = calc.rateApoOwner;
+  const apoOwnerActual = cum.owner > 0 ? (cum.apo / cum.owner) * 100 : 0;
+  const apoOwnerUnmet =
+    elapsedBusDays > 0 && cum.owner > 0 && apoOwnerActual < apoOwnerTarget - 1e-9;
+
+  map.set('apo_owner', {
+    item: 'apo_owner',
+    shouldBe: apoOwnerTarget,
+    actual: apoOwnerActual,
+    isUnmet: apoOwnerUnmet,
+  });
+
+  return map;
+}
+
+export function evaluateMemberAlertsForImport(
+  input: EvaluateMemberAlertsInput,
+): GeneratedAlertDraft[] {
+  const { importLogId, memberId, targetDate, holidays, monthlyTarget, approvedMonthEntries } =
+    input;
+  const monthFirst = getMonthFirstDate(targetDate);
+
+  // 1. 目標が未入力（target_missing）
+  if (!monthlyTarget) {
+    // その月でその人の承認済みの日々のKPIがはじめて出た日だけ needs_response を真にする
+    const hasEarlierApprovedDayInMonth = approvedMonthEntries.some(
+      (e) => e.date >= monthFirst && e.date < targetDate,
+    );
+    return [
+      {
+        import_log_id: importLogId,
+        member_id: memberId,
+        date: targetDate,
+        compare: 'daily',
+        item: 'target_missing',
+        target: null,
+        actual: null,
+        needs_response: !hasEarlierApprovedDayInMonth,
+      },
+    ];
+  }
+
+  const businessDaysInMonth = listBusinessDaysInMonth(monthFirst, holidays);
+  const isTargetBusinessDay = isBusinessDay(targetDate, holidays);
+  const dailySum = sumEntriesUpToDate(approvedMonthEntries, targetDate, true);
+
+  const drafts: GeneratedAlertDraft[] = [];
+
+  // 2. 日ごとの未達：対象の日が営業日で、その日の総が1以上の人だけ（総が0の日＝休みの日は日ごとの未達を出さない）
+  if (isTargetBusinessDay && dailySum.total >= 1) {
+    const effectiveValues = resolveTargetValuesAtDate(monthlyTarget, targetDate);
+    const calc = calculateKpiTargets(monthlyTarget.goes_to_sales, effectiveValues);
+
+    const dailyChecks: Array<{
+      item: 'total' | 'connected' | 'owner';
+      targetVal: number;
+      actualVal: number;
+    }> = [
+      { item: 'total', targetVal: calc.dailyTotal, actualVal: dailySum.total },
+      { item: 'connected', targetVal: calc.dailyConnected, actualVal: dailySum.connected },
+      { item: 'owner', targetVal: calc.dailyOwner, actualVal: dailySum.owner },
+    ];
+
+    for (const dc of dailyChecks) {
+      if (dc.actualVal < dc.targetVal - 1e-9) {
+        drafts.push({
+          import_log_id: importLogId,
+          member_id: memberId,
+          date: targetDate,
+          compare: 'daily',
+          item: dc.item,
+          target: dc.targetVal,
+          actual: dc.actualVal,
+          needs_response: true,
+        });
+      }
+    }
+
+    // ア/オ（日ごと）：オが0の日は判定しない
+    if (dailySum.owner >= 1) {
+      const actualApoOwner = (dailySum.apo / dailySum.owner) * 100;
+      if (actualApoOwner < calc.rateApoOwner - 1e-9) {
+        drafts.push({
+          import_log_id: importLogId,
+          member_id: memberId,
+          date: targetDate,
+          compare: 'daily',
+          item: 'apo_owner',
+          target: calc.rateApoOwner,
+          actual: actualApoOwner,
+          needs_response: true,
+        });
+      }
+    }
+  }
+
+  // 3. 月のペースの未達：対象の日が営業日のとき（休んだ分も月のペースに出る）
+  const elapsedBusDays = countBusinessDaysElapsed(targetDate, businessDaysInMonth);
+  if (elapsedBusDays >= 1) {
+    const todayPaceMap = evaluatePaceItemsAtDate(
+      monthlyTarget,
+      approvedMonthEntries,
+      targetDate,
+      businessDaysInMonth,
+    );
+    const prevBusDay = getPreviousBusinessDayInMonth(targetDate, businessDaysInMonth);
+    const prevPaceMap = prevBusDay
+      ? evaluatePaceItemsAtDate(
+          monthlyTarget,
+          approvedMonthEntries,
+          prevBusDay,
+          businessDaysInMonth,
+        )
+      : null;
+
+    const paceOrder: Array<Exclude<AlertItem, 'target_missing'>> = [
+      'total',
+      'connected',
+      'owner',
+      'apo',
+      'apo_owner',
+    ];
+
+    for (const itemKey of paceOrder) {
+      const check = todayPaceMap.get(itemKey);
+      if (!check || !check.isUnmet) continue;
+
+      const wasUnmetOnPrevBusDay = prevPaceMap ? (prevPaceMap.get(itemKey)?.isUnmet ?? false) : false;
+      const needsResponse = prevBusDay === null || !wasUnmetOnPrevBusDay;
+
+      drafts.push({
+        import_log_id: importLogId,
+        member_id: memberId,
+        date: targetDate,
+        compare: 'pace',
+        item: itemKey,
+        target: check.shouldBe,
+        actual: check.actual,
+        needs_response: needsResponse,
+      });
+    }
+  }
+
+  return drafts;
+}
