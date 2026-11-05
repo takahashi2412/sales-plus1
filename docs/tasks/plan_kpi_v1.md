@@ -1,6 +1,6 @@
 # 計画：KPI・部下メモ②：KPIの取り込み・目標・未達の一覧（plan_kpi_v1）
 
-作成日：2026-11-05 ／ 仕上げ：①plan_kpi-memo-common_v1 が本線に入ったあとに渡す ／ 作成：Claude Code ／ 作業：Antigravity
+作成日：2026-11-05 ／ 仕上げ：2026-11-05（①plan_kpi-memo-common_v1 が本線に入ったあとに渡す） ／ 作成：Claude Code ／ 作業：Antigravity
 作業用ブランチ：task/kpi
 並列：あり（もう1本の計画ファイル：plan_memo_v1.md）
 作業するフォルダ：C:\Workspace\apps\sales-plus1-worktrees\kpi\（Claude Code が用意した、この計画専用の作業用フォルダ（ワークツリー）。作業用ブランチもできている）
