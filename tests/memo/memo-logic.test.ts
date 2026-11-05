@@ -498,10 +498,13 @@ describe('一覧の並び順・絞り込み・表示補助（filterAndSortSubmit
     expect(
       formatMemoTargetNames(
         'm-1',
-        [{ memo_id: 'm-1', member_id: 'member-a1', removed_at: null }],
+        [
+          { memo_id: 'm-1', member_id: 'member-a1', removed_at: null },
+          { memo_id: 'm-1', member_id: 'unreadable-member', removed_at: null },
+        ],
         map,
       ),
-    ).toBe('架空メンバーA1');
+    ).toBe('架空メンバーA1・ほかのチームの人');
 
     expect(formatMemoCheckLabel('o')).toBe('○');
     expect(formatMemoCheckLabel('d')).toBe('△');

@@ -37,6 +37,7 @@ import {
   type MemoPageDataset,
   type SubordinateMemoRow,
 } from './memo-logic';
+import './styles.css';
 
 export * from './memo-logic';
 
@@ -564,25 +565,28 @@ export function SubordinateMemoPage() {
     {
       key: 'next_check_on',
       header: '次の確認日',
+      className: 'memo-col-nowrap',
       render: (row) => <DateText value={row.next_check_on} />,
     },
     {
       key: 'date',
       header: '指導日',
+      className: 'memo-col-nowrap',
       render: (row) => <DateText value={row.date} />,
     },
     {
       key: 'targets',
       header: '対象者',
-      className: 'col-name',
+      className: 'col-name memo-col-nowrap',
       render: (row) =>
         dataset ? formatMemoTargetNames(row.id, dataset.targetRows, readableMembers) : '－',
     },
     {
       key: 'theme_kind',
       header: 'テーマ・種類',
+      className: 'memo-col-nowrap',
       render: (row) => (
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap' }}>
           <Tag tone="navy">{row.theme_id ? (masterNameMap.get(row.theme_id) ?? '－') : '－'}</Tag>
           <Tag tone="plain">{row.kind_id ? (masterNameMap.get(row.kind_id) ?? '－') : '－'}</Tag>
         </div>
@@ -591,6 +595,7 @@ export function SubordinateMemoPage() {
     {
       key: 'summary',
       header: '気づいた内容・指導した内容',
+      className: 'memo-col-summary',
       render: (row) => (
         <div>
           <div>気づき：{truncateMemoSnippet(row.noticed, 32)}</div>
@@ -601,6 +606,7 @@ export function SubordinateMemoPage() {
     {
       key: 'action',
       header: '確認入力',
+      className: 'memo-col-nowrap',
       render: (row) => (
         <Button
           variant="secondary"
@@ -616,6 +622,7 @@ export function SubordinateMemoPage() {
     {
       key: 'date',
       header: '日付',
+      className: 'memo-col-nowrap',
       render: (row) => {
         const updatedLabel = formatUpdatedAfterSubmitLabel(row.submitted_at, row.updated_at);
         return (
@@ -633,13 +640,14 @@ export function SubordinateMemoPage() {
     {
       key: 'targets',
       header: '対象者',
-      className: 'col-name',
+      className: 'col-name memo-col-nowrap',
       render: (row) =>
         dataset ? formatMemoTargetNames(row.id, dataset.targetRows, readableMembers) : '－',
     },
     {
       key: 'theme',
       header: 'テーマ',
+      className: 'memo-col-nowrap',
       render: (row) => (
         <Tag tone="navy">{row.theme_id ? (masterNameMap.get(row.theme_id) ?? '－') : '－'}</Tag>
       ),
@@ -647,6 +655,7 @@ export function SubordinateMemoPage() {
     {
       key: 'kind',
       header: '種類',
+      className: 'memo-col-nowrap',
       render: (row) => (
         <Tag tone="plain">{row.kind_id ? (masterNameMap.get(row.kind_id) ?? '－') : '－'}</Tag>
       ),
@@ -654,6 +663,7 @@ export function SubordinateMemoPage() {
     {
       key: 'content',
       header: '気づいた内容・指導した内容（頭の部分）',
+      className: 'memo-col-summary',
       render: (row) => (
         <div>
           <div>気づき：{truncateMemoSnippet(row.noticed, 36)}</div>
@@ -664,26 +674,31 @@ export function SubordinateMemoPage() {
     {
       key: 'next_check_on',
       header: '次の確認日',
+      className: 'memo-col-nowrap',
       render: (row) => <DateText value={row.next_check_on} />,
     },
     {
       key: 'action_check',
       header: '行動',
+      className: 'memo-col-nowrap',
       render: (row) => formatMemoCheckLabel(row.action_check),
     },
     {
       key: 'result_check',
       header: '結果',
+      className: 'memo-col-nowrap',
       render: (row) => formatMemoCheckLabel(row.result_check),
     },
     {
       key: 'writer',
       header: '書いた人',
+      className: 'memo-col-nowrap',
       render: (row) => formatMemoWriterName(row.created_by, viewer.memberId, readableMembers),
     },
     {
       key: 'open',
       header: '操作',
+      className: 'memo-col-nowrap',
       render: (row) => (
         <Button variant="secondary" onClick={() => loadMemoIntoForm(row)}>
           {row.created_by === viewer.memberId ? '開く・直す' : '詳細を見る'}
@@ -697,7 +712,7 @@ export function SubordinateMemoPage() {
     : null;
 
   return (
-    <div>
+    <div className="memo-page">
       {/* 1. 一番上に「確認待ち」 */}
       <section className="panel" aria-label="確認待ちの部下メモ">
         <div className="section-header-row">

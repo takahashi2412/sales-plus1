@@ -1,0 +1,19 @@
+/* 部下メモ画面の表レイアウト調整（短い列は折り返さず、枠の中で横スクロールできるようにする） */
+.memo-page .table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.memo-page .data-table th {
+  white-space: nowrap;
+}
+
+.memo-page .memo-col-nowrap,
+.memo-page .memo-col-nowrap button,
+.memo-page .data-table td.col-name {
+  white-space: nowrap;
+}
+
+.memo-page .memo-col-summary {
+  min-width: 240px;
+}

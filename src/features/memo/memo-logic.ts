@@ -169,7 +169,7 @@ export function getActiveTargetMemberIds(
 }
 
 /**
- * 対象者の名前の一覧を返す（読めない場合は「対象者」とする）
+ * 対象者の名前の一覧を返す（読めない場合は「ほかのチームの人」とする）
  */
 export function formatMemoTargetNames(
   memoId: string,
@@ -179,7 +179,7 @@ export function formatMemoTargetNames(
   const ids = getActiveTargetMemberIds(memoId, targetRows);
   if (ids.length === 0) return '未選択';
   return ids
-    .map((id) => readableMembers.get(id)?.name ?? '対象者')
+    .map((id) => readableMembers.get(id)?.name ?? 'ほかのチームの人')
     .join('・');
 }
 
