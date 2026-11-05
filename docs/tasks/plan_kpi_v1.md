@@ -64,7 +64,7 @@
 - 設定値 `kpi_holidays` を変える画面（週間教育の区切りの設定値の画面）
 
 ## 4. 仕様
-参照：設計書 `docs/design/project-dashboard_v28.html` の「3」「3-2」（率の計算のしかた・月初の目標の立て方・受注の3つの形）、「9 画面と権限」（権限の表・書く画面の決まり・管理の画面の決まり）、「11 1日・1週間の流れ」、用語集の「あるべき」。表と列の名前・権限は `docs/tasks/plan_kpi-memo-common_v1.md` の4章が正（①で作った `supabase/migrations/` の新しいファイルも読んでよい）
+参照：設計書 `docs/design/old/project-dashboard_v28.html`（作ったときの版。今の正は v29） の「3」「3-2」（率の計算のしかた・月初の目標の立て方・受注の3つの形）、「9 画面と権限」（権限の表・書く画面の決まり・管理の画面の決まり）、「11 1日・1週間の流れ」、用語集の「あるべき」。表と列の名前・権限は `docs/tasks/plan_kpi-memo-common_v1.md` の4章が正（①で作った `supabase/migrations/` の新しいファイルも読んでよい）
 
 - 時間帯（`time_slot`）：`'0_8'`＝0:00〜8:59、`'9'`〜`'20'`＝各時台、`'21_23'`＝21:00〜23:59
 - 見る人の情報（役割・今のチーム・MGRの担当・管理者か）は、①で作った `src/foundation/viewer.ts` を使う。ロープレの箱（`src/features/roleplay/`）と部下メモの箱（`src/features/memo/`）のファイルは読み込まない
