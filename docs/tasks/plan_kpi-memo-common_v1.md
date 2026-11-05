@@ -110,6 +110,7 @@ KPI・部下メモの区切りの先頭で、2本の並列（②KPIの画面、�
 - 対応の記録を入れる・直すとき：`responded_by` をログインしている人、`responded_at` を今にする。`response` を入れるときは `response_reason`（空白だけでない）が必須
 
 ### 部下メモ（`subordinate_memos`・`subordinate_memo_targets` のトリガー）
+- 変更のとき、`updated_at` を今にする（送ったあとに直したことは、この日時で画面に出す。前の内容の控えは持たない。2026-11-05 本人の選択）
 - `theme_id` は `masters` の `kind = 'memo_theme'`、`kind_id` は `kind = 'memo_kind'` の行であること
 - 送るとき（変更で `submitted_at` が空から入るとき。追加では入れられない）は、対象者（`removed_at` が空の行）が1人以上いること
 - 対象者を足す・戻す（`removed_at` を空にする）とき：①メモを書いた人自身は対象者にできない ②**そのメモの今の対象者（`removed_at` が空の行）と、今のチーム（`private.member_team_now`）が同じ人だけ**（チームがない人は、ほかの対象者がいないときだけ。2026-11-05 本人の選択：複数選べるのは同じチームの人だけ）
