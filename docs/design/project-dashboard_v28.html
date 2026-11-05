@@ -355,7 +355,7 @@
 
   <div class="callout callout--conclusion">
     <div class="kind">結論</div>
-    <p>部下1人ひとりの「数字」と「指導の記録」を1画面のカルテで見られるようにし、AIの提案で毎週の改善を回すアプリです。設計書は8つのまとまりのうち5つ（使う人・権限・AIのルール・運用・データの項目）が確定しました。6「画面」も中身はすべて決まりました。ここからは1業務ずつ「決める→作る→使ってみる」で回し、土台（ログイン・名簿・権限）とロープレ（記録・テーマ表・トーク一覧・研修の記録）は 2026-11-04 にできあがり、次はロープレをリーダーに触ってもらいます。作るときは、土台を1つにして、業務ごとに箱を分けます（v24）。既存の営業管理アプリ（rushup-weekly-report）は、SALES +1 に置きかえます。</p>
+    <p>部下1人ひとりの「数字」と「指導の記録」を1画面のカルテで見られるようにし、AIの提案で毎週の改善を回すアプリです。設計書は8つのまとまりのうち5つ（使う人・権限・AIのルール・運用・データの項目）が確定しました。6「画面」も中身はすべて決まりました。ここからは1業務ずつ「決める→作る→使ってみる」で回し、土台（ログイン・名簿・権限）とロープレ（記録・テーマ表・トーク一覧・研修の記録）は 2026-11-04 にできあがり、次は KPI・部下メモを作ります（ロープレをリーダーに触ってもらうのは、カルテ第1版の節目でまとめて行う。2026-11-05）。作るときは、土台を1つにして、業務ごとに箱を分けます（v24）。既存の営業管理アプリ（rushup-weekly-report）は、SALES +1 に置きかえます。</p>
   </div>
 
   <div class="tiles">
@@ -1721,12 +1721,12 @@
         <rect class="s-box" x="190" y="34" width="290" height="40" rx="6"/><text class="t-body" x="202" y="59">ログイン・名簿・権限・守りのテスト</text>
         <text class="t-muted" x="490" y="59">並列なし ／ 済み（2026-11-04）</text>
 
-        <rect class="s-core" x="10" y="80" width="170" height="40" rx="6"/><text class="t-title" x="95" y="105" text-anchor="middle">ロープレ（今ここ）</text>
+        <rect class="s-box" x="10" y="80" width="170" height="40" rx="6"/><text class="t-title" x="95" y="105" text-anchor="middle">ロープレ</text>
         <rect class="s-box" x="190" y="80" width="290" height="40" rx="6"/><text class="t-body" x="202" y="105">表・共通の部品・画面（すべて済み）</text>
         <rect class="s-box" x="490" y="80" width="180" height="40" rx="6"/><text class="t-body" x="502" y="105">記録＋テーマと卒業</text>
         <rect class="s-box" x="680" y="80" width="180" height="40" rx="6"/><text class="t-body" x="692" y="105">トーク一覧</text>
 
-        <rect class="s-box" x="10" y="126" width="170" height="40" rx="6"/><text class="t-title" x="95" y="151" text-anchor="middle">KPI・部下メモ</text>
+        <rect class="s-core" x="10" y="126" width="170" height="40" rx="6"/><text class="t-title" x="95" y="151" text-anchor="middle">KPI・部下メモ</text>
         <rect class="s-box" x="190" y="126" width="290" height="40" rx="6"/><text class="t-body" x="202" y="151">KPI と部下メモの表・守りのテスト</text>
         <rect class="s-bar" x="490" y="126" width="180" height="40" rx="6"/><text class="t-body" x="502" y="151">KPI（取り込み・目標）</text>
         <rect class="s-bar" x="680" y="126" width="180" height="40" rx="6"/><text class="t-body" x="692" y="151">部下メモ</text>
@@ -1834,7 +1834,7 @@
 
   <!-- 15 未決事項と次の一手 -->
   <section id="s15">
-    <h2><span class="section-num">15</span>未決事項と次の一手：土台とロープレができ、次はロープレを触ってもらう</h2>
+    <h2><span class="section-num">15</span>未決事項と次の一手：土台とロープレができ、次は KPI・部下メモ</h2>
     <div class="issues">
       <div class="iss done"><span class="no">1</span><b>現行Excelの見本</b><span class="tag tag--good" style="align-self:start">決定（6業務すべて受領・確定）</span></div>
       <div class="iss review"><span class="no">2</span><b>技術構成</b><span class="tag tag--navy" style="align-self:start">認証・作り方は決定、土台は Supabase で動いた</span></div>
@@ -1860,7 +1860,8 @@
       <div class="nx"><span class="n">3</span><b>土台を作る</b>Antigravity が作り、Claude Code がレビュー<span class="tag tag--good" style="align-self:start">済み（2026-11-04）</span></div>
       <div class="nx"><span class="n">4</span><b>ロープレ①</b>土台の追加・ロープレと研修の表・画面の枠と共通の部品<span class="tag tag--good" style="align-self:start">済み（2026-11-04）</span></div>
       <div class="nx"><span class="n">5</span><b>ロープレ②③</b>記録とテーマ表、トーク一覧と研修の記録を2本の並列で<span class="tag tag--good" style="align-self:start">済み（2026-11-04）</span></div>
-      <div class="nx first"><span class="n">6</span><b>ロープレを触ってもらう</b>リーダーに数日使ってもらい、直す所を集める。先に決めること：触ってもらう人、架空データのまま触ってもらうか本物の名簿を先に入れるか、費用の上限と保守する人。そのあと KPI・部下メモ<span class="tag tag--warn" style="align-self:start">今ここ・未決あり</span></div>
+      <div class="nx"><span class="n">6</span><b>ロープレを触ってもらう</b><span class="tag tag--warn">変更</span> 2026-11-05：カルテ第1版の節目（リーダー層に数日使ってもらう）でまとめて行う。そのときに決めること：触ってもらう人、本物の名簿を入れる準備、費用の上限と保守する人<span class="tag tag--plain" style="align-self:start">後に回す</span></div>
+      <div class="nx first"><span class="n">7</span><b>KPI・部下メモの計画</b>表と守りのテストを1本 → KPI と部下メモの画面を2本の並列。先に、計画の下書きと決めることの確認から<span class="tag tag--navy" style="align-self:start">今ここ</span></div>
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>緑＝決定、濃紺＝検討中、橙＝待ち、白＝未着手。下の帯は件数の割合</li></ul></div>
