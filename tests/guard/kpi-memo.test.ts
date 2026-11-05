@@ -81,6 +81,7 @@ const ids = {
   memoMgrBoth: '', // mgr1 が leaderA と memberA1 を一緒に対象にして送ったメモ
   memoB1: '', // leaderB が memberB1 について書いて送ったメモ
   memoHidden: '', // leaderA が送って、見えなくしたメモ（対象 memberA1）
+  memoRemoved: '', // ceo が送ったメモ。対象 memberA1（今も対象）と memberB1（外した）
 };
 const auditRowIds: string[] = []; // 監査ログの片づけに使う（masters・permissions・名前の対応の id）
 
@@ -256,6 +257,11 @@ beforeAll(async () => {
   ids.memoMgrBoth = await memoWith(memoRow('mgr1', true), ['leaderA', 'memberA1']);
   ids.memoB1 = await memoWith(memoRow('leaderB', true), ['memberB1']);
   ids.memoHidden = await memoWith(memoRow('leaderA', true, { hidden_at: new Date().toISOString() }), ['memberA1']);
+  ids.memoRemoved = await memoWith(memoRow('ceo', true, { noticed: `${RUN}-removed` }), ['memberA1']);
+  {
+    const { error } = await admin.from('subordinate_memo_targets').insert({ memo_id: ids.memoRemoved, member_id: M('memberB1'), removed_at: new Date().toISOString() });
+    if (error) throw error;
+  }
 
   for (const p of PEOPLE) {
     const c = anonClient();
@@ -404,6 +410,18 @@ describe('KPI：書ける範囲', () => {
     await C('memberB1').from('kpi_entries').insert({ ...entry(String(own.id), 'memberA2', '2025-06-01'), time_slot: '11' });
     expect(await adminRows('kpi_entries', (q) => q.eq('import_log_id', own.id))).toHaveLength(1);
 
+    // 送った日付が取り込みの記録の日と違っても、取り込みの記録の日になる
+    await C('memberB1').from('kpi_entries').insert({ ...entry(String(own.id), 'memberA2', '2025-07-07'), time_slot: '15' });
+    const slot15 = (await adminRows('kpi_entries', (q) => q.eq('import_log_id', own.id).eq('time_slot', '15')))[0];
+    expect(slot15).toBeTruthy();
+    expect(slot15.date).toBe('2025-06-01');
+
+    // 取り込みの記録の変えてはいけない列は変わらない。承認前の数は、取り込んだ人が直せる
+    await C('memberB1').from('import_logs').update({ file_name: `${RUN}-renamed.csv` }).eq('id', own.id);
+    expect((await adminOne('import_logs', String(own.id))).file_name).not.toBe(`${RUN}-renamed.csv`);
+    await C('memberB1').from('import_logs').update({ row_count: 2 }).eq('id', own.id);
+    expect((await adminOne('import_logs', String(own.id))).row_count).toBe(2);
+
     // ほかの管理者の承認前の記録・管理者でない人は入れられない
     await C('memberB1').from('kpi_entries').insert({ ...entry(ids.logPending, 'memberA2', '2025-05-02'), time_slot: '12' });
     await C('leaderA').from('kpi_entries').insert({ ...entry(ids.logPending, 'memberA2', '2025-05-02'), time_slot: '13' });
@@ -493,6 +511,10 @@ describe('KPI：書ける範囲', () => {
     expect(history).toHaveLength(1);
     expect(Number(history[0].values.apo_target)).toBe(30);
 
+    // 営業に出るかは、変更でも変えられない
+    await C('memberA1').from('kpi_targets').update({ goes_to_sales: true }).eq('id', ids.targetA1);
+    expect((await adminOne('kpi_targets', ids.targetA1)).goes_to_sales).toBe(false);
+
     // 控えを空に書きかえようとしても、残る
     await C('memberA1').from('kpi_targets').update({ history: [] }).eq('id', ids.targetA1);
     expect((await adminOne('kpi_targets', ids.targetA1)).history as unknown[]).toHaveLength(1);
@@ -510,6 +532,9 @@ describe('KPI：書ける範囲', () => {
     const row = { ...alertRow(ids.logApprovedA, 'memberA2', '2025-05-01'), item: 'connected' };
     await C('memberB1').from('alerts').insert(row);
     await C('leaderA').from('alerts').insert(row);
+    expect(await adminRows('alerts', (q) => q.eq('import_log_id', ids.logApprovedA).eq('member_id', M('memberA2')))).toHaveLength(0);
+    // 対応の欄を入れたまま入れることはできない
+    await C('leaderB').from('alerts').insert({ ...row, item: 'owner', response: 'done', response_reason: `${RUN}-pre` });
     expect(await adminRows('alerts', (q) => q.eq('import_log_id', ids.logApprovedA).eq('member_id', M('memberA2')))).toHaveLength(0);
     await C('leaderB').from('alerts').insert(row);
     expect(await adminRows('alerts', (q) => q.eq('import_log_id', ids.logApprovedA).eq('member_id', M('memberA2')))).toHaveLength(1);
@@ -569,6 +594,11 @@ describe('部下メモ：読める範囲', () => {
     expect(await seenIds('ceo', 'subordinate_memos', [ids.memoMgrBoth])).toEqual([ids.memoMgrBoth]);
   });
 
+  it('外した対象者は数えない（外した人の上席は読めない）', async () => {
+    expect(await seenIds('leaderB', 'subordinate_memos', [ids.memoRemoved])).toEqual([]);
+    expect(await seenIds('leaderA', 'subordinate_memos', [ids.memoRemoved])).toEqual([ids.memoRemoved]);
+  });
+
   it('見えなくしたメモは、書いた人だけが読める', async () => {
     expect(await seenIds('leaderA', 'subordinate_memos', [ids.memoHidden])).toEqual([ids.memoHidden]);
     expect(await seenIds('mgr1', 'subordinate_memos', [ids.memoHidden])).toEqual([]);
@@ -587,8 +617,14 @@ describe('部下メモ：書ける範囲', () => {
     expect(await memoIdsBy('mgr1', `${RUN}-as-other`)).toHaveLength(0);
 
     // 代表も書ける（2026-11-05 本人の選択）
-    await C('ceo').from('subordinate_memos').insert(memoRow('ceo', false, { noticed: `${RUN}-by-ceo` }));
-    expect(await memoIdsBy('ceo', `${RUN}-by-ceo`)).toHaveLength(1);
+    // 追加したすぐあとに番号を受け取れる（書きかけの自動保存で使う）
+    const { data: made, error: madeErr } = await C('ceo').from('subordinate_memos').insert(memoRow('ceo', false, { noticed: `${RUN}-by-ceo` })).select('id').single();
+    expect(madeErr).toBeNull();
+    expect(await memoIdsBy('ceo', `${RUN}-by-ceo`)).toEqual([String((made as { id: string }).id)]);
+
+    // 送った状態で追加することはできない（対象者なしで送れてしまうため）
+    await C('leaderA').from('subordinate_memos').insert(memoRow('leaderA', true, { noticed: `${RUN}-insert-submitted` }));
+    expect(await memoIdsBy('leaderA', `${RUN}-insert-submitted`)).toHaveLength(0);
   });
 
   it('対象者：自分は選べない。上席として見ている人だけ。1つのメモに選べるのは今同じチームの人だけ', async () => {
