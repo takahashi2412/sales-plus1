@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { MemberAffiliationRow } from '../../src/foundation/types'
@@ -19,12 +19,10 @@ import {
   type KpiTargetRow,
 } from '../../src/features/kpi/shared'
 
-const FIXTURES_DIR = resolve(__dirname, 'fixtures')
+const FIXTURES_DIR = resolve(__dirname, '../../fixtures/kpi/sample-csv/tests')
 
 function loadShiftJisFixture(fileName: string): Uint8Array {
-  const csvPath = resolve(FIXTURES_DIR, fileName)
-  const targetPath = existsSync(csvPath) ? csvPath : resolve(FIXTURES_DIR, `${fileName}.sjis`)
-  const buf = readFileSync(targetPath)
+  const buf = readFileSync(resolve(FIXTURES_DIR, fileName))
   return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
 }
 

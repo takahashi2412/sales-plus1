@@ -219,12 +219,16 @@ export async function savePendingCsvImport(
 
   // 1. 置きかえ対象の記録がある場合は先に status = 'replaced' にする（replaced_at はトリガーが自動設定）
   if (input.existingImportLogIdToReplace) {
-    const { error: replaceErr } = await supabase
+    const { data: replacedRows, error: replaceErr } = await supabase
       .from('import_logs')
       .update({ status: 'replaced' })
       .eq('id', input.existingImportLogIdToReplace)
+      .select('id')
 
     if (replaceErr) throw replaceErr
+    if (!replacedRows || replacedRows.length === 0) {
+      throw new Error('この操作はできません')
+    }
   }
 
   // 2. 新しい import_logs を status = 'pending' で作る
@@ -292,12 +296,16 @@ export async function savePendingCsvImport(
 }
 
 export async function cancelPendingImportLog(importLogId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('import_logs')
     .update({ status: 'replaced' })
     .eq('id', importLogId)
+    .select('id')
 
   if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('この操作はできません')
+  }
 }
 
 /**
@@ -428,12 +436,16 @@ export async function approvePendingImportAndGenerateAlerts(
   holidaysSetting: readonly string[] | null,
 ): Promise<{ alertCount: number; drafts: GeneratedAlertDraft[] }> {
   // 1. status を 'approved' に更新（approved_by, approved_at, approval_kind はDBトリガーが設定）
-  const { error: approveErr } = await supabase
+  const { data: approvedRows, error: approveErr } = await supabase
     .from('import_logs')
     .update({ status: 'approved' })
     .eq('id', importLog.id)
+    .select('id')
 
   if (approveErr) throw approveErr
+  if (!approvedRows || approvedRows.length === 0) {
+    throw new Error('この操作はできません')
+  }
 
   // 2. 直後に未達を計算して alerts に書き込み、alerts_created_at と alert_count を記録
   return generateAlertsForApprovedImport(

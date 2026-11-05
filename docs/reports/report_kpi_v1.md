@@ -27,7 +27,10 @@
 - `src/features/kpi/alerts/styles.css`（新規：未達の一覧画面のスタイル）
 - `src/features/kpi/alerts/index.tsx`（更新：未対応件数・日付／チーム絞り込み・黒字＋▼＋「未達」表示・「続いている」表示・リーダーの対応記録画面）
 - `tests/kpi/kpi-shared.test.ts`（新規：KPI共通計算部品の自動テスト12件）
-- `tests/kpi/fixtures/`（新規：テスト用の Shift_JIS 架空CSV 4種＋Git追跡用 `.csv.sjis` 控え4種）
+- `fixtures/kpi/sample-csv/tests/架空チームA(WEB)時間別20261106_20261106.csv`（新規：自動テスト用の正常系 Shift_JIS 架空CSV）
+- `fixtures/kpi/sample-csv/tests/架空チームA(WEB)時間別20261105_20261106.csv`（新規：自動テスト用の2日期間 Shift_JIS 架空CSV）
+- `fixtures/kpi/sample-csv/tests/異常ヘッダ_架空チームA(WEB)時間別20261106_20261106.csv`（新規：自動テスト用の見出し不一致 Shift_JIS 架空CSV）
+- `fixtures/kpi/sample-csv/tests/架空チームA(WEB)時間別20261106_20261106_合計不一致.csv`（新規：自動テスト用の合計不一致 Shift_JIS 架空CSV）
 - `fixtures/kpi/sample-csv/架空チームA(WEB)時間別20261106_20261106.csv`（新規：画面確認用の Shift_JIS 架空CSV）
 - `fixtures/kpi/sample-csv/架空チームB(WEB)時間別20261106_20261106.csv`（新規：未登録名を含む画面確認用の Shift_JIS 架空CSV）
 - `fixtures/kpi/sample-csv/架空チームA(WEB)時間別20261104_20261104.csv`（新規：同日・同チームの取り込み直し確認用の Shift_JIS 架空CSV）
@@ -45,16 +48,21 @@
    - 5つの取り込みチェック（①1日分か・ファイル名日付と一致するか、②見出しが一致するか、③対象日時点で有効な `cti_member_map` があるか・`member_id = null` の「取り込まない」行の扱い・有効期間重複のエラー検出、④「取り込まない」行を含む人の行の合計と `合計` 行の一致、⑤同日・同CSVチーム名の既存記録の有無）と、名簿の所属と `cti_team_map` の食い違い警告、同日の他チーム承認済み重複チェックを実装しました。
    - 営業に出る人（`320P ÷ 40P = 8件`、`÷ 80% = 10件`、`÷ 25% = 40件`、`÷ 80% = 50件`）と営業に出ない人（`apo_target`・採用数）の目標逆算を途中丸めなしで実装し、「総×オ率×ア/オから出るアポ数（月次）」との比較判定を入れました。
    - 土日と `kpi_holidays` を除いた営業日の算出（設定値がないときの検知フラグ付き）、日ごとの未達（総が0の休みの日は除外、オが0の日はア/オを除外）、月のペースの未達（新しく遅れた日＝月の最初の営業日または前の営業日時点で遅れていなかったときだけ `needs_response = true`、継続中は `false`）、`history` から対象日の終わり時点の目標値を取り出す処理、`target_missing`（月内の初回承認日のみ `needs_response = true`）を実装し、画面を作る前に12件の自動テストを通してコミットしました。
-   - **架空のCSV（Shift_JIS）の作り方**：Windows PowerShell 5.1 の `[System.Text.Encoding]::GetEncoding(932)` を使い、波ダッシュには CP932 で文字化けしない全角チルダ（`U+FF5E`＝`0x8160`）を用いて `tests/kpi/fixtures/` と `fixtures/kpi/sample-csv/` に書き出しました（ルートの `.gitignore` で `*.csv` のうち `!fixtures/**/*.csv` だけが追跡対象になっているため、`tests/kpi/fixtures/` には同じ Shift_JIS バイト列の `.csv.sjis` も並置して本線マージ後もテストがそのまま通るようにしています）。
+   - **架空のCSV（Shift_JIS）の作り方と置き場所**：Windows PowerShell 5.1 の `[System.Text.Encoding]::GetEncoding(932)` を使い、波ダッシュには CP932 で文字化けしない全角チルダ（`U+FF5E`＝`0x8160`）を用いて、画面で試す見本3つは `fixtures/kpi/sample-csv/` に、自動テスト用の4つは `fixtures/kpi/sample-csv/tests/` に `.csv` のまま書き出しました（`.gitignore` の `!fixtures/**/*.csv` により `.csv` のまま Git で追跡されます）。
 2. **CSV取り込み・承認の画面（`src/features/kpi/import/`）**
    - 複数CSVの同時選択、5つのチェック結果・所属食い違い警告の表示、未対応のCTI名・CSVチーム名のその場登録（`valid_from`＝対象日）、承認前取り込み、置きかえ確認（前の記録を `replaced` → 新しい記録 → `kpi_entries`）、承認と同時に未達を計算して `alerts` へ `.select()` なし・`ignoreDuplicates: true` で書き込み、`import_logs` の `alerts_created_at` と `alert_count` を更新する流れ、「未達を出し直す」ボタン、承認前の取り消し（`replaced`）、および記録一覧・名前の対応一覧・チーム名の対応一覧（`valid_to` の設定による無効化）を作成しました。
 3. **KPIの目標の画面（`src/features/kpi/targets/`）**
    - 今月・来月の自分の目標入力、`goes_to_sales` に応じた入力欄の出し分け、月次・日次目標のリアルタイム逆算表示（小数第1位まで）、「総×オ率×ア/オ」アポ数との不一致通知、月途中の修正による「修正あり」と `history` の差分表示（「いつ・どの欄が・前の値→今の値」）、上席・管理者向けの今月の目標状態一覧（入力済み／未入力／修正あり）と閲覧画面を作成しました。
 4. **未達の一覧の画面（`src/features/kpi/alerts/`）**
    - 一番上への未対応件数の表示、日付・チームでの絞り込み、日付（新しい順）×人ごとの未達一覧、黒字＋`▼未達`の表示（赤にしない）、月のペースで継続中の行への「続いている」表示と対応欄の非表示、`target_missing` の「目標が未入力」表示、同じチームのリーダーによる「対応済」「不要だった」＋理由（必須）の記録、MGR・代表の閲覧専用表示を作成しました。
+5. **レビュー指摘4点の修正（2026-11-05 追記）**
+   - **未達の一覧のデータ取得修正**：`src/features/kpi/alerts/api.ts` の `fetchKpiAlertsScreenData` から `import_logs` の読み込みと絞り込みを外し、管理者権限のないリーダー・MGR・代表でもデータベースのRLS（`is_approved_import`）で承認済み取り込み分の `alerts` がそのまま表示されるように直しました。
+   - **テスト用CSVの置き場所修正**：`tests/kpi/fixtures/` の `.csv` と `.csv.sjis` を削除し、自動テスト用の Shift_JIS CSV 4つを `fixtures/kpi/sample-csv/tests/` に `.csv` のまま配置して `tests/kpi/kpi-shared.test.ts` から直接読み込むように直しました。
+   - **更新0行時のエラー停止**：`submitAlertResponse`、`approvePendingImportAndGenerateAlerts`（`status: 'approved'` 更新）、`cancelPendingImportLog`、`savePendingCsvImport`（`status: 'replaced'` 更新）で `.select('id')` を受け取り、更新行が0行のときは「この操作はできません」として止め（承認0行のときは未達計算に進まない）るようにしました。
+   - **月のペースのア/オ比較のコメント整理**：`src/features/kpi/shared/alerts.ts` のア/オ比較コメントを「ア/オは率なので、あるべきを使わず、今月ここまでのア÷オと目標の率をそのまま比べる（2026-11-05 本人の選択）」に書きかえました。
 
 ## 6. 決められずに止めたこと・質問
-- なし（すべて計画書の記載どおりに実装しました）。
+- なし（すべて計画書およびレビュー指摘の記載どおりに実装しました）。
 
 ## 7. テストの結果（通った数／全体）
 - `npm test`（守りのテストを含む全テスト）：**10ファイル・141テスト中 141テスト通過（失敗 0・スキップ 0）**
@@ -80,4 +88,4 @@
 - なし
 
 ## 11. 気になった点
-- ルートの `.gitignore` で `*.csv` が除外され `!fixtures/**/*.csv` のみが例外許可されているため、`tests/kpi/fixtures/` に置いた `.csv` ファイルは Git の追跡対象外になります。このワークツリー上には `.csv` を置いたうえで、本線へのマージ後も `tests/kpi/kpi-shared.test.ts` が確実に Shift_JIS バイト列を読めるよう、同じバイト列の `.csv.sjis` を `tests/kpi/fixtures/` に同梱して追跡させています。
+- なし（テスト用CSVの置き場所も `fixtures/kpi/sample-csv/tests/` に整理し、`.csv` のまま追跡できるよう解消しました）。
