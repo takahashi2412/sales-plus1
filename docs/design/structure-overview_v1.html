@@ -557,9 +557,9 @@
     <div class="boxes">
       <div class="bx found"><h4>土台（1つ）</h4><div class="in"><p><span class="lbl">画面</span>ログイン、名簿・所属・MGRの担当、権限、設定値、監査ログ</p><p><span class="lbl">表 8</span><code>teams</code> <code>members</code> <code>member_affiliations</code> <code>mgr_assignments</code> <code>permissions</code> <code>settings</code> <code>audit_logs</code> <code>masters</code></p></div></div>
       <div class="bx"><h4>ロープレの箱</h4><div class="in"><p><span class="lbl">画面</span>ロープレ、トーク一覧、研修の記録</p><p><span class="lbl">表 6</span><code>roleplays</code> <code>roleplay_themes</code> <code>member_themes</code> <code>talks</code> <code>seminars</code> <code>seminar_members</code></p></div></div>
-      <div class="bx"><h4>KPIの箱</h4><div class="in"><p><span class="lbl">画面</span>KPIの目標、未達の一覧、CSV取り込み・承認</p><p><span class="lbl">表 7</span><code>kpi_entries</code> <code>kpi_targets</code> <code>alerts</code> <code>import_logs</code> <code>call_lists</code> <code>cti_member_map</code> <code>cti_team_map</code></p></div></div>
+      <div class="bx"><h4>KPIの箱</h4><div class="in"><p><span class="lbl">画面</span>KPIの目標、未達の一覧、CSV取り込み・承認</p><p><span class="lbl">表 6</span><code>kpi_entries</code> <code>kpi_targets</code> <code>alerts</code> <code>import_logs</code> <code>cti_member_map</code> <code>cti_team_map</code></p></div></div>
       <div class="bx"><h4>部下メモの箱</h4><div class="in"><p><span class="lbl">画面</span>部下メモ</p><p><span class="lbl">表 2</span><code>subordinate_memos</code> <code>subordinate_memo_targets</code></p></div></div>
-      <div class="bx"><h4>一般日報の箱</h4><div class="in"><p><span class="lbl">画面</span>一般日報（受注・見込み・週の約束を含む）</p><p><span class="lbl">表 5</span><code>daily_reports</code> <code>daily_lists</code> <code>weekly_promises</code> <code>daily_prospects</code> <code>orders</code></p></div></div>
+      <div class="bx"><h4>一般日報の箱</h4><div class="in"><p><span class="lbl">画面</span>一般日報（受注・見込み・週の約束を含む）</p><p><span class="lbl">表 6</span><code>daily_reports</code> <code>daily_lists</code> <code>call_lists</code> <code>weekly_promises</code> <code>daily_prospects</code> <code>orders</code> <span class="tag tag--warn">変更</span> 2026-11-05：狙うリスト（call_lists）をKPIの箱から移した</p></div></div>
       <div class="bx"><h4>週間教育の箱</h4><div class="in"><p><span class="lbl">画面</span>週間教育</p><p><span class="lbl">表 3</span><code>trainings</code> <code>training_issues</code> <code>training_reviews</code></p></div></div>
       <div class="bx"><h4>責任者日報の箱</h4><div class="in"><p><span class="lbl">画面</span>責任者日報</p><p><span class="lbl">表 4</span><code>manager_reports</code> <code>manager_actions</code> <code>manager_monthly</code> <code>manager_weekly_summaries</code></p></div></div>
       <div class="bx"><h4>AIの箱</h4><div class="in"><p><span class="lbl">画面</span>AIレポート（本人版・指導版）</p><p><span class="lbl">表 2</span><code>ai_reports</code> <code>ai_proposals</code></p></div></div>
@@ -661,7 +661,7 @@
     <h2><span class="section-num">7</span>作る順番のチャート：区切りを進むごとに、表と画面がそろっていく</h2>
     <p class="lead"><span class="tag tag--warn">変更</span> 2026-11-04：管理の画面2つをカルテ第1版に入れた。9つの区切りを左から順に作ったとき、できあがる表と画面の数（それまでの合計）の目安です。4の箱の分け方と、作る順番の表（設計書13章）から数えました。日付はまだ決めていません。（区切りの名前は、同じ時期に作るもののまとまりで、画面のまとまりではありません。例：「KPI・部下メモ」は、KPI の画面と部下メモの画面を同じ時期に作るという意味で、サイトでは別々の画面です）</p>
     <div class="svg-wrap">
-      <svg viewBox="0 0 880 360" role="img" aria-label="作る順番ごとの、できあがる表と画面の数の積み上げ。表は 5、14、23、23、28、31、35、37、37。画面は 0、3、7、11、12、15、17、18、18">
+      <svg viewBox="0 0 880 360" role="img" aria-label="作る順番ごとの、できあがる表と画面の数の積み上げ。表は 5、14、22、22、28、31、35、37、37。画面は 0、3、7、11、12、15、17、18、18">
         <line class="s-grid" x1="50" y1="250" x2="870" y2="250"/>
         <line class="s-grid" x1="50" y1="196" x2="870" y2="196"/>
         <line class="s-grid" x1="50" y1="142" x2="870" y2="142"/>
@@ -677,9 +677,9 @@
         <text class="t-fig" x="113" y="244" text-anchor="middle">0</text>
         <rect class="s-bar" x="162" y="174" width="26" height="76" style="fill:var(--navy-band)"/><text class="t-figb" x="175" y="168" text-anchor="middle">14</text>
         <rect class="s-hl" x="190" y="234" width="26" height="16" style="stroke:var(--navy-band);stroke-width:1"/><text class="t-fig" x="203" y="228" text-anchor="middle">3</text>
-        <rect class="s-bar" x="254" y="126" width="26" height="124" style="fill:var(--navy-band)"/><text class="t-figb" x="267" y="120" text-anchor="middle">23</text>
+        <rect class="s-bar" x="254" y="131" width="26" height="119" style="fill:var(--navy-band)"/><text class="t-figb" x="267" y="125" text-anchor="middle">22</text>
         <rect class="s-hl" x="282" y="212" width="26" height="38" style="stroke:var(--navy-band);stroke-width:1"/><text class="t-fig" x="295" y="206" text-anchor="middle">7</text>
-        <rect class="s-bar" x="346" y="126" width="26" height="124" style="fill:var(--navy-band)"/><text class="t-figb" x="359" y="120" text-anchor="middle">23</text>
+        <rect class="s-bar" x="346" y="131" width="26" height="119" style="fill:var(--navy-band)"/><text class="t-figb" x="359" y="125" text-anchor="middle">22</text>
         <rect class="s-hl" x="374" y="190" width="26" height="60" style="stroke:var(--navy-band);stroke-width:1"/><text class="t-fig" x="387" y="184" text-anchor="middle">11</text>
         <rect class="s-bar" x="438" y="99" width="26" height="151" style="fill:var(--navy-band)"/><text class="t-figb" x="451" y="93" text-anchor="middle">28</text>
         <rect class="s-hl" x="466" y="185" width="26" height="65" style="stroke:var(--navy-band);stroke-width:1"/><text class="t-fig" x="479" y="179" text-anchor="middle">12</text>
@@ -707,7 +707,7 @@
     </div>
     <div class="guide">
       <div><div class="g-label">図の見方</div><ul><li>横が作る順番、縦が数。濃い棒が表、薄い棒が画面。数は、その区切りまでに作ったものの合計</li><li>棒が伸びない区切り（カルテ第1版の表、自動化）は、新しい表を作らず、今ある表を読む・使う区切り</li></ul></div>
-      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>表は前半（土台〜KPI・部下メモ）で6割（23／37）がそろう。カルテ第1版の節目で、リーダー層が記録を書いて見られる形になる</li><li>画面は AI の区切りで18がそろう。管理の画面2つ（名簿を直す・権限を与える）は、本物のデータを入れる前に要るので、カルテ第1版で作る（2026-11-04 決定）。それまでトーク責任者などの権限は、架空データとしてデータベースに入れる</li></ul></div>
+      <div class="g-pt"><div class="g-label">ポイント</div><ul><li>表は前半（土台〜KPI・部下メモ）で約6割（22／37）がそろう（2026-11-05：狙うリストを一般日報の箱に移したので23から22に）。カルテ第1版の節目で、リーダー層が記録を書いて見られる形になる</li><li>画面は AI の区切りで18がそろう。管理の画面2つ（名簿を直す・権限を与える）は、本物のデータを入れる前に要るので、カルテ第1版で作る（2026-11-04 決定）。それまでトーク責任者などの権限は、架空データとしてデータベースに入れる</li></ul></div>
     </div>
   </section>
 
