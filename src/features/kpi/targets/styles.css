@@ -1,0 +1,120 @@
+.kpi-targets-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.kpi-targets-month-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.kpi-targets-month-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.kpi-targets-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.kpi-targets-box {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  padding: 16px 18px;
+}
+
+.kpi-targets-box-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--navy-text);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-targets-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.kpi-targets-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.kpi-targets-preview-table th,
+.kpi-targets-preview-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.kpi-targets-preview-table th {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy-text);
+  background: var(--surface-sunken);
+}
+
+.kpi-targets-preview-table td.num-col {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  text-align: right;
+}
+
+.kpi-targets-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.kpi-targets-history-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy-band);
+  border-radius: 6px;
+  background: var(--surface-sunken);
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.kpi-targets-history-time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy-text);
+  margin-bottom: 4px;
+}
+
+.kpi-targets-history-diffs {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 860px) {
+  .kpi-targets-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-targets-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

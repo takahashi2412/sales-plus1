@@ -1,0 +1,143 @@
+.kpi-alerts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.kpi-alerts-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi-alerts-summary-card {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy-band);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.kpi-alerts-summary-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.kpi-alerts-summary-count {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.kpi-alerts-filter-bar {
+  display: grid;
+  grid-template-columns: 240px 240px auto;
+  gap: 12px;
+  align-items: end;
+  padding: 12px 16px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.kpi-alerts-date-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.kpi-alerts-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid var(--navy-band);
+}
+
+.kpi-alerts-date-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--navy-text);
+}
+
+.kpi-alerts-member-card {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-sunken);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.kpi-alerts-member-card:last-child {
+  margin-bottom: 0;
+}
+
+.kpi-alerts-member-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.kpi-alerts-member-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+/* 未達は赤にしない（黒字＋▼＋「未達」） */
+.kpi-alerts-unmet-badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.kpi-alerts-diff-text {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.kpi-alerts-response-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+}
+
+.kpi-alerts-response-controls {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .kpi-alerts-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-alerts-response-controls {
+    grid-template-columns: 1fr;
+  }
+}

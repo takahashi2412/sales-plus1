@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { MemberAffiliationRow } from '../../src/foundation/types'
@@ -22,7 +22,9 @@ import {
 const FIXTURES_DIR = resolve(__dirname, 'fixtures')
 
 function loadShiftJisFixture(fileName: string): Uint8Array {
-  const buf = readFileSync(resolve(FIXTURES_DIR, fileName))
+  const csvPath = resolve(FIXTURES_DIR, fileName)
+  const targetPath = existsSync(csvPath) ? csvPath : resolve(FIXTURES_DIR, `${fileName}.sjis`)
+  const buf = readFileSync(targetPath)
   return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
 }
 
