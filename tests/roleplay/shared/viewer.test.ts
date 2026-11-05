@@ -137,6 +137,7 @@ describe('buildViewerContext（見る人の情報の組み立て）', () => {
       teamId: 'team-new',
       mgrTeamIds: [],
       isTalkOwner: false,
+      isAdmin: false,
       isCeo: false,
     });
   });
@@ -164,6 +165,7 @@ describe('buildViewerContext（見る人の情報の組み立て）', () => {
       teamId: null,
       mgrTeamIds: ['team-a', 'team-b'],
       isTalkOwner: false,
+      isAdmin: true,
       isCeo: false,
     });
 
@@ -221,6 +223,7 @@ describe('pickWritableMembers（ロープレを書ける課員の選択）', () 
       teamId: 'team-a',
       mgrTeamIds: [],
       isTalkOwner: false,
+      isAdmin: false,
       isCeo: false,
     };
     const listForLeaderA = pickWritableMembers(viewerLeaderA, members, affiliations, TODAY);
@@ -237,6 +240,7 @@ describe('pickWritableMembers（ロープレを書ける課員の選択）', () 
       teamId: 'team-a',
       mgrTeamIds: [],
       isTalkOwner: false,
+      isAdmin: false,
       isCeo: false,
     };
     const listForMemberA1 = pickWritableMembers(viewerMemberA1, members, affiliations, TODAY);
@@ -254,6 +258,7 @@ describe('pickWritableMembers（ロープレを書ける課員の選択）', () 
       teamId: 'team-b',
       mgrTeamIds: ['team-a'], // 仮に配列が入っていても役割が leader なら使われない
       isTalkOwner: true,
+      isAdmin: false,
       isCeo: false,
     };
     // member-overlap は古い所属が team-b だが最新の所属が team-a なので team-b には入らない
@@ -268,6 +273,7 @@ describe('pickWritableMembers（ロープレを書ける課員の選択）', () 
       teamId: null,
       mgrTeamIds: ['team-a'],
       isTalkOwner: false,
+      isAdmin: false,
       isCeo: false,
     };
     const listForMgr = pickWritableMembers(viewerMgr, members, affiliations, TODAY);
@@ -286,6 +292,7 @@ describe('pickWritableMembers（ロープレを書ける課員の選択）', () 
       teamId: null,
       mgrTeamIds: [],
       isTalkOwner: false,
+      isAdmin: false,
       isCeo: true,
     };
     const listForCeo = pickWritableMembers(viewerCeo, members, affiliations, TODAY);
@@ -308,6 +315,7 @@ describe('ボタンを出すかの計算だけの関数', () => {
     teamId: 'team-a',
     mgrTeamIds: ['team-b'], // 役割が leader なので mgrTeamIds は見ない
     isTalkOwner: false,
+    isAdmin: false,
     isCeo: false,
   };
   const memberA: ViewerContext = {
@@ -316,6 +324,7 @@ describe('ボタンを出すかの計算だけの関数', () => {
     teamId: 'team-a',
     mgrTeamIds: [],
     isTalkOwner: false,
+    isAdmin: false,
     isCeo: false,
   };
   const talkOwnerMemberB: ViewerContext = {
@@ -324,6 +333,7 @@ describe('ボタンを出すかの計算だけの関数', () => {
     teamId: 'team-b',
     mgrTeamIds: [],
     isTalkOwner: true,
+    isAdmin: false,
     isCeo: false,
   };
   const mgrA: ViewerContext = {
@@ -332,6 +342,7 @@ describe('ボタンを出すかの計算だけの関数', () => {
     teamId: 'team-b', // 役割が mgr なので teamId ではなく mgrTeamIds を見る
     mgrTeamIds: ['team-a'],
     isTalkOwner: false,
+    isAdmin: false,
     isCeo: false,
   };
   const ceo: ViewerContext = {
@@ -340,6 +351,7 @@ describe('ボタンを出すかの計算だけの関数', () => {
     teamId: null,
     mgrTeamIds: [],
     isTalkOwner: false,
+    isAdmin: false,
     isCeo: true,
   };
 
@@ -536,6 +548,7 @@ describe('fetchViewerContext / fetchWritableMembers（モッククライアン�
       teamId: 'team-a',
       mgrTeamIds: [],
       isTalkOwner: true,
+      isAdmin: false,
       isCeo: false,
     });
     expect(eqCalls).toEqual([
@@ -583,6 +596,7 @@ describe('fetchViewerContext / fetchWritableMembers（モッククライアン�
       teamId: 'team-b',
       mgrTeamIds: [],
       isTalkOwner: false,
+      isAdmin: false,
       isCeo: false,
     };
 

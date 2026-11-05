@@ -1,12 +1,13 @@
-export const DEV_ROLE_KEYS = ['ceo', 'leader', 'member', 'mgr', 'talk-owner'];
+export const DEV_ROLE_KEYS = ['ceo', 'leader', 'member', 'mgr', 'talk-owner', 'admin'];
 
 export const DEV_ROLE_USAGE = [
-  '使い方: npm run fixtures:dev-role -- <ceo|leader|member|mgr|talk-owner>',
+  '使い方: npm run fixtures:dev-role -- <ceo|leader|member|mgr|talk-owner|admin>',
   '  ceo        : 代表（所属・担当・権限なし。元に戻す）',
   '  leader     : 架空チームAのリーダー（拠点：架空拠点A、開始：2025-04-01）',
   '  member     : 架空チームAのメンバー（拠点：架空拠点A、開始：2025-04-01）',
   '  mgr        : 架空チームAの担当MGR（開始：2025-04-01）',
   '  talk-owner : 架空チームBのメンバー（拠点：架空拠点B、開始：2025-04-01、トーク責任者）',
+  '  admin      : 架空チームBのメンバー（拠点：架空拠点B、開始：2025-04-01、管理者）',
 ].join('\n');
 
 const PLANS = {
@@ -70,6 +71,24 @@ const PLANS = {
     mgrAssignment: null,
     permission: {
       kind: 'talk_owner',
+      granted_by: null,
+      revoked_by: null,
+      revoked_at: null,
+    },
+  },
+  admin: {
+    key: 'admin',
+    label: '架空チームBのメンバー（管理者）',
+    role: 'member',
+    affiliation: {
+      teamName: '架空チームB',
+      base: '架空拠点B',
+      start_date: '2025-04-01',
+      end_date: null,
+    },
+    mgrAssignment: null,
+    permission: {
+      kind: 'admin',
       granted_by: null,
       revoked_by: null,
       revoked_at: null,

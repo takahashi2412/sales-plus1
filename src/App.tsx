@@ -8,20 +8,32 @@ import type {
   MemberAffiliationRow,
   MemberRow,
   MgrAssignmentRow,
+  PermissionRow,
   TeamRow,
 } from './foundation/types';
 import { LoginView } from './foundation/LoginView';
 import { DirectoryView } from './foundation/DirectoryView';
-import { AppLayout, parseHashRoute, type RouteKey } from './components/layout/AppLayout';
+import {
+  AppLayout,
+  canAccessRoute,
+  parseHashRoute,
+  type RouteKey,
+} from './components/layout/AppLayout';
+import { NoticeBox } from './components/ui';
 import { RoleplayRecordPage } from './features/roleplay/record';
 import { RoleplayTalksPage } from './features/roleplay/talks';
 import { RoleplaySeminarPage } from './features/roleplay/seminar';
+import { KpiTargetsPage } from './features/kpi/targets';
+import { KpiAlertsPage } from './features/kpi/alerts';
+import { KpiImportPage } from './features/kpi/import';
+import { SubordinateMemoPage } from './features/memo';
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [selfEntry, setSelfEntry] = useState<DirectoryEntry | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [route, setRoute] = useState<RouteKey>(() =>
     typeof window !== 'undefined' ? parseHashRoute(window.location.hash) : 'directory',
@@ -61,6 +73,7 @@ export function App() {
   useEffect(() => {
     if (!session) {
       setSelfEntry(null);
+      setIsAdmin(false);
       setEntries([]);
       return;
     }
@@ -69,11 +82,12 @@ export function App() {
 
     async function loadDirectory(currentSession: Session) {
       setDataLoading(true);
-      const [membersRes, teamsRes, affRes, mgrRes] = await Promise.all([
+      const [membersRes, teamsRes, affRes, mgrRes, permRes] = await Promise.all([
         supabase.from('members').select('*'),
         supabase.from('teams').select('*'),
         supabase.from('member_affiliations').select('*'),
         supabase.from('mgr_assignments').select('*'),
+        supabase.from('permissions').select('*'),
       ]);
 
       if (cancelled) return;
@@ -82,16 +96,22 @@ export function App() {
       const teams = (teamsRes.data ?? []) as TeamRow[];
       const affiliations = (affRes.data ?? []) as MemberAffiliationRow[];
       const mgrAssignments = (mgrRes.data ?? []) as MgrAssignmentRow[];
+      const permissions = (permRes.data ?? []) as PermissionRow[];
 
       const built = buildDirectoryEntries(members, teams, affiliations, mgrAssignments);
       const selfRow = members.find((m) => m.auth_user_id === currentSession.user.id);
       const foundSelf = selfRow ? (built.find((e) => e.id === selfRow.id) ?? null) : null;
 
-      if (!foundSelf) {
+      if (!foundSelf || !selfRow) {
         setSelfEntry(null);
+        setIsAdmin(false);
         setEntries([]);
       } else {
+        const hasAdmin = permissions.some(
+          (p) => p.member_id === selfRow.id && p.kind === 'admin' && p.revoked_at === null,
+        );
         setSelfEntry(foundSelf);
+        setIsAdmin(hasAdmin);
         setEntries(built);
       }
       setDataLoading(false);
@@ -132,15 +152,36 @@ export function App() {
     );
   }
 
+  const allowed = canAccessRoute(route, selfEntry.role, isAdmin);
+
   return (
-    <AppLayout activeRoute={route} selfEntry={selfEntry} onSignOut={handleSignOut}>
-      {route === 'directory' && (
-        <DirectoryView selfEntry={selfEntry} entries={entries} onSignOut={handleSignOut} />
+    <AppLayout
+      activeRoute={route}
+      selfEntry={selfEntry}
+      isAdmin={isAdmin}
+      onSignOut={handleSignOut}
+    >
+      {!allowed ? (
+        <section className="panel">
+          <NoticeBox title="この画面は使えません" tone="warn" role="alert">
+            この画面は使えません。現在の役割・権限では開くことができません。
+          </NoticeBox>
+        </section>
+      ) : (
+        <>
+          {route === 'directory' && (
+            <DirectoryView selfEntry={selfEntry} entries={entries} onSignOut={handleSignOut} />
+          )}
+          {route === 'roleplay' && <RoleplayRecordPage mode="roleplay" />}
+          {route === 'themes' && <RoleplayRecordPage mode="themes" />}
+          {route === 'talks' && <RoleplayTalksPage />}
+          {route === 'seminar' && <RoleplaySeminarPage />}
+          {route === 'kpi-targets' && <KpiTargetsPage />}
+          {route === 'kpi-alerts' && <KpiAlertsPage />}
+          {route === 'kpi-import' && <KpiImportPage />}
+          {route === 'memo' && <SubordinateMemoPage />}
+        </>
       )}
-      {route === 'roleplay' && <RoleplayRecordPage mode="roleplay" />}
-      {route === 'themes' && <RoleplayRecordPage mode="themes" />}
-      {route === 'talks' && <RoleplayTalksPage />}
-      {route === 'seminar' && <RoleplaySeminarPage />}
     </AppLayout>
   );
 }
