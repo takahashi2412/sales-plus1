@@ -165,3 +165,23 @@ export interface AlertRow {
   responded_at: string | null;
   created_at: string;
 }
+
+/**
+ * Supabase のエラー（PostgrestError など Error のインスタンスでないオブジェクト）からも
+ * message を取り出し、「決まった文（理由：…）」の形で返す。
+ */
+export function formatKpiErrorMessage(fallback: string, err: unknown): string {
+  if (!err) return fallback;
+  if (typeof err === 'string' && err.trim().length > 0) {
+    const trimmed = err.trim();
+    return trimmed === fallback ? fallback : `${fallback}（理由：${trimmed}）`;
+  }
+  if (typeof err === 'object' && 'message' in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string' && msg.trim().length > 0) {
+      const trimmed = msg.trim();
+      return trimmed === fallback ? fallback : `${fallback}（理由：${trimmed}）`;
+    }
+  }
+  return fallback;
+}

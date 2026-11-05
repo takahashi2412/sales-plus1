@@ -118,18 +118,26 @@
   white-space: nowrap;
 }
 
+.kpi-alerts-nowrap-cell {
+  white-space: nowrap;
+}
+
 .kpi-alerts-response-box {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 280px;
+  min-width: 460px;
 }
 
 .kpi-alerts-response-controls {
   display: grid;
-  grid-template-columns: 140px 1fr auto;
+  grid-template-columns: 130px minmax(240px, 1fr) auto;
   gap: 8px;
   align-items: center;
+}
+
+.kpi-alerts-reason-input {
+  min-width: 240px;
 }
 
 @media (max-width: 760px) {

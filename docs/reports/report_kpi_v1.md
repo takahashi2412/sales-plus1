@@ -26,7 +26,7 @@
 - `src/features/kpi/alerts/api.ts`（新規：未達の一覧のデータ取得・同じチームのリーダーによる対応記録）
 - `src/features/kpi/alerts/styles.css`（新規：未達の一覧画面のスタイル）
 - `src/features/kpi/alerts/index.tsx`（更新：未対応件数・日付／チーム絞り込み・黒字＋▼＋「未達」表示・「続いている」表示・リーダーの対応記録画面）
-- `tests/kpi/kpi-shared.test.ts`（新規：KPI共通計算部品の自動テスト12件）
+- `tests/kpi/kpi-shared.test.ts`（新規：KPI共通計算部品の自動テスト13件）
 - `fixtures/kpi/sample-csv/tests/架空チームA(WEB)時間別20261106_20261106.csv`（新規：自動テスト用の正常系 Shift_JIS 架空CSV）
 - `fixtures/kpi/sample-csv/tests/架空チームA(WEB)時間別20261105_20261106.csv`（新規：自動テスト用の2日期間 Shift_JIS 架空CSV）
 - `fixtures/kpi/sample-csv/tests/異常ヘッダ_架空チームA(WEB)時間別20261106_20261106.csv`（新規：自動テスト用の見出し不一致 Shift_JIS 架空CSV）
@@ -60,16 +60,25 @@
    - **テスト用CSVの置き場所修正**：`tests/kpi/fixtures/` の `.csv` と `.csv.sjis` を削除し、自動テスト用の Shift_JIS CSV 4つを `fixtures/kpi/sample-csv/tests/` に `.csv` のまま配置して `tests/kpi/kpi-shared.test.ts` から直接読み込むように直しました。
    - **更新0行時のエラー停止**：`submitAlertResponse`、`approvePendingImportAndGenerateAlerts`（`status: 'approved'` 更新）、`cancelPendingImportLog`、`savePendingCsvImport`（`status: 'replaced'` 更新）で `.select('id')` を受け取り、更新行が0行のときは「この操作はできません」として止め（承認0行のときは未達計算に進まない）るようにしました。
    - **月のペースのア/オ比較のコメント整理**：`src/features/kpi/shared/alerts.ts` のア/オ比較コメントを「ア/オは率なので、あるべきを使わず、今月ここまでのア÷オと目標の率をそのまま比べる（2026-11-05 本人の選択）」に書きかえました。
+6. **画面確認で見つかった5点の修正（2026-11-05 追記）**
+   - **承認後の未達書き込み（`alerts` への `insert` と `23505` 対応）**：`upsert`（`onConflict`・`ignoreDuplicates`）は未達を読めない管理者で RLS により 403 で断られるため、`persistGeneratedAlertsAndMarkImportLog`（`src/features/kpi/shared/alerts.ts`）を追加し、`.insert(drafts)` で1回でまとめて入れ（`.select()` なし）、一意違反（`error.code === '23505'`）のときは前に入れ終えていたものとして続けて `import_logs` の `alerts_created_at` と `alert_count` を入れ、ほかのエラーは止めて出すように直しました。あわせて偽クライアントで成功・`23505`・他エラーの3通りを確かめる自動テストを `tests/kpi/kpi-shared.test.ts` に追加しました。
+   - **Supabase エラーの `message` 表示**：`formatKpiErrorMessage`（`src/features/kpi/shared/types.ts`）を追加し、取り込み・承認・未達・目標・対応記録のすべての画面でエラーに `message` があれば「…に失敗しました（理由：…）」と画面に出すように直しました。
+   - **未達が未計算のときの承認済み表示**：`alerts_created_at`（または `alert_count`）が空のときは「承認済み（未達はまだ計算されていません。下の一覧の「未達を出し直す」で入れてください）」と表示するように直しました。
+   - **取り込み後のカードの5つ目のチェック表示**：取り込んだあとのカードでは、その取り込み自身でできた記録を「前の記録」に数えず、「この取り込みの記録（承認前／承認済み）」と出すように直しました。
+   - **見た目・折り返し・入力欄幅の調整**：
+     - 差の `▼` のときにマイナス記号が二重にならないよう（`▼-10件` → `▼10件`）、未達の一覧と目標の画面の両方で絶対値を使うように直しました。
+     - 目標画面の右の逆算表、未達の一覧の表、取り込み画面の「承認待ち・未達の出し直しが必要な取り込み」および記録一覧の表で見出しや短い言葉が1〜2文字ずつ折り返さないよう `white-space: nowrap` と横スクロール枠を整えました。
+     - 未達の一覧の理由の入力欄に `min-width: 240px`（12文字以上が十分見える幅）を設定しました。
 
 ## 6. 決められずに止めたこと・質問
 - なし（すべて計画書およびレビュー指摘の記載どおりに実装しました）。
 
 ## 7. テストの結果（通った数／全体）
-- `npm test`（守りのテストを含む全テスト）：**10ファイル・141テスト中 141テスト通過（失敗 0・スキップ 0）**
+- `npm test`（守りのテストを含む全テスト）：**10ファイル・142テスト中 142テスト通過（失敗 0・スキップ 0）**
   - `tests/foundation/dev-role.test.ts`：8 / 8
   - `tests/foundation/directory.test.ts`：3 / 3
   - `tests/foundation/ui-and-routing.test.ts`：4 / 4
-  - `tests/kpi/kpi-shared.test.ts`：12 / 12
+  - `tests/kpi/kpi-shared.test.ts`：13 / 13
   - `tests/roleplay/shared/viewer.test.ts`：15 / 15
   - `tests/roleplay/talks/talks-and-seminar.test.ts`：8 / 8
   - `tests/roleplay/record/record-logic.test.ts`：17 / 17

@@ -258,3 +258,67 @@ export function evaluateMemberAlertsForImport(
 
   return drafts;
 }
+
+export interface AlertsPersistenceError {
+  code?: string;
+  message?: string;
+}
+
+export interface AlertsPersistenceClient {
+  from(table: 'alerts'): {
+    insert(
+      values: GeneratedAlertDraft[],
+    ): PromiseLike<{ error: AlertsPersistenceError | null }>;
+  };
+  from(table: 'import_logs'): {
+    update(values: { alerts_created_at: string; alert_count: number }): {
+      eq(
+        column: 'id',
+        value: string,
+      ): PromiseLike<{ error: AlertsPersistenceError | null }>;
+    };
+  };
+}
+
+/**
+ * 計算した未達（drafts）を alerts に1回の .insert(drafts) でまとめて入れ（.select() なし・upsert 不使用）、
+ * 続けて import_logs の alerts_created_at と alert_count を更新する。
+ * insert が一意制約違反（code === '23505'）で断られたときは、前に入れ終えていたものとして扱い、
+ * 続けて import_logs の更新に進む。それ以外のエラーは止めて投げる。
+ */
+export async function persistGeneratedAlertsAndMarkImportLog(
+  client: AlertsPersistenceClient,
+  importLogId: string,
+  drafts: GeneratedAlertDraft[],
+  nowIso: string = new Date().toISOString(),
+): Promise<{ alertCount: number; alreadyExisted: boolean }> {
+  let alreadyExisted = false;
+
+  if (drafts.length > 0) {
+    const { error: insertAlertsErr } = await client.from('alerts').insert(drafts);
+    if (insertAlertsErr) {
+      if (insertAlertsErr.code === '23505') {
+        alreadyExisted = true;
+      } else {
+        throw insertAlertsErr;
+      }
+    }
+  }
+
+  const { error: updateLogErr } = await client
+    .from('import_logs')
+    .update({
+      alerts_created_at: nowIso,
+      alert_count: drafts.length,
+    })
+    .eq('id', importLogId);
+
+  if (updateLogErr) {
+    throw updateLogErr;
+  }
+
+  return {
+    alertCount: drafts.length,
+    alreadyExisted,
+  };
+}

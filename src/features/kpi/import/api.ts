@@ -10,6 +10,7 @@ import {
   buildBusinessDaysContext,
   evaluateMemberAlertsForImport,
   getMonthFirstDate,
+  persistGeneratedAlertsAndMarkImportLog,
   type CtiMemberMapRow,
   type CtiTeamMapRow,
   type GeneratedAlertDraft,
@@ -404,26 +405,9 @@ export async function generateAlertsForApprovedImport(
     allDrafts.push(...memberDrafts)
   }
 
-  // alerts に入れるときは .select() を付けず、同じ組がもうある分は飛ばす（ignoreDuplicates）
-  if (allDrafts.length > 0) {
-    const { error: insertAlertsErr } = await supabase.from('alerts').upsert(allDrafts, {
-      onConflict: 'import_log_id,member_id,compare,item',
-      ignoreDuplicates: true,
-    })
-    if (insertAlertsErr) throw insertAlertsErr
-  }
-
-  // import_logs の alerts_created_at と alert_count を更新
-  const nowIso = new Date().toISOString()
-  const { error: updateLogErr } = await supabase
-    .from('import_logs')
-    .update({
-      alerts_created_at: nowIso,
-      alert_count: allDrafts.length,
-    })
-    .eq('id', importLog.id)
-
-  if (updateLogErr) throw updateLogErr
+  // alerts には 1回の .insert(allDrafts) でまとめて入れ（.select() なし・upsert 不使用）、
+  // 一意違反（23505）のときは前に入れ終えていたものとして import_logs の alerts_created_at・alert_count 更新へ進む
+  await persistGeneratedAlertsAndMarkImportLog(supabase, importLog.id, allDrafts)
 
   return {
     alertCount: allDrafts.length,

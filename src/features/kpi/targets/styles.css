@@ -55,6 +55,13 @@
   gap: 12px;
 }
 
+.kpi-targets-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
 .kpi-targets-preview-table {
   width: 100%;
   border-collapse: collapse;
@@ -66,6 +73,7 @@
   padding: 8px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;
+  white-space: nowrap;
 }
 
 .kpi-targets-preview-table th {

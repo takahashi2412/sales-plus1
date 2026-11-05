@@ -11,6 +11,7 @@ import {
 import {
   calculateKpiTargets,
   formatDecimal1,
+  formatKpiErrorMessage,
   type KpiTargetHistoryItem,
   type KpiTargetRow,
   type KpiTargetValues,
@@ -98,7 +99,7 @@ function buildTargetHistoryDiffs(row: KpiTargetRow | null): HistoryDiffEntry[] {
           if (diff > 0) {
             trendText = `（▲+${diff}${meta.unit}）`
           } else if (diff < 0) {
-            trendText = `（▼${diff}${meta.unit}）`
+            trendText = `（▼${Math.abs(diff)}${meta.unit}）`
           }
         }
         changes.push({
@@ -142,7 +143,7 @@ export function KpiTargetsPage() {
       const firstOther = data.readableMembers.find((m) => !m.isSelf)
       setInspectMemberId((prev) => prev || firstOther?.member.id || data.selfMember?.id || '')
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '目標データの読み込みに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('目標データの読み込みに失敗しました', err))
     } finally {
       setLoading(false)
     }
@@ -231,7 +232,7 @@ export function KpiTargetsPage() {
       await loadData()
       setSuccessMsg(`${formatMonthLabel(selectedMonth)}の自分の目標を保存しました。`)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '目標の保存に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('目標の保存に失敗しました', err))
     } finally {
       setSaving(false)
     }
@@ -447,7 +448,7 @@ export function KpiTargetsPage() {
             <strong>{formatDecimal1(selfCalculated.actionMonthlyApo)}件</strong> です（差：
             {selfCalculated.apoDiff >= 0
               ? `▲+${formatDecimal1(selfCalculated.apoDiff)}件`
-              : `▼${formatDecimal1(selfCalculated.apoDiff)}件`}
+              : `▼${formatDecimal1(Math.abs(selfCalculated.apoDiff))}件`}
             ）。稼働日・コール時間・オ率・ア/オを見直すか確認してください。
           </NoticeBox>
         )}
@@ -624,7 +625,8 @@ export function KpiTargetsPage() {
                 <span>自動で逆算される月次・日次の目標（小数第1位まで表示）</span>
               </h2>
 
-              <table className="kpi-targets-preview-table">
+              <div className="kpi-targets-table-scroll">
+                <table className="kpi-targets-preview-table">
                 <thead>
                   <tr>
                     <th>項目</th>
@@ -739,6 +741,7 @@ export function KpiTargetsPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
 
               {/* 自分の目標を直した記録（history） */}
               <div style={{ marginTop: '18px' }}>
@@ -841,7 +844,7 @@ export function KpiTargetsPage() {
                 </NoticeBox>
               ) : (
                 <div className="kpi-targets-two-col">
-                  <div>
+                  <div className="kpi-targets-table-scroll">
                     <table className="kpi-targets-preview-table">
                       <thead>
                         <tr>

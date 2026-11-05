@@ -10,6 +10,7 @@ import {
 } from '../../../components/ui'
 import {
   formatDecimal1,
+  formatKpiErrorMessage,
   type AlertItem,
   type AlertResponseStatus,
 } from '../shared'
@@ -52,7 +53,7 @@ export function KpiAlertsPage() {
       const data = await fetchKpiAlertsScreenData()
       setScreenData(data)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '未達の一覧の読み込みに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('未達の一覧の読み込みに失敗しました', err))
     } finally {
       setLoading(false)
     }
@@ -150,7 +151,7 @@ export function KpiAlertsPage() {
         }」を記録しました。`,
       )
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '対応の記録に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('対応の記録に失敗しました', err))
     } finally {
       setSavingId(null)
     }
@@ -180,6 +181,7 @@ export function KpiAlertsPage() {
     {
       key: 'unmet_mark',
       header: '判定',
+      className: 'kpi-alerts-nowrap-cell',
       render: (r) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {/* 未達は黒字＋▼＋「未達」（赤にしない） */}
@@ -192,12 +194,13 @@ export function KpiAlertsPage() {
     {
       key: 'item',
       header: '項目',
-      className: 'col-name',
+      className: 'col-name kpi-alerts-nowrap-cell',
       render: (r) => ITEM_LABELS[r.item]?.label ?? r.item,
     },
     {
       key: 'compare',
       header: '比べ方',
+      className: 'kpi-alerts-nowrap-cell',
       render: (r) =>
         r.item === 'target_missing'
           ? '月の目標'
@@ -208,6 +211,7 @@ export function KpiAlertsPage() {
     {
       key: 'target',
       header: '目標（またはあるべき）',
+      className: 'kpi-alerts-nowrap-cell',
       render: (r) => {
         if (r.item === 'target_missing' || r.target === null) return '目標が未入力'
         const unit = ITEM_LABELS[r.item]?.unit ?? ''
@@ -217,6 +221,7 @@ export function KpiAlertsPage() {
     {
       key: 'actual',
       header: '実績',
+      className: 'kpi-alerts-nowrap-cell',
       render: (r) => {
         if (r.item === 'target_missing' || r.actual === null) return '－'
         const unit = ITEM_LABELS[r.item]?.unit ?? ''
@@ -226,6 +231,7 @@ export function KpiAlertsPage() {
     {
       key: 'diff',
       header: '差',
+      className: 'kpi-alerts-nowrap-cell',
       render: (r) => {
         if (r.item === 'target_missing' || r.target === null || r.actual === null) {
           return '－'
@@ -235,7 +241,7 @@ export function KpiAlertsPage() {
         return (
           <span className="kpi-alerts-diff-text">
             {diff < 0
-              ? `▼${formatDecimal1(diff)}${unit}`
+              ? `▼${formatDecimal1(Math.abs(diff))}${unit}`
               : `▲+${formatDecimal1(diff)}${unit}`}
           </span>
         )
@@ -303,7 +309,7 @@ export function KpiAlertsPage() {
               />
               <input
                 type="text"
-                className="text-input"
+                className="text-input kpi-alerts-reason-input"
                 aria-label={`${r.memberName} ${ITEM_LABELS[r.item]?.label} の理由`}
                 placeholder="理由を入力（必須）..."
                 value={currentReason}

@@ -9,12 +9,17 @@ import {
   decodeShiftJis,
   evaluateMemberAlertsForImport,
   formatDecimal1,
+  formatKpiErrorMessage,
   getPreviousBusinessDayInMonth,
   parseKpiCsvBuffer,
+  persistGeneratedAlertsAndMarkImportLog,
   resolveTargetValuesAtDate,
   validateCsvImport,
+  type AlertsPersistenceClient,
+  type AlertsPersistenceError,
   type CtiMemberMapRow,
   type CtiTeamMapRow,
+  type GeneratedAlertDraft,
   type ImportLogRow,
   type KpiTargetRow,
 } from '../../src/features/kpi/shared'
@@ -587,5 +592,109 @@ describe('KPI 共通ロジック：営業日数・日ごと未達・月ペース
     expect(secondDayAlerts).toHaveLength(1)
     expect(secondDayAlerts[0].item).toBe('target_missing')
     expect(secondDayAlerts[0].needs_response).toBe(false)
+  })
+
+  it('未達の書き込み（persistGeneratedAlertsAndMarkImportLog）：偽クライアントで成功・23505（一意違反）・他エラーの3通りを検証する', async () => {
+    const sampleDrafts: GeneratedAlertDraft[] = [
+      {
+        import_log_id: 'log-100',
+        member_id: 'member-a',
+        date: '2026-11-06',
+        compare: 'daily',
+        item: 'total',
+        target: 100,
+        actual: 80,
+        needs_response: true,
+      },
+    ]
+
+    function createFakeClient(insertError: AlertsPersistenceError | null) {
+      const insertedBatches: GeneratedAlertDraft[][] = []
+      const updatedLogs: Array<{
+        id: string
+        values: { alerts_created_at: string; alert_count: number }
+      }> = []
+
+      const client: AlertsPersistenceClient = {
+        from(table: 'alerts' | 'import_logs') {
+          if (table === 'alerts') {
+            return {
+              async insert(values: GeneratedAlertDraft[]) {
+                insertedBatches.push(values)
+                return { error: insertError }
+              },
+            }
+          }
+          return {
+            update(values: { alerts_created_at: string; alert_count: number }) {
+              return {
+                async eq(_col: 'id', id: string) {
+                  updatedLogs.push({ id, values })
+                  return { error: null }
+                },
+              }
+            },
+          }
+        },
+      } as AlertsPersistenceClient
+
+      return { client, insertedBatches, updatedLogs }
+    }
+
+    // 1. 成功：alerts に .insert(drafts) で1回まとめて入り、import_logs の alerts_created_at と alert_count が更新される
+    const case1 = createFakeClient(null)
+    const res1 = await persistGeneratedAlertsAndMarkImportLog(
+      case1.client,
+      'log-100',
+      sampleDrafts,
+      '2026-11-06T10:00:00Z',
+    )
+    expect(res1).toEqual({ alertCount: 1, alreadyExisted: false })
+    expect(case1.insertedBatches).toEqual([sampleDrafts])
+    expect(case1.updatedLogs).toEqual([
+      {
+        id: 'log-100',
+        values: { alerts_created_at: '2026-11-06T10:00:00Z', alert_count: 1 },
+      },
+    ])
+
+    // 2. 23505（一意違反）：前に入れ終えていたものとして扱い、import_logs の更新まで進む
+    const case2 = createFakeClient({
+      code: '23505',
+      message: 'duplicate key value violates unique constraint',
+    })
+    const res2 = await persistGeneratedAlertsAndMarkImportLog(
+      case2.client,
+      'log-100',
+      sampleDrafts,
+      '2026-11-06T10:05:00Z',
+    )
+    expect(res2).toEqual({ alertCount: 1, alreadyExisted: true })
+    expect(case2.insertedBatches).toHaveLength(1)
+    expect(case2.updatedLogs).toEqual([
+      {
+        id: 'log-100',
+        values: { alerts_created_at: '2026-11-06T10:05:00Z', alert_count: 1 },
+      },
+    ])
+
+    // 3. ほかのエラー（例：42501 など）：止めてエラーを投げ、import_logs は更新しない
+    const otherError: AlertsPersistenceError = {
+      code: '42501',
+      message: 'new row violates row-level security policy for table "alerts"',
+    }
+    const case3 = createFakeClient(otherError)
+    await expect(
+      persistGeneratedAlertsAndMarkImportLog(
+        case3.client,
+        'log-100',
+        sampleDrafts,
+        '2026-11-06T10:10:00Z',
+      ),
+    ).rejects.toEqual(otherError)
+    expect(case3.updatedLogs).toEqual([])
+    expect(formatKpiErrorMessage('未達の出し直しに失敗しました', otherError)).toBe(
+      '未達の出し直しに失敗しました（理由：new row violates row-level security policy for table "alerts"）',
+    )
   })
 })

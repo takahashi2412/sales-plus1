@@ -11,6 +11,7 @@ import {
 } from '../../../components/ui'
 import { getTodayJstDateString } from '../../../foundation/directory'
 import {
+  formatKpiErrorMessage,
   parseKpiCsvBuffer,
   validateCsvImport,
   type CtiMemberMapRow,
@@ -85,7 +86,7 @@ export function KpiImportPage() {
       const data = await fetchKpiImportScreenData()
       setScreenData(data)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'データの読み込みに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('データの読み込みに失敗しました', err))
     } finally {
       setLoading(false)
     }
@@ -133,8 +134,9 @@ export function KpiImportPage() {
     if (!screenData) return []
     return uploadedItems.map((item) => {
       const targetDate = item.parsed.targetDate ?? ''
+      // 取り込んだあとのカードでは、その取り込み自身でできた記録を「前の記録」に数えない
       const existingLogsOnDate = screenData.importLogs.filter(
-        (l) => l.target_date === targetDate,
+        (l) => l.target_date === targetDate && l.id !== item.importedLogId,
       )
       const check: CsvImportCheckResult = validateCsvImport({
         parsed: item.parsed,
@@ -177,7 +179,7 @@ export function KpiImportPage() {
       }
       setUploadedItems(nextItems)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'CSVファイルの読み取りに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('CSVファイルの読み取りに失敗しました', err))
     } finally {
       setBusy(false)
       e.target.value = ''
@@ -214,7 +216,7 @@ export function KpiImportPage() {
         `名前「${ctiName}」を${memberId ? `「${memberNameById.get(memberId) ?? ''}」` : '「取り込まない」'}として対応表に登録しました（次回から自動で結びつきます）。`,
       )
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '名前の対応の登録に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('名前の対応の登録に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -249,7 +251,7 @@ export function KpiImportPage() {
         `CSVのチーム名「${csvTeamName}」を「${teamNameById.get(selectedTeamId) ?? ''}」に対応づけました。`,
       )
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'チーム名の対応の登録に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('チーム名の対応の登録に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -323,7 +325,7 @@ export function KpiImportPage() {
         `「${check.parsed.fileName}」を承認前として取り込みました（${mappedRows.length}人分）。数字を確認して「承認する」を押すと確定し、未達の一覧が作られます。`,
       )
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '取り込み処理に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('取り込み処理に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -355,12 +357,12 @@ export function KpiImportPage() {
         `「${log.file_name}」（${log.target_date}・${log.csv_team_name}）を承認し、未達 ${alertCount}件を計算して記録しました。`,
       )
     } catch (err) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : '承認または未達の計算・書き込みに失敗しました。',
+      const detail = formatKpiErrorMessage(
+        '承認または未達の計算・書き込みに失敗しました',
+        err,
       )
       await loadData()
+      setErrorMsg(detail)
     } finally {
       setBusy(false)
     }
@@ -381,7 +383,7 @@ export function KpiImportPage() {
         `「${log.file_name}」（${log.target_date}）の未達を出し直しました（未達 ${alertCount}件）。`,
       )
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '未達の出し直しに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('未達の出し直しに失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -402,7 +404,7 @@ export function KpiImportPage() {
         `承認前の取り込み「${log.file_name}」（${log.target_date}・${log.csv_team_name}）を置きかえとして取り消しました。`,
       )
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '取り込みの取り消しに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('取り込みの取り消しに失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -421,7 +423,7 @@ export function KpiImportPage() {
       const rows = await fetchEntriesSummaryForImportLog(log.id)
       setPreviewRows(rows)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '取り込み内容の読み込みに失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('取り込み内容の読み込みに失敗しました', err))
     } finally {
       setPreviewLoading(false)
     }
@@ -457,7 +459,7 @@ export function KpiImportPage() {
       await loadData()
       setSuccessMsg('名前の対応を追加しました。')
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '名前の対応の追加に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('名前の対応の追加に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -474,7 +476,7 @@ export function KpiImportPage() {
       await loadData()
       setSuccessMsg(`「${row.cti_name}」の有効期間の終わりを更新しました。`)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '有効期間の更新に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('有効期間の更新に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -509,7 +511,7 @@ export function KpiImportPage() {
       await loadData()
       setSuccessMsg('チーム名の対応を追加しました。')
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'チーム名の対応の追加に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('チーム名の対応の追加に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -526,7 +528,7 @@ export function KpiImportPage() {
       await loadData()
       setSuccessMsg(`「${row.csv_team_name}」の有効期間の終わりを更新しました。`)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '有効期間の更新に失敗しました。')
+      setErrorMsg(formatKpiErrorMessage('有効期間の更新に失敗しました', err))
     } finally {
       setBusy(false)
     }
@@ -564,11 +566,13 @@ export function KpiImportPage() {
     {
       key: 'target_date',
       header: '対象日',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => <DateText value={r.target_date} withWeekday />,
     },
     {
       key: 'csv_team_name',
       header: 'CSVチーム名（対応チーム）',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => (
         <div>
           <strong>{r.csv_team_name}</strong>
@@ -583,16 +587,19 @@ export function KpiImportPage() {
     {
       key: 'file_name',
       header: 'ファイル名',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => r.file_name,
     },
     {
       key: 'row_count',
       header: '人数',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => `${r.row_count}人`,
     },
     {
       key: 'status',
       header: '状態',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => {
         if (r.status === 'approved') {
           return <Tag tone="good">承認済み</Tag>
@@ -606,16 +613,19 @@ export function KpiImportPage() {
     {
       key: 'imported_by',
       header: '取り込んだ人',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => memberNameById.get(r.imported_by) ?? '－',
     },
     {
       key: 'approved_by',
       header: '承認した人',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => (r.approved_by ? (memberNameById.get(r.approved_by) ?? '－') : '－'),
     },
     {
       key: 'alert_count',
       header: '未達の計算',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => {
         if (r.status !== 'approved') return '－'
         if (r.alerts_created_at === null) {
@@ -627,8 +637,9 @@ export function KpiImportPage() {
     {
       key: 'actions',
       header: '操作',
+      className: 'kpi-import-nowrap-cell',
       render: (r) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <div className="kpi-import-row-actions">
           {(r.status === 'approved' ||
             (r.status === 'pending' && r.imported_by === viewerId)) && (
             <Button
@@ -955,17 +966,36 @@ export function KpiImportPage() {
                     </span>
                   </li>
                   <li className="kpi-import-check-item">
-                    <Tag tone={check.check5ExistingImport ? 'warn' : 'good'}>
-                      {check.check5ExistingImport ? '⑤ 既存の記録あり' : '⑤ 新規'}
-                    </Tag>
-                    <span>
-                      同じ日・同じチーム名の取り込みがもうあるか：
-                      {check.check5ExistingImport
-                        ? `すでに「${check.check5ExistingImport.file_name}」（状態：${
-                            check.check5ExistingImport.status === 'approved' ? '承認済み' : '承認前'
-                          }）があります。取り込む場合は前の記録を置きかえます`
-                        : '同じ日・同じチーム名の取り込みはまだありません'}
-                    </span>
+                    {importedLog ? (
+                      <>
+                        <Tag tone="good">⑤ この取り込みの記録</Tag>
+                        <span>
+                          同じ日・同じチーム名の取り込みがもうあるか：この取り込みの記録（
+                          {importedLog.status === 'approved'
+                            ? '承認済み'
+                            : importedLog.status === 'pending'
+                              ? '承認前'
+                              : '置きかえ済み'}
+                          ）
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Tag tone={check.check5ExistingImport ? 'warn' : 'good'}>
+                          {check.check5ExistingImport ? '⑤ 既存の記録あり' : '⑤ 新規'}
+                        </Tag>
+                        <span>
+                          同じ日・同じチーム名の取り込みがもうあるか：
+                          {check.check5ExistingImport
+                            ? `すでに「${check.check5ExistingImport.file_name}」（状態：${
+                                check.check5ExistingImport.status === 'approved'
+                                  ? '承認済み'
+                                  : '承認前'
+                              }）があります。取り込む場合は前の記録を置きかえます`
+                            : '同じ日・同じチーム名の取り込みはまだありません'}
+                        </span>
+                      </>
+                    )}
                   </li>
                 </ul>
               </div>
@@ -1150,9 +1180,15 @@ export function KpiImportPage() {
                 )}
 
                 {importedLog && importedLog.status === 'approved' && (
-                  <span style={{ fontWeight: 700, color: 'var(--good)' }}>
-                    承認済み（未達 {importedLog.alert_count ?? 0}件を記録済み）
-                  </span>
+                  importedLog.alerts_created_at === null || importedLog.alert_count === null ? (
+                    <span style={{ fontWeight: 700, color: 'var(--warn)' }}>
+                      承認済み（未達はまだ計算されていません。下の一覧の「未達を出し直す」で入れてください）
+                    </span>
+                  ) : (
+                    <span style={{ fontWeight: 700, color: 'var(--good)' }}>
+                      承認済み（未達 {importedLog.alert_count}件を記録済み）
+                    </span>
+                  )
                 )}
               </div>
             </div>
