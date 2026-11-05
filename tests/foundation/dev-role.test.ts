@@ -6,8 +6,8 @@ import {
 } from '../../fixtures/foundation/dev-role-plan.mjs';
 
 describe('テスト代表の役割の切り替え計画（dev-role-plan）', () => {
-  it('切り替え可能な5つの引数が定義されている', () => {
-    expect(DEV_ROLE_KEYS).toEqual(['ceo', 'leader', 'member', 'mgr', 'talk-owner']);
+  it('切り替え可能な6つの引数が定義されている', () => {
+    expect(DEV_ROLE_KEYS).toEqual(['ceo', 'leader', 'member', 'mgr', 'talk-owner', 'admin']);
     expect(DEV_ROLE_USAGE).toContain('npm run fixtures:dev-role');
   });
 
@@ -91,10 +91,30 @@ describe('テスト代表の役割の切り替え計画（dev-role-plan）', () 
     });
   });
 
-  it('引数なし・知らない引数（admin など）のときは null を返す', () => {
+  it('admin：役割は member、所属は架空チームB（拠点：架空拠点B、開始：2025-04-01）、権限は admin', () => {
+    expect(resolveDevRolePlan('admin')).toEqual({
+      key: 'admin',
+      label: '架空チームBのメンバー（管理者）',
+      role: 'member',
+      affiliation: {
+        teamName: '架空チームB',
+        base: '架空拠点B',
+        start_date: '2025-04-01',
+        end_date: null,
+      },
+      mgrAssignment: null,
+      permission: {
+        kind: 'admin',
+        granted_by: null,
+        revoked_by: null,
+        revoked_at: null,
+      },
+    });
+  });
+
+  it('引数なし・知らない引数のときは null を返す', () => {
     expect(resolveDevRolePlan(undefined)).toBeNull();
     expect(resolveDevRolePlan('')).toBeNull();
-    expect(resolveDevRolePlan('admin')).toBeNull();
     expect(resolveDevRolePlan('unknown')).toBeNull();
     expect(resolveDevRolePlan('__proto__')).toBeNull();
     expect(resolveDevRolePlan('toString')).toBeNull();

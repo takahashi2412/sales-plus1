@@ -1,0 +1,126 @@
+// 架空データ定義（部下メモ：plan_kpi-memo-common_v1）
+// 社員の実名・人事評価は含めず、すべて架空の名前と例だけにする
+
+export const FIXTURE_MEMO_MASTERS = [
+  // 部下メモのテーマ7つ（アポ・リスト・営業・管理・採用・姿勢・その他）
+  { key: 'theme_apo', kind: 'memo_theme', name: 'アポ', sort_order: 1 },
+  { key: 'theme_list', kind: 'memo_theme', name: 'リスト', sort_order: 2 },
+  { key: 'theme_sales', kind: 'memo_theme', name: '営業', sort_order: 3 },
+  { key: 'theme_mgmt', kind: 'memo_theme', name: '管理', sort_order: 4 },
+  { key: 'theme_adopt', kind: 'memo_theme', name: '採用', sort_order: 5 },
+  { key: 'theme_attitude', kind: 'memo_theme', name: '姿勢', sort_order: 6 },
+  { key: 'theme_other', kind: 'memo_theme', name: 'その他', sort_order: 7 },
+  // 部下メモの種類4つ（指摘・指導／ほめた／1on1・面談／様子の記録。並び順もこの順）
+  { key: 'kind_guidance', kind: 'memo_kind', name: '指摘・指導', sort_order: 1 },
+  { key: 'kind_praise', kind: 'memo_kind', name: 'ほめた', sort_order: 2 },
+  { key: 'kind_1on1', kind: 'memo_kind', name: '1on1・面談', sort_order: 3 },
+  { key: 'kind_observation', kind: 'memo_kind', name: '様子の記録', sort_order: 4 },
+];
+
+export const FIXTURE_SUBORDINATE_MEMOS = [
+  // 1. 送ったもの（次の確認日がこれから）
+  {
+    date: '2026-11-04',
+    writerMemberKey: 'leaderA',
+    themeKey: 'theme_apo',
+    kindKey: 'kind_praise',
+    noticed: '架空の気づき1：午前中の10時台に声のトーンが明るく、決裁者までスムーズに取次が通っていた',
+    guidance: '架空の指導1：良かった名乗りの間合いを午後もそのまま続けるよう伝えた',
+    next_check_on: '2026-11-11',
+    action_check: null,
+    result_check: null,
+    checked_on: null,
+    submitted_at: '2026-11-04T09:00:00Z',
+    targetMemberKeys: ['memberA'],
+  },
+  // 2. 書きかけ
+  {
+    date: '2026-11-05',
+    writerMemberKey: 'leaderA',
+    themeKey: 'theme_list',
+    kindKey: 'kind_guidance',
+    noticed: '架空の気づき2（書きかけ）：15時台の再コールリストの順番が整理しきれていない様子',
+    guidance: '',
+    next_check_on: null,
+    action_check: null,
+    result_check: null,
+    checked_on: null,
+    submitted_at: null,
+    targetMemberKeys: ['memberB'],
+  },
+  // 3. 次の確認日が過ぎて行動・結果が未記入のもの
+  {
+    date: '2026-10-20',
+    writerMemberKey: 'leaderA',
+    themeKey: 'theme_apo',
+    kindKey: 'kind_guidance',
+    noticed: '架空の気づき3：時間切りの前に説明が長くなり、途中で断られる場面が続いていた',
+    guidance: '架空の指導3：最初の用件は2文で切り上げ、2択の日時提示にすぐ入る形を確認した',
+    next_check_on: '2026-10-27',
+    action_check: null,
+    result_check: null,
+    checked_on: null,
+    submitted_at: '2026-10-20T09:30:00Z',
+    targetMemberKeys: ['memberA'],
+  },
+  // 4. 行動・結果を記録済みのもの
+  {
+    date: '2026-10-14',
+    writerMemberKey: 'leaderA',
+    themeKey: 'theme_adopt',
+    kindKey: 'kind_guidance',
+    noticed: '架空の気づき4：アポ取得時の先方予定の再確認が抜けて日程変更になっていた',
+    guidance: '架空の指導4：終話前に日時と参加者を復唱する手順を一緒に決めた',
+    next_check_on: '2026-10-21',
+    action_check: 'o',
+    result_check: 'o',
+    checked_on: '2026-10-21',
+    submitted_at: '2026-10-14T09:15:00Z',
+    targetMemberKeys: ['memberB'],
+  },
+  // 5. 対象者が同じチームの2人のもの
+  {
+    date: '2026-10-28',
+    writerMemberKey: 'leaderA',
+    themeKey: 'theme_list',
+    kindKey: 'kind_guidance',
+    noticed: '架空の気づき5：夕方の時間帯にかける業種の選び方が2人とも偏っていた',
+    guidance: '架空の指導5：16時以降は在席率の高い業種リストに切り替える手順を2人に共有した',
+    next_check_on: '2026-11-10',
+    action_check: null,
+    result_check: null,
+    checked_on: null,
+    submitted_at: '2026-10-28T09:20:00Z',
+    targetMemberKeys: ['memberA', 'memberB'],
+  },
+  // 6. リーダーとメンバーが一緒に対象のもの（MGR が書いた）
+  {
+    date: '2026-10-30',
+    writerMemberKey: 'mgrA',
+    themeKey: 'theme_mgmt',
+    kindKey: 'kind_1on1',
+    noticed: '架空の気づき6：チーム内での夕方の振り返り時間が日によって前後していた',
+    guidance: '架空の指導6：17時30分に5分間の進捗確認を固定で行う運用をリーダーとメンバーで確認した',
+    next_check_on: '2026-11-13',
+    action_check: null,
+    result_check: null,
+    checked_on: null,
+    submitted_at: '2026-10-30T10:00:00Z',
+    targetMemberKeys: ['leaderA', 'memberA'],
+  },
+  // 7. 代表が書いたもの（書いた人は土台の「テスト代表」。いなければ入れない）
+  {
+    date: '2026-11-01',
+    writerMemberKey: '__TEST_CEO__',
+    themeKey: 'theme_attitude',
+    kindKey: 'kind_observation',
+    noticed: '架空の気づき7（代表記入）：朝礼での発言が具体的になり、周囲への声かけが増えていた',
+    guidance: '架空の指導7：チームの雰囲気づくりへの貢献をねぎらった',
+    next_check_on: null,
+    action_check: null,
+    result_check: null,
+    checked_on: null,
+    submitted_at: '2026-11-01T08:00:00Z',
+    targetMemberKeys: ['memberC'],
+  },
+];

@@ -1,10 +1,4 @@
-import type {
-  MemberAffiliationRow,
-  MemberRole,
-  MemberRow,
-  MgrAssignmentRow,
-  PermissionRow,
-} from '../../../foundation/types';
+export type { ViewerContext, ViewerSourceRows } from '../../../foundation/viewer';
 
 export type MasterKind = 'scene' | 'industry' | 'list_type';
 
@@ -158,22 +152,6 @@ export const TALK_STATUS_LABELS: Record<TalkStatus, string> = {
   trial: '試行中',
   standard: '標準',
 };
-
-export interface ViewerContext {
-  memberId: string;
-  role: MemberRole;
-  teamId: string | null;
-  mgrTeamIds: string[];
-  isTalkOwner: boolean;
-  isCeo: boolean;
-}
-
-export interface ViewerSourceRows {
-  member: MemberRow | null;
-  affiliations: MemberAffiliationRow[];
-  mgrAssignments: MgrAssignmentRow[];
-  permissions: PermissionRow[];
-}
 
 export interface WritableMember {
   id: string;

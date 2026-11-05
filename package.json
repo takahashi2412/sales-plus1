@@ -16,7 +16,13 @@
     "fixtures:cleanup-guard": "node --env-file=.env fixtures/foundation/cleanup-guard.mjs",
     "fixtures:roleplay:load": "node --env-file=.env fixtures/roleplay/load.mjs",
     "fixtures:roleplay:remove": "node --env-file=.env fixtures/roleplay/remove.mjs",
-    "fixtures:roleplay:cleanup-guard": "node --env-file=.env fixtures/roleplay/cleanup-guard.mjs"
+    "fixtures:roleplay:cleanup-guard": "node --env-file=.env fixtures/roleplay/cleanup-guard.mjs",
+    "fixtures:kpi:load": "node --env-file=.env fixtures/kpi/load.mjs",
+    "fixtures:kpi:remove": "node --env-file=.env fixtures/kpi/remove.mjs",
+    "fixtures:kpi:cleanup-guard": "node --env-file=.env fixtures/kpi/cleanup-guard.mjs",
+    "fixtures:memo:load": "node --env-file=.env fixtures/memo/load.mjs",
+    "fixtures:memo:remove": "node --env-file=.env fixtures/memo/remove.mjs",
+    "fixtures:memo:cleanup-guard": "node --env-file=.env fixtures/memo/cleanup-guard.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
