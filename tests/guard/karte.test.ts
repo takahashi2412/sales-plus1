@@ -277,6 +277,10 @@ afterAll(async () => {
   warnIf('roleplay_themes', (await admin.from('roleplay_themes').delete().like('name', `${RUN}%`)).error);
   warnIf('masters', (await admin.from('masters').delete().like('name', `${RUN}%`)).error);
   if (memberIds.length) warnIf('members', (await admin.from('members').delete().in('id', memberIds)).error);
+  // テストで足せてしまった名簿の行があれば、それも消す（足せないことを確かめるテストの分）
+  const { data: extraMembers } = await admin.from('members').select('id').like('name', `${RUN}%`);
+  for (const m of extraMembers ?? []) auditRowIds.push(String(m.id));
+  warnIf('members（テストで足した分）', (await admin.from('members').delete().like('name', `${RUN}%`)).error);
   // テストで足したチームも含めて消す
   const { data: teams } = await admin.from('teams').select('id').like('name', `${RUN}%`);
   for (const t of teams ?? []) auditRowIds.push(String(t.id));
@@ -397,7 +401,7 @@ describe('名簿・チーム・権限を直せるのは管理者の権限があ�
     expect(await adminRows('permissions', (q) => q.eq('member_id', M('memberA1')))).toHaveLength(0);
   });
 
-  it('管理者の権限がある人は、チームを足し、名簿を直し、権限を与えて外せる。どれも監査ログに残る', async () => {
+  it('管理者の権限がある人は、チームを足し、名簿を直し（代表の役割は除く）、権限を与えて外せる。どれも監査ログに残る', async () => {
     // ここから leaderA に管理者の権限を与える（このあとのテストは leaderA が管理者として動く）
     ids.permLeaderA = await insertOne('permissions', { member_id: M('leaderA'), kind: 'admin', granted_by: M('ceo'), granted_at: new Date().toISOString() });
     auditRowIds.push(ids.permLeaderA);
@@ -412,12 +416,27 @@ describe('名簿・チーム・権限を直せるのは管理者の権限があ�
     expect(memErr).toBeNull();
     expect((await adminRows('members', (q) => q.eq('id', M('memberA1'))))[0].goes_to_sales).toBe(true);
 
+    // 役割を「代表」にする・「代表」から外すのは代表だけ（2026-11-07 本人の選択）。管理者でもできない
+    await C('leaderA').from('members').update({ role: 'ceo' }).eq('id', M('memberA1'));
+    expect((await adminRows('members', (q) => q.eq('id', M('memberA1'))))[0].role).toBe('member');
+    await C('leaderA').from('members').update({ role: 'leader' }).eq('id', M('ceo'));
+    expect((await adminRows('members', (q) => q.eq('id', M('ceo'))))[0].role).toBe('ceo');
+    await C('leaderA').from('members').insert({ email: `${RUN}-newceo@example.test`, name: `${RUN}-newceo`, role: 'ceo', goes_to_sales: false, hired_on: '2025-07-01' });
+    expect(await adminRows('members', (q) => q.eq('name', `${RUN}-newceo`))).toHaveLength(0);
+
     const { error: grantErr } = await C('leaderA').from('permissions').insert({ member_id: M('memberA1'), kind: 'talk_owner', granted_by: M('leaderA') });
     expect(grantErr).toBeNull();
     const granted = (await adminRows('permissions', (q) => q.eq('member_id', M('memberA1')).eq('kind', 'talk_owner')))[0];
     expect(granted).toBeTruthy();
     expect(granted.revoked_at).toBeNull();
     auditRowIds.push(String(granted.id));
+
+    // 与えた権限の種類や人は、あとから書きかえられない（外すことだけができる。最後の管理者の決まりを回り道で破らせないため）
+    await C('leaderA').from('permissions').update({ kind: 'admin' }).eq('id', granted.id);
+    await C('leaderA').from('permissions').update({ member_id: M('leaderB') }).eq('id', granted.id);
+    const unchanged = (await adminRows('permissions', (q) => q.eq('id', granted.id)))[0];
+    expect(unchanged.kind).toBe('talk_owner');
+    expect(unchanged.member_id).toBe(M('memberA1'));
 
     const { error: revokeErr } = await C('leaderA')
       .from('permissions')

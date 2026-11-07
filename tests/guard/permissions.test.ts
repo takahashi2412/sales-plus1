@@ -204,7 +204,12 @@ afterAll(async () => {
   if (!admin) return;
   if (outsider.authId) warnIf('名簿にない人', (await admin.auth.admin.deleteUser(outsider.authId)).error);
   const ids = PEOPLE.map((p) => p.memberId).filter(Boolean) as string[];
+  // カルテ第1版①から、名簿・所属・担当・チームの変更も監査ログに残る。この回の分の id を控え、最後に消す
+  const rosterIdsForAudit: string[] = [...ids, teamA, teamB].filter(Boolean);
   if (ids.length) {
+    const { data: runAffs } = await admin.from('member_affiliations').select('id').in('member_id', ids);
+    const { data: runAssigns } = await admin.from('mgr_assignments').select('id').in('mgr_member_id', ids);
+    rosterIdsForAudit.push(...(runAffs ?? []).map((a) => String(a.id)), ...(runAssigns ?? []).map((a) => String(a.id)));
     // ロープレ①で権限の変更が監査ログ（audit_logs）に残るようになる。この回の権限の id を控え、最後に消す
     const { data: runPerms } = await admin.from('permissions').select('id').in('member_id', ids);
     permIdsForAudit.push(...(runPerms ?? []).map((p) => String(p.id)));
@@ -218,6 +223,10 @@ afterAll(async () => {
     // 監査ログの表がまだない（ロープレ①の前）ときは、何もしない
     const { error } = await admin.from('audit_logs').delete().eq('table_name', 'permissions').in('row_id', permIdsForAudit);
     if (error && !/audit_logs/.test(error.message)) warnIf('audit_logs', error);
+  }
+  if (rosterIdsForAudit.length) {
+    const { error } = await admin.from('audit_logs').delete().in('table_name', ['members', 'member_affiliations', 'mgr_assignments', 'teams']).in('row_id', rosterIdsForAudit);
+    if (error && !/audit_logs/.test(error.message)) warnIf('audit_logs（名簿）', error);
   }
   for (const p of PEOPLE) {
     if (p.authId) warnIf(`利用者 ${p.key}`, (await admin.auth.admin.deleteUser(p.authId)).error);

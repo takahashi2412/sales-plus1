@@ -303,6 +303,10 @@ afterAll(async () => {
   if (memberIds.length) {
     const { data: runPerms } = await admin.from('permissions').select('id').in('member_id', memberIds);
     for (const p of runPerms ?? []) auditRowIds.push(String(p.id));
+    // カルテ第1版①から、名簿・所属・担当・チームの変更も監査ログに残る
+    const { data: runAffs } = await admin.from('member_affiliations').select('id').in('member_id', memberIds);
+    const { data: runAssigns } = await admin.from('mgr_assignments').select('id').in('mgr_member_id', memberIds);
+    auditRowIds.push(...memberIds, ...teams, ...(runAffs ?? []).map((a) => String(a.id)), ...(runAssigns ?? []).map((a) => String(a.id)));
     warnIf('permissions', (await admin.from('permissions').delete().in('member_id', memberIds)).error);
     warnIf('mgr_assignments', (await admin.from('mgr_assignments').delete().in('mgr_member_id', memberIds)).error);
     warnIf('member_affiliations', (await admin.from('member_affiliations').delete().in('member_id', memberIds)).error);

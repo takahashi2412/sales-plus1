@@ -237,6 +237,10 @@ afterAll(async () => {
   if (memberIds.length) {
     const { data: runPerms } = await admin.from('permissions').select('id').in('member_id', memberIds);
     for (const p of runPerms ?? []) auditRowIds.push(String(p.id));
+    // カルテ第1版①から、名簿・所属・担当・チームの変更も監査ログに残る
+    const { data: runAffs } = await admin.from('member_affiliations').select('id').in('member_id', memberIds);
+    const { data: runAssigns } = await admin.from('mgr_assignments').select('id').in('mgr_member_id', memberIds);
+    auditRowIds.push(...memberIds, ...teams, ...(runAffs ?? []).map((a) => String(a.id)), ...(runAssigns ?? []).map((a) => String(a.id)));
   }
   warnIf('masters', (await admin.from('masters').delete().like('name', `${RUN}%`)).error);
   warnIf('settings', (await admin.from('settings').delete().like('key', `${RUN}%`)).error);
@@ -282,9 +286,10 @@ describe('読める範囲', () => {
     }
   });
 
-  it('退職した人の名簿の行は消えず、代表は読める（リーダーからは、所属が閉じたので見えない）', async () => {
+  it('退職した人の名簿の行は消えず、代表と、最後にいたチームの今のリーダーは読める（2026-11-07 本人の選択。ほかのチームの人は読めない。leaderB は管理者なので名簿は全員読める）', async () => {
     expect(await rowsOf(P('ceo').client!, 'members', 'id', [P('retired').memberId!])).toHaveLength(1);
-    expect(await rowsOf(P('leaderA').client!, 'members', 'id', [P('retired').memberId!])).toHaveLength(0);
+    expect(await rowsOf(P('leaderA').client!, 'members', 'id', [P('retired').memberId!])).toHaveLength(1);
+    expect(await rowsOf(P('memberB1').client!, 'members', 'id', [P('retired').memberId!])).toHaveLength(0);
   });
 
   it('名簿にいる人は、一覧・テーマ一覧を読める（設定値も）', async () => {
