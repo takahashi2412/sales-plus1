@@ -97,7 +97,7 @@ function buildTargetHistoryDiffs(row: KpiTargetRow | null): HistoryDiffEntry[] {
         if (bNum !== null && aNum !== null) {
           const diff = Math.round((aNum - bNum) * 100) / 100
           if (diff > 0) {
-            trendText = `（▲+${diff}${meta.unit}）`
+            trendText = `（▲${diff}${meta.unit}）`
           } else if (diff < 0) {
             trendText = `（▼${Math.abs(diff)}${meta.unit}）`
           }
@@ -193,6 +193,7 @@ export function KpiTargetsPage() {
           screenData.selfMember.goes_to_sales,
           selectedMonth,
           screenData.holidaysSetting,
+          screenData.workdaysSetting,
         ),
       )
     }
@@ -447,7 +448,7 @@ export function KpiTargetsPage() {
             ですが、行動の目標（総×オ率×ア/オ）から出る月次のアポ数は{' '}
             <strong>{formatDecimal1(selfCalculated.actionMonthlyApo)}件</strong> です（差：
             {selfCalculated.apoDiff >= 0
-              ? `▲+${formatDecimal1(selfCalculated.apoDiff)}件`
+              ? `▲${formatDecimal1(selfCalculated.apoDiff)}件`
               : `▼${formatDecimal1(Math.abs(selfCalculated.apoDiff))}件`}
             ）。稼働日・コール時間・オ率・ア/オを見直すか確認してください。
           </NoticeBox>

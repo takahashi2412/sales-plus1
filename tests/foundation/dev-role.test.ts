@@ -6,9 +6,18 @@ import {
 } from '../../fixtures/foundation/dev-role-plan.mjs';
 
 describe('テスト代表の役割の切り替え計画（dev-role-plan）', () => {
-  it('切り替え可能な6つの引数が定義されている', () => {
-    expect(DEV_ROLE_KEYS).toEqual(['ceo', 'leader', 'member', 'mgr', 'talk-owner', 'admin']);
+  it('切り替え可能な7つの引数が定義されている', () => {
+    expect(DEV_ROLE_KEYS).toEqual([
+      'ceo',
+      'leader',
+      'member',
+      'mgr',
+      'talk-owner',
+      'admin',
+      'leader-admin',
+    ]);
     expect(DEV_ROLE_USAGE).toContain('npm run fixtures:dev-role');
+    expect(DEV_ROLE_USAGE).toContain('leader-admin');
   });
 
   it('ceo：役割は ceo、所属・MGR担当・権限はすべてなし', () => {
@@ -99,6 +108,27 @@ describe('テスト代表の役割の切り替え計画（dev-role-plan）', () 
       affiliation: {
         teamName: '架空チームB',
         base: '架空拠点B',
+        start_date: '2025-04-01',
+        end_date: null,
+      },
+      mgrAssignment: null,
+      permission: {
+        kind: 'admin',
+        granted_by: null,
+        revoked_by: null,
+        revoked_at: null,
+      },
+    });
+  });
+
+  it('leader-admin：役割は leader、所属は架空チームA（拠点：架空拠点A、開始：2025-04-01）、権限は admin', () => {
+    expect(resolveDevRolePlan('leader-admin')).toEqual({
+      key: 'leader-admin',
+      label: '架空チームAのリーダー（管理者）',
+      role: 'leader',
+      affiliation: {
+        teamName: '架空チームA',
+        base: '架空拠点A',
         start_date: '2025-04-01',
         end_date: null,
       },

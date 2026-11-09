@@ -66,7 +66,12 @@ export function DirectoryView({ selfEntry, entries, onSignOut }: DirectoryViewPr
       key: 'name',
       header: '名前',
       className: 'col-name',
-      render: (entry) => entry.name,
+      render: (entry) => (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <span>{entry.name}</span>
+          {entry.isRetired && <Tag tone="plain">退職</Tag>}
+        </span>
+      ),
     },
     {
       key: 'role',

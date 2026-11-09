@@ -242,7 +242,7 @@ export function KpiAlertsPage() {
           <span className="kpi-alerts-diff-text">
             {diff < 0
               ? `▼${formatDecimal1(Math.abs(diff))}${unit}`
-              : `▲+${formatDecimal1(diff)}${unit}`}
+              : `▲${formatDecimal1(diff)}${unit}`}
           </span>
         )
       },

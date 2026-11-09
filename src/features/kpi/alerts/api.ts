@@ -28,6 +28,8 @@ export interface KpiAlertsScreenData {
   alerts: EnrichedAlertRow[]
   teams: TeamRow[]
   availableDates: string[]
+  holidaysSetting: string[] | null
+  workdaysSetting: string[] | null
 }
 
 export async function fetchKpiAlertsScreenData(): Promise<KpiAlertsScreenData> {
@@ -40,11 +42,13 @@ export async function fetchKpiAlertsScreenData(): Promise<KpiAlertsScreenData> {
       alerts: [],
       teams: [],
       availableDates: [],
+      holidaysSetting: null,
+      workdaysSetting: null,
     }
   }
 
   // alerts はデータベースのRLS（is_approved_import）により承認済みの取り込みの分だけが返る
-  const [alertsRes, membersRes, teamsRes, affRes] = await Promise.all([
+  const [alertsRes, membersRes, teamsRes, affRes, settingsRes] = await Promise.all([
     supabase
       .from('alerts')
       .select('*')
@@ -53,17 +57,35 @@ export async function fetchKpiAlertsScreenData(): Promise<KpiAlertsScreenData> {
     supabase.from('members').select('*'),
     supabase.from('teams').select('*').order('name', { ascending: true }),
     supabase.from('member_affiliations').select('*'),
+    supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['kpi_holidays', 'kpi_workdays']),
   ])
 
   if (alertsRes.error) throw alertsRes.error
   if (membersRes.error) throw membersRes.error
   if (teamsRes.error) throw teamsRes.error
   if (affRes.error) throw affRes.error
+  if (settingsRes.error) throw settingsRes.error
 
   const rawAlerts = (alertsRes.data ?? []) as AlertRow[]
   const members = (membersRes.data ?? []) as MemberRow[]
   const teams = (teamsRes.data ?? []) as TeamRow[]
   const affiliations = (affRes.data ?? []) as MemberAffiliationRow[]
+
+  const settingRows = (settingsRes.data ?? []) as Array<{ key: string; value: unknown }>
+  const holidaysRow = settingRows.find((r) => r.key === 'kpi_holidays')
+  const workdaysRow = settingRows.find((r) => r.key === 'kpi_workdays')
+
+  const holidaysSetting =
+    holidaysRow && Array.isArray(holidaysRow.value)
+      ? holidaysRow.value.filter((v): v is string => typeof v === 'string')
+      : null
+  const workdaysSetting =
+    workdaysRow && Array.isArray(workdaysRow.value)
+      ? workdaysRow.value.filter((v): v is string => typeof v === 'string')
+      : null
 
   const memberById = new Map<string, MemberRow>(members.map((m) => [m.id, m]))
   const teamNameById = new Map<string, string>(teams.map((t) => [t.id, t.name]))
@@ -103,6 +125,8 @@ export async function fetchKpiAlertsScreenData(): Promise<KpiAlertsScreenData> {
     alerts: enriched,
     teams,
     availableDates,
+    holidaysSetting,
+    workdaysSetting,
   }
 }
 
