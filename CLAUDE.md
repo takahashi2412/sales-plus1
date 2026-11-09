@@ -51,6 +51,7 @@
   - `npm run fixtures:roleplay:load`／`fixtures:roleplay:remove`／`fixtures:roleplay:cleanup-guard`：ロープレの架空データを入れる・消す、守りのテストの残りを片づける。入れるときは土台が先、消すときはロープレが先（ロープレの表が名簿を参照しているため）
   - `npm run fixtures:kpi:load`／`fixtures:kpi:remove`／`fixtures:kpi:cleanup-guard`、`npm run fixtures:memo:load`／`fixtures:memo:remove`／`fixtures:memo:cleanup-guard`：KPI・部下メモの架空データを入れる・消す、守りのテストの残りを片づける。入れるときは土台が先、消すときは KPI・部下メモが先（土台の `fixtures:remove`・`fixtures:remove-ceo` より前）
   - `npm run fixtures:karte:load`／`fixtures:karte:remove`／`fixtures:karte:cleanup-guard`：カルテ第1版の架空データ（2か月分の KPI と目標・架空退職メンバー・過去の形の記録・設定値 `karte_call_hour_threshold`・`kpi_workdays`）を入れる・消す、守りのテストの残りを片づける。入れる順は 土台 → ロープレ → KPI → 部下メモ → カルテ、消すときはカルテが先
+  - `npm run fixtures:legacy:load`／`fixtures:legacy:remove`：架空の過去の記録（`fixtures/legacy/clean`）を入れる・消す（つなぐ先のホスト名は .env から読む）。入れるのは土台と部下メモのあと、消すのは部下メモ・土台より前。本物の過去の記録は `npm run legacy:preview`／`legacy:import`／`legacy:remove`（`--names`・`--dir`・`--out`、取り込みと消すには `--expect-host 〈ホスト名〉 --yes`）で、⑤本番の準備で本番用の環境だけに入れる。途中で失敗したら、消してから入れ直す
   - `npm run fixtures:dev-role -- 〈leader／member／mgr／talk-owner／admin／leader-admin／ceo〉`：本人の Microsoft 365 につながった「テスト代表」の役割と所属を、架空チームAのリーダー・メンバー・担当MGR、架空チームBのトーク責任者、架空チームBのメンバーで管理者の権限がある人、架空チームAのリーダーで管理者の権限がある人、代表に切り替える（画面を読み込み直すと反映。終わったら ceo に戻す。並列の作業中は Antigravity に流させない）
 - このPCには Docker がないので、Supabase の手元の道具（`supabase start` など）は使わない。表と権限の直しは、新しいマイグレーションのファイルで足す
 
