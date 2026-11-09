@@ -50,7 +50,8 @@
   - `npm run fixtures:load`／`fixtures:remove`／`fixtures:remove-ceo`／`fixtures:cleanup-guard`：架空の名簿と「テスト代表」を入れる・消す、守りのテストの残りを片づける
   - `npm run fixtures:roleplay:load`／`fixtures:roleplay:remove`／`fixtures:roleplay:cleanup-guard`：ロープレの架空データを入れる・消す、守りのテストの残りを片づける。入れるときは土台が先、消すときはロープレが先（ロープレの表が名簿を参照しているため）
   - `npm run fixtures:kpi:load`／`fixtures:kpi:remove`／`fixtures:kpi:cleanup-guard`、`npm run fixtures:memo:load`／`fixtures:memo:remove`／`fixtures:memo:cleanup-guard`：KPI・部下メモの架空データを入れる・消す、守りのテストの残りを片づける。入れるときは土台が先、消すときは KPI・部下メモが先（土台の `fixtures:remove`・`fixtures:remove-ceo` より前）
-  - `npm run fixtures:dev-role -- 〈leader／member／mgr／talk-owner／admin／ceo〉`：本人の Microsoft 365 につながった「テスト代表」の役割と所属を、架空チームAのリーダー・メンバー・担当MGR、架空チームBのトーク責任者、架空チームBのメンバーで管理者の権限がある人、代表に切り替える（画面を読み込み直すと反映。終わったら ceo に戻す。並列の作業中は Antigravity に流させない）
+  - `npm run fixtures:karte:load`／`fixtures:karte:remove`／`fixtures:karte:cleanup-guard`：カルテ第1版の架空データ（2か月分の KPI と目標・架空退職メンバー・過去の形の記録・設定値 `karte_call_hour_threshold`・`kpi_workdays`）を入れる・消す、守りのテストの残りを片づける。入れる順は 土台 → ロープレ → KPI → 部下メモ → カルテ、消すときはカルテが先
+  - `npm run fixtures:dev-role -- 〈leader／member／mgr／talk-owner／admin／leader-admin／ceo〉`：本人の Microsoft 365 につながった「テスト代表」の役割と所属を、架空チームAのリーダー・メンバー・担当MGR、架空チームBのトーク責任者、架空チームBのメンバーで管理者の権限がある人、架空チームAのリーダーで管理者の権限がある人、代表に切り替える（画面を読み込み直すと反映。終わったら ceo に戻す。並列の作業中は Antigravity に流させない）
 - このPCには Docker がないので、Supabase の手元の道具（`supabase start` など）は使わない。表と権限の直しは、新しいマイグレーションのファイルで足す
 
 ## 守ること
