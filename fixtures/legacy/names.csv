@@ -1,0 +1,12 @@
+元の名前,上席か対象か,名簿のメール,備考
+リーダーA,上席,fixture-leader-a@example.test,架空チームAリーダー
+リーダーB,上席,fixture-leader-b@example.test,架空チームBリーダー
+MGR_A,上席,fixture-mgr-a@example.test,架空MGR_A
+架空イトウ,上席,fixture-leader-a@example.test,同姓の別人を上席ではリーダーAに引き当て
+メンバーA,対象,fixture-member-a@example.test,架空メンバーA（通常表記）
+メンA,対象,fixture-member-a@example.test,架空メンバーA（略称表記）
+メンバーB,対象,fixture-member-b@example.test,架空メンバーB
+架空イトウ,対象,fixture-member-b@example.test,同姓の別人を対象ではメンバーBに引き当て
+メンバーC,対象,fixture-member-c@example.test,架空メンバーC
+リーダーA,対象,fixture-leader-a@example.test,上席がリーダーAを対象に指導した場合
+リーダーB,対象,fixture-leader-b@example.test,上席がリーダーBを対象に指導した場合

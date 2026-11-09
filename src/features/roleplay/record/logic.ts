@@ -81,7 +81,8 @@ export function getCurrentJstTimeSlot(now: Date = new Date()): string {
 /**
  * 時間帯の文字を数値に変える（'9' が '10' より前になるようにする）
  */
-export function parseTimeSlotNumber(timeSlot: string): number {
+export function parseTimeSlotNumber(timeSlot: string | null | undefined): number {
+  if (!timeSlot || !String(timeSlot).trim()) return 999;
   const num = Number(String(timeSlot).trim());
   return Number.isFinite(num) ? num : 999;
 }
@@ -626,4 +627,36 @@ export function buildThemeNoticesSummary(
     longPracticingAlerts,
     overMinutesRoleplays,
   };
+}
+
+
+export function canModifyRoleplay(row: Pick<RoleplayRow, 'is_legacy'>): boolean {
+  return !row.is_legacy;
+}
+
+export function formatRoleplayTimeSlotDisplay(timeSlot: string | null | undefined): string {
+  const s = timeSlot ? String(timeSlot).trim() : '';
+  return s ? `${s}時台` : '－';
+}
+
+export function formatRoleplayThemeDisplay(
+  row: Pick<RoleplayRow, 'theme_id' | 'is_legacy'>,
+  themeMap: ReadonlyMap<string, RoleplayThemeRow>,
+): string {
+  if (row.theme_id) {
+    return (
+      themeMap.get(row.theme_id)?.name ??
+      (row.is_legacy ? '（過去の記録：なし）' : '（テーマ不明）')
+    );
+  }
+  return row.is_legacy ? '（過去の記録：なし）' : '（テーマ不明）';
+}
+
+export function formatRoleplayPassResultDisplay(
+  row: Pick<RoleplayRow, 'pass_result' | 'is_legacy'>,
+): string {
+  if (row.pass_result) {
+    return row.pass_result === 'o' ? '○' : row.pass_result === 'd' ? '△' : '×';
+  }
+  return row.is_legacy ? '（過去の記録：なし）' : '－';
 }

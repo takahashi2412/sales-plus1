@@ -306,6 +306,11 @@ export function RoleplaySeminarPage() {
       render: (row) => (
         <div className="rp-seminar-meta-stack">
           <strong>{row.theme}</strong>
+          {row.is_legacy && (
+            <div>
+              <Tag tone="warn">過去の記録（見るだけ）</Tag>
+            </div>
+          )}
           <span className="rp-seminar-meta-sub">
             講師：{row.lecturer}（記録者：{formatSeminarMemberName(row.created_by, memberNameMap)}）
           </span>
@@ -328,7 +333,7 @@ export function RoleplaySeminarPage() {
         const allRows = seminarMembersBySeminarMap.get(row.id) ?? [];
         const activeRows = allRows.filter((r) => r.removed_at === null);
         const activeIdSet = new Set(activeRows.map((r) => r.member_id));
-        const isCreator = viewer ? canEditSeminar(viewer, row.created_by) : false;
+        const isCreator = viewer ? canEditSeminar(viewer, row.created_by, Boolean(row.is_legacy)) : false;
 
         const addableCandidates = candidateMembers.filter(
           (m) => !activeIdSet.has(m.id),
@@ -408,7 +413,10 @@ export function RoleplaySeminarPage() {
       header: '操作',
       className: 'rp-seminar-col-actions',
       render: (row) => {
-        if (!viewer || !canEditSeminar(viewer, row.created_by)) {
+        if (row.is_legacy) {
+          return <span className="rp-seminar-meta-sub">過去の記録（見るだけ）</span>;
+        }
+        if (!viewer || !canEditSeminar(viewer, row.created_by, Boolean(row.is_legacy))) {
           return '－';
         }
         return (

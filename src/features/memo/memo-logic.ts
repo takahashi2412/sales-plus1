@@ -110,7 +110,9 @@ export function formatMemoCheckLabel(value: MemoCheckValue | null | undefined): 
 export function formatUpdatedAfterSubmitLabel(
   submittedAt: string | null | undefined,
   updatedAt: string | null | undefined,
+  isLegacy = false,
 ): string | null {
+  if (isLegacy) return null;
   if (!submittedAt || !updatedAt) return null;
   const subTime = Date.parse(submittedAt);
   const updTime = Date.parse(updatedAt);
@@ -242,6 +244,7 @@ export function pickPendingCheckMemos(
   return memos
     .filter(
       (m) =>
+        !m.is_legacy &&
         m.created_by === viewerMemberId &&
         m.submitted_at !== null &&
         m.hidden_at === null &&
@@ -266,6 +269,7 @@ export function pickMyDraftMemos(
   return memos
     .filter(
       (m) =>
+        !m.is_legacy &&
         m.created_by === viewerMemberId &&
         m.submitted_at === null &&
         m.hidden_at === null,
@@ -707,4 +711,30 @@ export async function syncMemoTargets(
       throw new Error('この操作はできません');
     }
   }
+}
+
+
+/**
+ * メモを編集・見えなくできるか判定する（過去の記録 is_legacy = true は自分が created_by でも不可）
+ */
+export function canModifyMemo(
+  viewerMemberId: string,
+  memo: Pick<SubordinateMemoRow, 'created_by' | 'is_legacy'>,
+): boolean {
+  if (memo.is_legacy) return false;
+  return memo.created_by === viewerMemberId;
+}
+
+/**
+ * メモのテーマ・種類の表示文言（過去の記録で空のときは「（過去の記録：なし）」、今の記録で空のときは「－」）
+ */
+export function formatMemoMasterDisplay(
+  masterId: string | null,
+  isLegacy: boolean,
+  masterNameMap: ReadonlyMap<string, string>,
+): string {
+  if (masterId) {
+    return masterNameMap.get(masterId) ?? (isLegacy ? '（過去の記録：なし）' : '－');
+  }
+  return isLegacy ? '（過去の記録：なし）' : '－';
 }

@@ -8,6 +8,8 @@ import type {
 import type { ViewerContext } from '../../src/foundation/viewer';
 import {
   buildReadableMemberMap,
+  canModifyMemo,
+  formatMemoMasterDisplay,
   createSequentialTaskQueue,
   filterAndSortSubmittedMemos,
   filterSelectableTargetsBySelected,
@@ -666,5 +668,52 @@ describe('一覧の並び順・絞り込み・表示補助（filterAndSortSubmit
     expect(draftId).toBe('draft-created-1');
     // member-a1 が二重に insert されず、1回ずつだけ insert されていること
     expect(insertedMembersLog).toEqual(['member-a1', 'member-a2']);
+  });
+});
+
+
+describe('過去の記録（is_legacy = true）の編集不可判定と空欄表示（部下メモ）', () => {
+  it('is_legacy = true のメモは自分が created_by でも編集不可になり、確認待ち・書きかけから除かれ、空欄が「（過去の記録：なし）」と出る', () => {
+    const legacyMemo = makeMemo({
+      id: 'memo-legacy',
+      created_by: 'leader-a',
+      theme_id: null,
+      kind_id: null,
+      next_check_on: '2026-10-01',
+      action_check: null,
+      is_legacy: true,
+    });
+    const currentMemo = makeMemo({
+      id: 'memo-current',
+      created_by: 'leader-a',
+      is_legacy: false,
+    });
+
+    expect(canModifyMemo('leader-a', legacyMemo)).toBe(false);
+    expect(canModifyMemo('leader-a', currentMemo)).toBe(true);
+
+    // 確認待ち一覧に過去の記録が出ないこと
+    expect(pickPendingCheckMemos([legacyMemo], 'leader-a', '2026-11-05')).toEqual([]);
+
+    const masterMap = new Map<string, string>([['theme-apo', 'アポ']]);
+    expect(formatMemoMasterDisplay(null, true, masterMap)).toBe('（過去の記録：なし）');
+    expect(formatMemoMasterDisplay(null, false, masterMap)).toBe('－');
+    expect(formatMemoMasterDisplay('theme-apo', true, masterMap)).toBe('アポ');
+
+    // 過去の記録（is_legacy = true）では、submitted_at と updated_at が離れていても「〇月〇日に直した」を出さない
+    expect(
+      formatUpdatedAfterSubmitLabel(
+        '2025-04-10T00:00:00+09:00',
+        '2026-11-09T12:00:00Z',
+        true,
+      ),
+    ).toBeNull();
+    expect(
+      formatUpdatedAfterSubmitLabel(
+        '2026-11-04T09:00:00Z',
+        '2026-11-05T06:00:00Z',
+        false,
+      ),
+    ).toBe('11月5日に直した');
   });
 });

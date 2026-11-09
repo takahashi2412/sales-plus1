@@ -25,7 +25,12 @@
     "fixtures:memo:cleanup-guard": "node --env-file=.env fixtures/memo/cleanup-guard.mjs",
     "fixtures:karte:load": "node --env-file=.env fixtures/karte/load.mjs",
     "fixtures:karte:remove": "node --env-file=.env fixtures/karte/remove.mjs",
-    "fixtures:karte:cleanup-guard": "node --env-file=.env fixtures/karte/cleanup-guard.mjs"
+    "fixtures:karte:cleanup-guard": "node --env-file=.env fixtures/karte/cleanup-guard.mjs",
+    "legacy:preview": "node --env-file=.env scripts/legacy-import/cli.mjs preview",
+    "legacy:import": "node --env-file=.env scripts/legacy-import/cli.mjs import",
+    "legacy:remove": "node --env-file=.env scripts/legacy-import/cli.mjs remove",
+    "fixtures:legacy:load": "node --env-file=.env scripts/legacy-import/fixtures-runner.mjs load",
+    "fixtures:legacy:remove": "node --env-file=.env scripts/legacy-import/fixtures-runner.mjs remove"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

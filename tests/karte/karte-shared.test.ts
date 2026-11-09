@@ -802,7 +802,7 @@ describe('karte shared calculations', () => {
         sheet: '旧ロープレ記録',
         row: 12,
       })
-      expect(timeline[2].title).toContain('テーマ未設定')
+      expect(timeline[2].title).toContain('（過去の記録：なし）'); expect(timeline[0].subtitle).toBe('分類未設定')
     })
 
     it('アドレス（#/karte?member=...）の読み書き・設定値の欠落検知・DBエラー文言が正しく動く', () => {
@@ -967,3 +967,104 @@ describe('karte shared calculations', () => {
     })
   })
 })
+
+
+describe('カルテの出来事の並び：過去の部下メモと過去のロープレの空欄表示', () => {
+  it('is_legacy = true の部下メモとロープレで空のテーマ・種類が「（過去の記録：なし）」になり、今の記録では「テーマ未設定」「分類未設定」のままになる', () => {
+    const items = buildKarteTimeline({
+      memberId: 'member-a',
+      isRetired: false,
+      viewerRole: 'leader',
+      filter: 'all',
+      roleplays: [
+        {
+          id: 'rp-legacy-empty',
+          date: '2025-05-10',
+          runner_member_id: 'leader-a',
+          member_id: 'member-a',
+          time_slot: null,
+          kind: 'apo',
+          theme_id: null,
+          used_talk_id: null,
+          minutes: 20,
+          homework_result: null,
+          repeat_count: 1,
+          pass_result: 'o',
+          next_homework: null,
+          fixed_point: '架空の直した点',
+          note: null,
+          purpose: null,
+          result_ap: null,
+          result_rate: null,
+          submitted_at: '2025-05-10T00:00:00+09:00',
+          hidden_at: null,
+          is_legacy: true,
+          legacy_source: { file: 'b.csv', row: 2 },
+        },
+        {
+          id: 'rp-current-empty',
+          date: '2026-11-01',
+          runner_member_id: 'leader-a',
+          member_id: 'member-a',
+          time_slot: '10',
+          kind: 'apo',
+          theme_id: null,
+          used_talk_id: null,
+          minutes: 20,
+          homework_result: null,
+          repeat_count: 1,
+          pass_result: 'o',
+          next_homework: null,
+          fixed_point: '架空の直した点',
+          note: null,
+          purpose: null,
+          result_ap: null,
+          result_rate: null,
+          submitted_at: '2026-11-01T00:00:00+09:00',
+          hidden_at: null,
+          is_legacy: false,
+          legacy_source: null,
+        },
+      ],
+      roleplayThemes: [],
+      seminars: [],
+      seminarMembers: [],
+      memos: [
+        {
+          id: 'memo-legacy-empty',
+          created_by: 'leader-a',
+          date: '2025-04-22',
+          theme_id: null,
+          kind_id: null,
+          noticed: '架空の昔メモ',
+          guidance: '',
+          next_check_on: null,
+          action_check: null,
+          result_check: null,
+          checked_on: null,
+          training_id: null,
+          is_legacy: true,
+          legacy_source: { file: 'a.csv', row: 3 },
+          submitted_at: '2025-04-22T00:00:00+09:00',
+          hidden_at: null,
+          created_at: '2025-04-22T00:00:00+09:00',
+          updated_at: '2025-04-22T00:00:00+09:00',
+        },
+      ],
+      memoTargets: [
+        { memo_id: 'memo-legacy-empty', member_id: 'member-a', removed_at: null },
+      ],
+      memoMasters: [],
+      members: [],
+    });
+
+    const rpLegacy = items.find((i) => i.id === 'roleplay-rp-legacy-empty');
+    const rpCurrent = items.find((i) => i.id === 'roleplay-rp-current-empty');
+    const memoLegacy = items.find((i) => i.id === 'memo-memo-legacy-empty');
+
+    expect(rpLegacy?.title).toBe('ロープレ：（過去の記録：なし）');
+    expect(rpCurrent?.title).toBe('ロープレ：テーマ未設定');
+    expect(memoLegacy?.subtitle).toBe('分類：（過去の記録：なし）・（過去の記録：なし）');
+    expect(memoLegacy?.tags).toEqual(['（過去の記録：なし）', '（過去の記録：なし）']);
+  });
+});

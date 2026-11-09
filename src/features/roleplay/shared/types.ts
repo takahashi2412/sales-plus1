@@ -79,9 +79,9 @@ export interface RoleplayRow {
   date: string;
   runner_member_id: string;
   member_id: string;
-  time_slot: string;
+  time_slot: string | null;
   kind: RoleplayKind;
-  theme_id: string;
+  theme_id: string | null;
   used_talk_id: string | null;
   minutes: number | null;
   homework_result: JudgeMark | null;
@@ -95,6 +95,8 @@ export interface RoleplayRow {
   result_rate: number | null;
   submitted_at: string | null;
   hidden_at: string | null;
+  is_legacy?: boolean;
+  legacy_source?: Record<string, unknown> | null;
 }
 
 export type TalkStatus = 'pending' | 'trial' | 'standard';
@@ -123,6 +125,8 @@ export interface SeminarRow {
   content: string;
   created_by: string;
   hidden_at: string | null;
+  is_legacy?: boolean;
+  legacy_source?: Record<string, unknown> | null;
 }
 
 export interface SeminarMemberRow {
@@ -163,4 +167,3 @@ export interface SelectableTalkTeams {
   allowNoTeam: boolean;
   teamIds: string[];
 }
-

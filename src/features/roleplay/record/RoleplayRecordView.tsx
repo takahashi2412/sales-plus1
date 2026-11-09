@@ -36,6 +36,8 @@ import {
 } from './api';
 import {
   canCreateDraftRoleplay,
+  canModifyRoleplay,
+  formatRoleplayTimeSlotDisplay,
   filterRoleplays,
   findPreviousHomework,
   generateTalkCode,
@@ -434,6 +436,7 @@ export function RoleplayRecordView({
 
   // 一覧から「続きを書く」または「直す」を押したとき
   const handleSelectRowForEdit = (row: RoleplayRow) => {
+    if (!canModifyRoleplay(row)) return;
     setActionError(null);
     setActionInfo(null);
     draftIdRef.current = row.id;
@@ -442,10 +445,10 @@ export function RoleplayRecordView({
     newTalkInsertedForSessionRef.current = row.submitted_at !== null;
 
     setDate(row.date);
-    setTimeSlot(row.time_slot);
+    setTimeSlot(row.time_slot ?? initialTimeSlot);
     setMemberId(row.member_id);
     setKind(row.kind);
-    setThemeId(row.theme_id);
+    setThemeId(row.theme_id ?? '');
     setUsedTalkId(row.used_talk_id ?? '');
     setMinutesStr(row.minutes !== null ? String(row.minutes) : '');
     setHomeworkResult(row.homework_result ?? '');
@@ -461,9 +464,9 @@ export function RoleplayRecordView({
       date: row.date,
       runner_member_id: row.runner_member_id,
       member_id: row.member_id,
-      time_slot: row.time_slot,
+      time_slot: row.time_slot ?? '',
       kind: row.kind,
-      theme_id: row.theme_id,
+      theme_id: row.theme_id ?? '',
       used_talk_id: row.used_talk_id,
       minutes: row.minutes,
       homework_result: row.homework_result,
@@ -483,6 +486,8 @@ export function RoleplayRecordView({
   };
 
   const handleHideRow = async (rowId: string) => {
+    const target = roleplays.find((r) => r.id === rowId);
+    if (target && !canModifyRoleplay(target)) return;
     setActionError(null);
     setActionInfo(null);
     try {
@@ -541,7 +546,7 @@ export function RoleplayRecordView({
       render: (row) => (
         <div className="rp-record-cell-stack">
           <DateText value={row.date} withWeekday />
-          <span className="rp-record-muted">{row.time_slot}時台</span>
+          <span className="rp-record-muted">{formatRoleplayTimeSlotDisplay(row.time_slot)}</span>
         </div>
       ),
     },
@@ -549,7 +554,9 @@ export function RoleplayRecordView({
       key: 'status',
       header: '状態',
       render: (row) =>
-        row.submitted_at ? (
+        row.is_legacy ? (
+          <Tag tone="warn">過去の記録（見るだけ）</Tag>
+        ) : row.submitted_at ? (
           <Tag tone="good">送った記録</Tag>
         ) : (
           <Tag tone="warn">書きかけ</Tag>
@@ -571,13 +578,13 @@ export function RoleplayRecordView({
       key: 'theme',
       header: '内容・テーマ',
       render: (row) => {
-        const t = themeMap.get(row.theme_id);
+        const t = row.theme_id ? themeMap.get(row.theme_id) : undefined;
         return (
           <div className="rp-record-cell-stack">
             <div>
               <Tag tone="navy">{ROLEPLAY_KIND_LABELS[row.kind]}</Tag>
             </div>
-            <span>{t ? `段階${t.stage}：${t.name}` : 'テーマ情報なし'}</span>
+            <span>{t ? `段階${t.stage}：${t.name}` : row.is_legacy ? '（過去の記録：なし）' : 'テーマ情報なし'}</span>
           </div>
         );
       },
@@ -615,7 +622,7 @@ export function RoleplayRecordView({
             宿題：{row.homework_result ? JUDGE_MARK_LABELS[row.homework_result] : '－'}
           </span>
           <span>
-            合格：{row.pass_result ? JUDGE_MARK_LABELS[row.pass_result] : '未入力'}
+            合格：{row.pass_result ? JUDGE_MARK_LABELS[row.pass_result] : row.is_legacy ? '－' : '未入力'}
           </span>
         </div>
       ),
@@ -648,6 +655,9 @@ export function RoleplayRecordView({
       key: 'actions',
       header: '操作',
       render: (row) => {
+        if (!canModifyRoleplay(row)) {
+          return <span className="rp-record-muted">－</span>;
+        }
         const isRunner = row.runner_member_id === viewer.memberId;
         if (!isRunner) {
           return <span className="rp-record-muted">閲覧のみ</span>;

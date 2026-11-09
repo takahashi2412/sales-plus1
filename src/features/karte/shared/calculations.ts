@@ -1145,10 +1145,10 @@ export function buildKarteTimeline(
           : null
 
       const themeName = rp.theme_id
-        ? (themeNameMap.get(rp.theme_id) ?? 'テーマ未設定')
+        ? (themeNameMap.get(rp.theme_id) ?? (isLegacy ? '（過去の記録：なし）' : 'テーマ未設定'))
         : typeof legacySource?.theme === 'string' && legacySource.theme.trim()
           ? legacySource.theme
-          : 'テーマ未設定'
+          : isLegacy ? '（過去の記録：なし）' : 'テーマ未設定'
 
       const kindLabel = ROLEPLAY_KIND_LABELS[rp.kind] ?? rp.kind
       const runnerName = rp.runner_member_id
@@ -1268,8 +1268,8 @@ export function buildKarteTimeline(
         : ''
 
       const tags: string[] = []
-      if (themeName) tags.push(themeName)
-      if (kindName) tags.push(kindName)
+      if (themeName) tags.push(themeName); else if (isLegacy) tags.push('（過去の記録：なし）')
+      if (kindName) tags.push(kindName); else if (isLegacy) tags.push('（過去の記録：なし）')
 
       const details: string[] = []
       if (memo.noticed?.trim()) {

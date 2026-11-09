@@ -8,7 +8,8 @@ export interface SeminarMemberMutationPlan {
   toRemove: string[];
 }
 
-export function canEditSeminar(viewer: ViewerContext, seminarCreatedBy: string): boolean {
+export function canEditSeminar(viewer: ViewerContext, seminarCreatedBy: string, isLegacy: boolean = false): boolean {
+  if (isLegacy) return false;
   return viewer.memberId === seminarCreatedBy;
 }
 
