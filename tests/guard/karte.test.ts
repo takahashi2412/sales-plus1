@@ -505,9 +505,14 @@ describe('取り込んだ過去の記録は、だれも直せない・消せな�
     expect(legacy.memo && legacy.roleplay && legacy.seminar).toBeTruthy();
   });
 
-  it('過去の記録は、今の記録と同じ人が読める（書いた上席は読める）', async () => {
+  it('過去の記録は、今の記録と同じ人が読める（書いた上席のほか、担当MGRも。ほかのチームのリーダーは読めない）', async () => {
     expect(await seenIds('leaderA', 'subordinate_memos', [legacy.memo])).toEqual([legacy.memo]);
     expect(await seenIds('leaderA', 'roleplays', [legacy.roleplay])).toEqual([legacy.roleplay]);
+    expect(await seenIds('leaderA', 'seminars', [legacy.seminar])).toEqual([legacy.seminar]);
+    expect(await seenIds('mgr1', 'subordinate_memos', [legacy.memo])).toEqual([legacy.memo]);
+    expect(await seenIds('mgr1', 'roleplays', [legacy.roleplay])).toEqual([legacy.roleplay]);
+    expect(await seenIds('leaderB', 'subordinate_memos', [legacy.memo])).toEqual([]);
+    expect(await seenIds('leaderB', 'roleplays', [legacy.roleplay])).toEqual([]);
   });
 
   it('過去の部下メモは、書いた上席でも直せず、見えなくもできず、対象者も変えられない', async () => {
@@ -555,5 +560,43 @@ describe('取り込んだ過去の記録は、だれも直せない・消せな�
       is_legacy: true,
     });
     expect(await adminRows('seminars', (q) => q.eq('theme', `${RUN}-legacy-insert`))).toHaveLength(0);
+
+    // 元の行（legacy_source）だけを入れて足すこともできない
+    await C('leaderA').from('seminars').insert({
+      date: '2025-05-13',
+      theme: `${RUN}-legacy-source-insert`,
+      lecturer: '架空の講師',
+      minutes: 20,
+      content: '架空の内容',
+      created_by: M('leaderA'),
+      legacy_source: source('seminar-insert'),
+    });
+    expect(await adminRows('seminars', (q) => q.eq('theme', `${RUN}-legacy-source-insert`))).toHaveLength(0);
+
+    // 自分の今の研修を、あとから過去の記録にすることもできない
+    const ownId = await insertOne('seminars', {
+      date: '2025-05-14',
+      theme: `${RUN}-own-seminar`,
+      lecturer: '架空の講師',
+      minutes: 20,
+      content: '架空の内容',
+      created_by: M('leaderA'),
+    });
+    await C('leaderA').from('seminars').update({ is_legacy: true, legacy_source: source('seminar-own') }).eq('id', ownId);
+    const own = (await adminRows('seminars', (q) => q.eq('id', ownId)))[0];
+    expect(own.is_legacy).toBe(false);
+    expect(own.legacy_source).toBeNull();
+  });
+
+  it('管理用の鍵なら、過去の記録を消せる（取り込み直しと片づけのため）', async () => {
+    const del = async (table: string, col: string, id: string) => (await admin.from(table).delete().eq(col, id)).error;
+    expect(await del('subordinate_memo_targets', 'memo_id', legacy.memo)).toBeNull();
+    expect(await del('subordinate_memos', 'id', legacy.memo)).toBeNull();
+    expect(await del('roleplays', 'id', legacy.roleplay)).toBeNull();
+    expect(await del('seminar_members', 'seminar_id', legacy.seminar)).toBeNull();
+    expect(await del('seminars', 'id', legacy.seminar)).toBeNull();
+    expect(await adminRows('subordinate_memos', (q) => q.eq('id', legacy.memo))).toHaveLength(0);
+    expect(await adminRows('roleplays', (q) => q.eq('id', legacy.roleplay))).toHaveLength(0);
+    expect(await adminRows('seminars', (q) => q.eq('id', legacy.seminar))).toHaveLength(0);
   });
 });
