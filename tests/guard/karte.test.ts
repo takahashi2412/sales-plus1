@@ -1,8 +1,9 @@
-// 守りのテスト：カルテ第1版の区切り（退職した人の記録を読める人・退職した人を対象にした新しい記録・ロープレの過去の記録の印・名簿と権限を直せる人）
+// 守りのテスト：カルテ第1版の区切り（退職した人の記録を読める人・退職した人を対象にした新しい記録・ロープレの過去の記録の印・名簿と権限を直せる人・取り込んだ過去の記録はだれも直せない）
 // 担当：Claude Code。Antigravity はこのファイルを変更・削除・スキップしない（計画ファイル 7章）。
 // 根拠：docs/tasks/plan_karte-common_v1.md の 4章「表と権限の直し」。
 //       NOTES.md の決めたことの表（2026-11-07：退職した人の記録は、最後にいたチームの今のリーダー・担当MGRと代表が読める。
-//       権限を与える・外すのは管理者と代表。2026-11-04：指導の記録は役割どおりで、管理者の権限では広げない）。
+//       権限を与える・外すのは管理者と代表。2026-11-09：取り込んだ過去の記録は、だれも直せない・消せない。
+//       2026-11-04：指導の記録は役割どおりで、管理者の権限では広げない）。根拠の計画：plan_karte-common_v1.md・plan_legacy-import_v1.md の 4章。
 //
 // 動かし方：.env に SUPABASE_URL・SUPABASE_ANON_KEY・SUPABASE_SERVICE_ROLE_KEY を入れ、`npm test`。
 // 開発用の Supabase プロジェクトに、架空の人（@example.test）と架空の記録を作って確かめ、最後に消す。本物のデータは使わない。
@@ -39,6 +40,7 @@ const PEOPLE: Person[] = (
     // [key, role, 所属の履歴, 退職日, ログインするか]
     ['leaderA', 'leader', [{ team: 'A', start: '2025-04-01', end: null }], null, true], // 架空チームAの今のリーダー（管理者の権限は、最後のテストで与える）
     ['memberA1', 'member', [{ team: 'A', start: '2025-04-01', end: null }], null, false],
+    ['memberA2', 'member', [{ team: 'A', start: '2025-04-01', end: null }], null, false], // 過去の記録の対象者・参加者に足そうとする人
     // 架空チームAにいて退職した人（最後のチーム＝A）
     ['retiredA', 'member', [{ team: 'A', start: '2025-04-01', end: '2025-06-30' }], '2025-06-30', false],
     // A から B へ異動して退職した人（最後のチーム＝B）
@@ -455,5 +457,103 @@ describe('名簿・チーム・権限を直せるのは管理者の権限があ�
     // leaderA は今は管理者。異動して退職した人（最後のチーム＝B）の部下メモとロープレは読めないまま
     expect(await seenIds('leaderA', 'subordinate_memos', [ids.memoMoved])).toEqual([]);
     expect(await seenIds('leaderA', 'roleplays', [ids.rpMoved])).toEqual([]);
+  });
+});
+
+// カルテ第1版④（plan_legacy-import_v1）の表の直しのあとに通る。過去の記録の準備はこのまとまりの中だけで行う
+describe('取り込んだ過去の記録は、だれも直せない・消せない（2026-11-09。管理者でも）', () => {
+  const legacy = { memo: '', roleplay: '', seminar: '' };
+  const source = (kind: string) => ({ file: `${RUN}-${kind}.csv`, row: 2, values: { 備考: '架空の過去の記録' } });
+
+  // 準備をテストの1件目にする（describe の beforeAll で失敗すると、ほかのテストが「落ちた」ではなく「飛ばした」と数えられ、気づけないため）
+  it('準備：管理用の鍵なら、空の欄がある過去の記録を入れられる（表の直しのあと）', async () => {
+    // 管理用の鍵で、過去の記録を入れる（取り込みの道具と同じ形。種類・テーマなどは空でよい）
+    legacy.memo = await insertOne('subordinate_memos', {
+      ...memoRow('leaderA', '2025-05-10', { noticed: `${RUN}-legacy-memo` }),
+      theme_id: null,
+      kind_id: null,
+      submitted_at: '2025-05-09T15:00:00Z',
+      is_legacy: true,
+      legacy_source: source('memo'),
+    });
+    {
+      const { error } = await admin.from('subordinate_memo_targets').insert({ memo_id: legacy.memo, member_id: M('memberA1') });
+      if (error) throw error;
+    }
+    legacy.roleplay = await insertOne('roleplays', {
+      ...rp('leaderA', 'memberA1', '2025-05-11', { fixed_point: `${RUN}-legacy-rp` }),
+      theme_id: null,
+      time_slot: null,
+      pass_result: null,
+      is_legacy: true,
+      legacy_source: source('roleplay'),
+    });
+    legacy.seminar = await insertOne('seminars', {
+      date: '2025-05-12',
+      theme: `${RUN}-legacy-seminar`,
+      lecturer: '架空の講師',
+      minutes: 20,
+      content: '架空の内容',
+      created_by: M('leaderA'),
+      is_legacy: true,
+      legacy_source: source('seminar'),
+    });
+    {
+      const { error } = await admin.from('seminar_members').insert({ seminar_id: legacy.seminar, member_id: M('memberA1') });
+      if (error) throw error;
+    }
+    expect(legacy.memo && legacy.roleplay && legacy.seminar).toBeTruthy();
+  });
+
+  it('過去の記録は、今の記録と同じ人が読める（書いた上席は読める）', async () => {
+    expect(await seenIds('leaderA', 'subordinate_memos', [legacy.memo])).toEqual([legacy.memo]);
+    expect(await seenIds('leaderA', 'roleplays', [legacy.roleplay])).toEqual([legacy.roleplay]);
+  });
+
+  it('過去の部下メモは、書いた上席でも直せず、見えなくもできず、対象者も変えられない', async () => {
+    await C('leaderA').from('subordinate_memos').update({ guidance: `${RUN}-edited` }).eq('id', legacy.memo);
+    await C('leaderA').from('subordinate_memos').update({ hidden_at: new Date().toISOString() }).eq('id', legacy.memo);
+    const memo = (await adminRows('subordinate_memos', (q) => q.eq('id', legacy.memo)))[0];
+    expect(memo.guidance).not.toBe(`${RUN}-edited`);
+    expect(memo.hidden_at).toBeNull();
+
+    await C('leaderA').from('subordinate_memo_targets').insert({ memo_id: legacy.memo, member_id: M('memberA2') });
+    await C('leaderA').from('subordinate_memo_targets').update({ removed_at: new Date().toISOString() }).eq('memo_id', legacy.memo).eq('member_id', M('memberA1'));
+    const targets = await adminRows('subordinate_memo_targets', (q) => q.eq('memo_id', legacy.memo));
+    expect(targets.map((t) => t.member_id)).toEqual([M('memberA1')]);
+    expect(targets[0].removed_at).toBeNull();
+  });
+
+  it('過去のロープレの記録は、実行者でも直せず、見えなくもできない', async () => {
+    await C('leaderA').from('roleplays').update({ fixed_point: `${RUN}-edited` }).eq('id', legacy.roleplay);
+    await C('leaderA').from('roleplays').update({ hidden_at: new Date().toISOString() }).eq('id', legacy.roleplay);
+    const row = (await adminRows('roleplays', (q) => q.eq('id', legacy.roleplay)))[0];
+    expect(row.fixed_point).toBe(`${RUN}-legacy-rp`);
+    expect(row.hidden_at).toBeNull();
+  });
+
+  it('過去の研修の記録は、作った人でも直せず、参加者も変えられない。過去の記録の印をつけて研修を足すこともできない', async () => {
+    await C('leaderA').from('seminars').update({ content: `${RUN}-edited` }).eq('id', legacy.seminar);
+    await C('leaderA').from('seminars').update({ hidden_at: new Date().toISOString() }).eq('id', legacy.seminar);
+    const seminar = (await adminRows('seminars', (q) => q.eq('id', legacy.seminar)))[0];
+    expect(seminar.content).toBe('架空の内容');
+    expect(seminar.hidden_at).toBeNull();
+
+    await C('leaderA').from('seminar_members').insert({ seminar_id: legacy.seminar, member_id: M('memberA2') });
+    await C('leaderA').from('seminar_members').update({ removed_at: new Date().toISOString() }).eq('seminar_id', legacy.seminar).eq('member_id', M('memberA1'));
+    const members = await adminRows('seminar_members', (q) => q.eq('seminar_id', legacy.seminar));
+    expect(members.map((m) => m.member_id)).toEqual([M('memberA1')]);
+    expect(members[0].removed_at).toBeNull();
+
+    await C('leaderA').from('seminars').insert({
+      date: '2025-05-13',
+      theme: `${RUN}-legacy-insert`,
+      lecturer: '架空の講師',
+      minutes: 20,
+      content: '架空の内容',
+      created_by: M('leaderA'),
+      is_legacy: true,
+    });
+    expect(await adminRows('seminars', (q) => q.eq('theme', `${RUN}-legacy-insert`))).toHaveLength(0);
   });
 });
