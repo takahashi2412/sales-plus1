@@ -1,4 +1,4 @@
-import { ROLE_LABELS } from '../../../foundation/directory';
+import { ROLE_LABELS, getTodayJstDateString, isActivePeriod } from '../../../foundation/directory';
 import type { MemberAffiliationRow, MemberRole } from '../../../foundation/types';
 import { normalizeDateInput } from './csv';
 import type {
@@ -28,6 +28,30 @@ export function getPreviousDateString(ymd: string): string {
   const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
   const dd = String(dt.getUTCDate()).padStart(2, '0');
   return `${yy}-${mm}-${dd}`;
+}
+
+/**
+ * 異動フォームを開いたときの「新しい拠点」の初期値として、
+ * 今の所属（現在有効な所属、なければ最新の所属）の拠点を返す。
+ */
+export function resolveCurrentBaseForTransfer(
+  memberId: string,
+  existingAffiliations: MemberAffiliationRow[],
+  todayJst: string = getTodayJstDateString(),
+): string {
+  const memberAffs = existingAffiliations
+    .filter((a) => a.member_id === memberId)
+    .sort((a, b) => b.start_date.localeCompare(a.start_date));
+
+  const active = memberAffs.find((a) => isActivePeriod(a.start_date, a.end_date, todayJst));
+  if (active?.base) {
+    return active.base;
+  }
+  const openAff = memberAffs.find((a) => a.end_date === null);
+  if (openAff?.base) {
+    return openAff.base;
+  }
+  return memberAffs[0]?.base ?? '';
 }
 
 /**

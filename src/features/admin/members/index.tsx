@@ -23,6 +23,7 @@ import {
   canEditMemberRole,
   decodeMembersCsvBytes,
   getSelectableRoles,
+  resolveCurrentBaseForTransfer,
   validateMembersCsv,
   type MemberCsvRowValidation,
 } from '../shared';
@@ -225,7 +226,9 @@ export function AdminMembersPage() {
     setEditGoesToSales(member.goes_to_sales ? 'true' : 'false');
     setEditHiredOn(member.hired_on);
     setTransferTeamId(bundle?.teams[0]?.id ?? '');
-    setTransferBase('');
+    setTransferBase(
+      resolveCurrentBaseForTransfer(member.id, bundle?.affiliations ?? [], todayJst),
+    );
     setTransferStartDate(todayJst);
     setRetireDate(member.retired_on ?? todayJst);
     setFeedback(null);
@@ -402,7 +405,7 @@ export function AdminMembersPage() {
         tone: 'good',
         text: `「${selectedMember.name}」さんの異動を所属の履歴に記録しました（前の所属は開始日の前日で閉じました）。`,
       });
-      setTransferBase('');
+      setTransferBase(transferBase.trim());
       await reload();
     } finally {
       setSubmitting(false);
@@ -565,9 +568,11 @@ export function AdminMembersPage() {
       key: 'name',
       header: '名前',
       render: (r) => (
-        <div>
+        <div style={{ whiteSpace: 'nowrap' }}>
           <strong>{r.member.name}</strong>
-          <div className="form-hint">{r.member.email}</div>
+          <div className="form-hint" style={{ whiteSpace: 'nowrap' }}>
+            {r.member.email}
+          </div>
         </div>
       ),
     },
@@ -579,12 +584,12 @@ export function AdminMembersPage() {
     {
       key: 'team',
       header: '今のチーム',
-      render: (r) => r.currentTeamText,
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.currentTeamText}</span>,
     },
     {
       key: 'base',
       header: '拠点',
-      render: (r) => r.currentBaseText,
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.currentBaseText}</span>,
     },
     {
       key: 'hired_on',
@@ -594,45 +599,52 @@ export function AdminMembersPage() {
     {
       key: 'goes_to_sales',
       header: '営業に出る',
-      render: (r) => (r.member.goes_to_sales ? '出る' : '出ない'),
+      render: (r) => (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {r.member.goes_to_sales ? '出る' : '出ない'}
+        </span>
+      ),
     },
     {
       key: 'retired_on',
       header: '退職日',
       render: (r) =>
         r.member.retired_on ? (
-          <span>
+          <span style={{ whiteSpace: 'nowrap' }}>
             <DateText value={r.member.retired_on} />
             {r.isRetired ? '（退職）' : ''}
           </span>
         ) : (
-          '－'
+          <span style={{ whiteSpace: 'nowrap' }}>－</span>
         ),
     },
     {
       key: 'mgr',
       header: 'MGRの担当',
-      render: (r) => r.mgrAssignedText,
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.mgrAssignedText}</span>,
     },
     {
       key: 'actions',
       header: '操作',
       render: (r) => (
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
           <Button
             variant="secondary"
+            style={{ whiteSpace: 'nowrap' }}
             onClick={() => openMemberPanel(r.member, 'edit')}
           >
             直す
           </Button>
           <Button
             variant="secondary"
+            style={{ whiteSpace: 'nowrap' }}
             onClick={() => openMemberPanel(r.member, 'transfer')}
           >
             異動・履歴
           </Button>
           <Button
             variant="ghost"
+            style={{ whiteSpace: 'nowrap' }}
             onClick={() => openMemberPanel(r.member, 'retire')}
           >
             退職
@@ -646,40 +658,49 @@ export function AdminMembersPage() {
     {
       key: 'rowNumber',
       header: '行',
-      render: (r) => `${r.rowNumber}行目`,
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.rowNumber}行目</span>,
     },
     {
       key: 'name',
       header: '名前',
-      render: (r) => r.raw.name || '－',
+      render: (r) => (
+        <span style={{ whiteSpace: 'nowrap', fontWeight: 700 }}>
+          {r.raw.name || '－'}
+        </span>
+      ),
     },
     {
       key: 'email',
       header: 'メール',
-      render: (r) => r.raw.email || '－',
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.raw.email || '－'}</span>,
     },
     {
       key: 'role',
       header: '役割',
-      render: (r) => r.raw.roleText || '－',
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.raw.roleText || '－'}</span>,
     },
     {
       key: 'goesToSales',
       header: '営業に出る',
-      render: (r) => r.raw.goesToSalesText || '－',
+      render: (r) => (
+        <span style={{ whiteSpace: 'nowrap' }}>{r.raw.goesToSalesText || '－'}</span>
+      ),
     },
     {
       key: 'hiredOn',
       header: '入社日',
-      render: (r) => r.raw.hiredOnText || '－',
+      render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{r.raw.hiredOnText || '－'}</span>,
     },
     {
       key: 'affiliation',
       header: 'チーム ／ 拠点 ／ 所属の開始日',
-      render: (r) =>
-        r.raw.teamName || r.raw.base || r.raw.affiliationStartDateText
-          ? `${r.raw.teamName || '－'} ／ ${r.raw.base || '－'} ／ ${r.raw.affiliationStartDateText || '－'}`
-          : '－',
+      render: (r) => (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {r.raw.teamName || r.raw.base || r.raw.affiliationStartDateText
+            ? `${r.raw.teamName || '－'} ／ ${r.raw.base || '－'} ／ ${r.raw.affiliationStartDateText || '－'}`
+            : '－'}
+        </span>
+      ),
     },
     {
       key: 'status',
@@ -688,7 +709,7 @@ export function AdminMembersPage() {
         r.errors.length === 0 ? (
           <Tag tone="good">OK</Tag>
         ) : (
-          <div>
+          <div style={{ minWidth: '260px' }}>
             <Tag tone="warn">要修正</Tag>
             <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
               {r.errors.map((err, i) => (
@@ -872,7 +893,18 @@ export function AdminMembersPage() {
                   </Button>
                   <Button
                     variant={memberPanelMode === 'transfer' ? 'primary' : 'secondary'}
-                    onClick={() => setMemberPanelMode('transfer')}
+                    onClick={() => {
+                      setMemberPanelMode('transfer');
+                      if (!transferBase.trim()) {
+                        setTransferBase(
+                          resolveCurrentBaseForTransfer(
+                            selectedMember.id,
+                            bundle?.affiliations ?? [],
+                            todayJst,
+                          ),
+                        );
+                      }
+                    }}
                   >
                     異動・所属の履歴
                   </Button>
@@ -974,12 +1006,16 @@ export function AdminMembersPage() {
                         {
                           key: 'team',
                           header: 'チーム',
-                          render: (a) => teamMap.get(a.team_id) ?? '－',
+                          render: (a) => (
+                            <span style={{ whiteSpace: 'nowrap' }}>
+                              {teamMap.get(a.team_id) ?? '－'}
+                            </span>
+                          ),
                         },
                         {
                           key: 'base',
                           header: '拠点',
-                          render: (a) => a.base,
+                          render: (a) => <span style={{ whiteSpace: 'nowrap' }}>{a.base}</span>,
                         },
                         {
                           key: 'start_date',
@@ -990,7 +1026,11 @@ export function AdminMembersPage() {
                           key: 'end_date',
                           header: '終わりの日',
                           render: (a) =>
-                            a.end_date ? <DateText value={a.end_date} /> : '現在（継続中）',
+                            a.end_date ? (
+                              <DateText value={a.end_date} />
+                            ) : (
+                              <span style={{ whiteSpace: 'nowrap' }}>現在（継続中）</span>
+                            ),
                         },
                       ]}
                       rows={selectedMemberAffiliations}
@@ -1366,12 +1406,20 @@ export function AdminMembersPage() {
               {
                 key: 'mgr',
                 header: 'MGR',
-                render: (ma) => memberNameMap.get(ma.mgr_member_id) ?? '－',
+                render: (ma) => (
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    {memberNameMap.get(ma.mgr_member_id) ?? '－'}
+                  </span>
+                ),
               },
               {
                 key: 'team',
                 header: '担当チーム',
-                render: (ma) => teamMap.get(ma.team_id) ?? '－',
+                render: (ma) => (
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    {teamMap.get(ma.team_id) ?? '－'}
+                  </span>
+                ),
               },
               {
                 key: 'start_date',
@@ -1389,13 +1437,21 @@ export function AdminMembersPage() {
                 header: '担当を終える',
                 render: (ma) =>
                   ma.end_date ? (
-                    '－'
+                    <span style={{ whiteSpace: 'nowrap' }}>－</span>
                   ) : (
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'center',
+                        flexWrap: 'nowrap',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       <input
                         type="date"
                         className="text-input"
-                        style={{ width: '150px' }}
+                        style={{ width: '150px', flexShrink: 0 }}
                         value={closingMgrEndDates[ma.id] ?? todayJst}
                         onChange={(e) =>
                           setClosingMgrEndDates((prev) => ({
@@ -1407,6 +1463,7 @@ export function AdminMembersPage() {
                       />
                       <Button
                         variant="secondary"
+                        style={{ whiteSpace: 'nowrap' }}
                         disabled={submitting}
                         onClick={() => handleCloseMgrAssignment(ma.id, ma.start_date)}
                       >
@@ -1459,16 +1516,25 @@ export function AdminMembersPage() {
               {
                 key: 'currentName',
                 header: '今のチーム名',
-                render: (t) => <strong>{t.name}</strong>,
+                render: (t) => <strong style={{ whiteSpace: 'nowrap' }}>{t.name}</strong>,
               },
               {
                 key: 'rename',
                 header: '名前を変える',
                 render: (t) => (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                      flexWrap: 'nowrap',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     <input
                       type="text"
                       className="text-input"
+                      style={{ minWidth: '180px' }}
                       value={editingTeamNames[t.id] ?? t.name}
                       onChange={(e) =>
                         setEditingTeamNames((prev) => ({
@@ -1480,6 +1546,7 @@ export function AdminMembersPage() {
                     />
                     <Button
                       variant="secondary"
+                      style={{ whiteSpace: 'nowrap' }}
                       disabled={
                         submitting ||
                         (editingTeamNames[t.id] ?? t.name).trim() === '' ||

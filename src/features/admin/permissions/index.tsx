@@ -237,24 +237,25 @@ export function AdminPermissionsPage() {
 
   const renderPermissionCell = (perm: PermissionRow | null, label: string) => {
     if (!perm) {
-      return <span className="form-hint">なし</span>;
+      return <span className="form-hint" style={{ whiteSpace: 'nowrap' }}>なし</span>;
     }
     const granterName = perm.granted_by
       ? (memberMap.get(perm.granted_by)?.name ?? '－')
       : '－';
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap' }}>
           <Tag tone="good">{label}</Tag>
           <Button
             variant="secondary"
+            style={{ whiteSpace: 'nowrap' }}
             disabled={submitting}
             onClick={() => handleRequestRevoke(perm.id)}
           >
             外す
           </Button>
         </div>
-        <div className="form-hint">
+        <div className="form-hint" style={{ whiteSpace: 'nowrap' }}>
           与えた人：{granterName} ／ 与えた日：<DateText value={perm.granted_at} />
         </div>
       </div>
@@ -266,10 +267,10 @@ export function AdminPermissionsPage() {
       key: 'member',
       header: '名前（役割）',
       render: (r) => (
-        <div>
+        <div style={{ whiteSpace: 'nowrap' }}>
           <strong>{r.member.name}</strong>{' '}
           <Tag tone="navy">{ROLE_LABELS[r.member.role]}</Tag>
-          <div className="form-hint">{r.member.email}</div>
+          <div className="form-hint" style={{ whiteSpace: 'nowrap' }}>{r.member.email}</div>
         </div>
       ),
     },
@@ -289,7 +290,11 @@ export function AdminPermissionsPage() {
     {
       key: 'member',
       header: '対象の人',
-      render: (p) => memberMap.get(p.member_id)?.name ?? '－',
+      render: (p) => (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {memberMap.get(p.member_id)?.name ?? '－'}
+        </span>
+      ),
     },
     {
       key: 'kind',
@@ -302,7 +307,7 @@ export function AdminPermissionsPage() {
       render: (p) => {
         const granter = p.granted_by ? (memberMap.get(p.granted_by)?.name ?? '－') : '－';
         return (
-          <span>
+          <span style={{ whiteSpace: 'nowrap' }}>
             {granter}（<DateText value={p.granted_at} />）
           </span>
         );
@@ -314,7 +319,7 @@ export function AdminPermissionsPage() {
       render: (p) => {
         const revoker = p.revoked_by ? (memberMap.get(p.revoked_by)?.name ?? '－') : '－';
         return (
-          <span>
+          <span style={{ whiteSpace: 'nowrap' }}>
             {revoker}（<DateText value={p.revoked_at} />）
           </span>
         );

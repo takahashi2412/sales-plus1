@@ -38,12 +38,15 @@
    - 管理者の権限がある人（`viewer.isAdmin`）だけが操作できる画面として、名簿の一覧（チーム・役割・在籍／退職での絞り込み）、1人を足す（初回 Microsoft 365 ログインでメールにより結ばれる旨の1行説明つき）、1人を直す（「営業に出る」変更時の翌月目標反映の案内、代表役割の制限つき）、異動・所属履歴、退職、MGRの担当管理、チームの追加・名前変更、CSV一括取り込みを実装しました。
 4. **権限の管理の画面（`src/features/admin/permissions/`）の作成**
    - 管理者の権限がある人と代表（`viewer.isAdmin || viewer.isCeo`）だけが操作できる画面として、今の権限の一覧、権限を与えるフォーム（重複防止つき）、権限を外す操作（自分の管理者権限を外すときの確認文表示、`last admin` エラー表示つき）、および外した前の権限の一覧を実装しました。
+5. **画面の確かめで見つかった2点の修正**
+   - **異動の「新しい拠点」の初期値**：異動パネルを開くときに、今の所属の拠点を `resolveCurrentBaseForTransfer` で最初から「新しい拠点」に入れておくようにし（変えたいときだけ書きかえる形に）、単体テストも追加しました。
+   - **表の折り返しと操作ボタンの並び**：CSV 取り込み前の確かめの表や名簿の一覧の表などで、名前・メール・役割・日付などの短い列が1〜2文字ずつ縦に折れないよう折り返しなし（`whiteSpace: 'nowrap'`）にし、入りきらないときは表の枠（`.table-wrap`）の中で横に動かせるようにしました。あわせて名簿の一覧の「操作」列などのボタンが縦に積み重ならないよう横一列（`flexWrap: 'nowrap'`）に見直しました。
 
 ## 決められずに止めたこと・質問
 - なし
 
 ## テストの結果（通った数／全体）
-- `npx vitest run tests/admin tests/foundation`：4ファイル、32件／32件 通過（`tests/admin/admin-shared.test.ts` 14件、`tests/foundation/` 18件）
+- `npx vitest run tests/admin tests/foundation`：4ファイル、33件／33件 通過（`tests/admin/admin-shared.test.ts` 15件、`tests/foundation/` 18件）
 - 事前確認で実行した `npx vitest run tests/foundation tests/roleplay tests/kpi tests/memo`：8ファイル、85件／85件 通過
 - `npm run build`：成功（エラー0件）
 - ※計画0-6に従い、守りのテストを含む `npm test` は回していません。

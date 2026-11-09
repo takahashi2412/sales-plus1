@@ -12,6 +12,7 @@ import {
   decodeMembersCsvBytes,
   formatAdminDbError,
   getSelectableRoles,
+  resolveCurrentBaseForTransfer,
   validateMembersCsv,
   type MemberAffiliationRow,
   type MemberRow,
@@ -257,6 +258,29 @@ describe('異動の計画（buildTransferPlan）', () => {
       existingAffs,
     );
     expect(earlierDay.ok).toBe(false);
+  });
+
+  it('異動の「新しい拠点」の初期値として、今の所属の拠点を取り出せる', () => {
+    const history: MemberAffiliationRow[] = [
+      {
+        id: 'aff-old',
+        member_id: 'mem-1',
+        team_id: 'team-a',
+        base: '旧拠点',
+        start_date: '2025-04-01',
+        end_date: '2026-03-31',
+      },
+      {
+        id: 'aff-current',
+        member_id: 'mem-1',
+        team_id: 'team-b',
+        base: '今の拠点',
+        start_date: '2026-04-01',
+        end_date: null,
+      },
+    ];
+    expect(resolveCurrentBaseForTransfer('mem-1', history, '2026-05-01')).toBe('今の拠点');
+    expect(resolveCurrentBaseForTransfer('mem-none', history, '2026-05-01')).toBe('');
   });
 });
 
