@@ -626,7 +626,11 @@ export function SubordinateMemoPage() {
       header: '日付',
       className: 'memo-col-nowrap',
       render: (row) => {
-        const updatedLabel = formatUpdatedAfterSubmitLabel(row.submitted_at, row.updated_at);
+        const updatedLabel = formatUpdatedAfterSubmitLabel(
+          row.submitted_at,
+          row.updated_at,
+          Boolean(row.is_legacy),
+        );
         return (
           <div>
             <DateText value={row.date} />
@@ -715,7 +719,7 @@ export function SubordinateMemoPage() {
   ];
 
   const selectedUpdatedLabel = selectedMemo
-    ? formatUpdatedAfterSubmitLabel(selectedMemo.submitted_at, selectedMemo.updated_at)
+    ? formatUpdatedAfterSubmitLabel(selectedMemo.submitted_at, selectedMemo.updated_at, Boolean(selectedMemo.is_legacy))
     : null;
 
   return (

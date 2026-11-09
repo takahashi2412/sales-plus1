@@ -656,7 +656,7 @@ export function RoleplayRecordView({
       header: '操作',
       render: (row) => {
         if (!canModifyRoleplay(row)) {
-          return <span className="rp-record-muted">過去の記録（見るだけ）</span>;
+          return <span className="rp-record-muted">－</span>;
         }
         const isRunner = row.runner_member_id === viewer.memberId;
         if (!isRunner) {

@@ -699,5 +699,21 @@ describe('過去の記録（is_legacy = true）の編集不可判定と空欄表
     expect(formatMemoMasterDisplay(null, true, masterMap)).toBe('（過去の記録：なし）');
     expect(formatMemoMasterDisplay(null, false, masterMap)).toBe('－');
     expect(formatMemoMasterDisplay('theme-apo', true, masterMap)).toBe('アポ');
+
+    // 過去の記録（is_legacy = true）では、submitted_at と updated_at が離れていても「〇月〇日に直した」を出さない
+    expect(
+      formatUpdatedAfterSubmitLabel(
+        '2025-04-10T00:00:00+09:00',
+        '2026-11-09T12:00:00Z',
+        true,
+      ),
+    ).toBeNull();
+    expect(
+      formatUpdatedAfterSubmitLabel(
+        '2026-11-04T09:00:00Z',
+        '2026-11-05T06:00:00Z',
+        false,
+      ),
+    ).toBe('11月5日に直した');
   });
 });

@@ -110,7 +110,9 @@ export function formatMemoCheckLabel(value: MemoCheckValue | null | undefined): 
 export function formatUpdatedAfterSubmitLabel(
   submittedAt: string | null | undefined,
   updatedAt: string | null | undefined,
+  isLegacy = false,
 ): string | null {
+  if (isLegacy) return null;
   if (!submittedAt || !updatedAt) return null;
   const subTime = Date.parse(submittedAt);
   const updTime = Date.parse(updatedAt);
