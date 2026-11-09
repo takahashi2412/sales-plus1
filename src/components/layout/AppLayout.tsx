@@ -3,6 +3,8 @@ import type { DirectoryEntry, MemberRole } from '../../foundation/types';
 import { Button, Tag } from '../ui';
 
 export type RouteKey =
+  | 'home'
+  | 'karte'
   | 'directory'
   | 'roleplay'
   | 'themes'
@@ -11,7 +13,9 @@ export type RouteKey =
   | 'kpi-targets'
   | 'kpi-alerts'
   | 'kpi-import'
-  | 'memo';
+  | 'memo'
+  | 'admin-members'
+  | 'admin-permissions';
 
 export interface NavItem {
   key: RouteKey;
@@ -20,6 +24,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  { key: 'home', label: 'ホーム', hash: '#/home' },
+  { key: 'karte', label: 'メンバーカルテ', hash: '#/karte' },
   { key: 'directory', label: '名簿の確認', hash: '#/directory' },
   { key: 'roleplay', label: 'ロープレ', hash: '#/roleplay' },
   { key: 'themes', label: 'テーマ表', hash: '#/themes' },
@@ -29,11 +35,17 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'kpi-alerts', label: '未達の一覧', hash: '#/kpi-alerts' },
   { key: 'kpi-import', label: 'CSV取り込み', hash: '#/kpi-import' },
   { key: 'memo', label: '部下メモ', hash: '#/memo' },
+  { key: 'admin-members', label: '名簿の管理', hash: '#/admin-members' },
+  { key: 'admin-permissions', label: '権限の管理', hash: '#/admin-permissions' },
 ];
 
 export function parseHashRoute(hash: string): RouteKey {
   const cleaned = hash.replace(/^#\/?/, '').split('?')[0].trim().toLowerCase();
   switch (cleaned) {
+    case 'home':
+      return 'home';
+    case 'karte':
+      return 'karte';
     case 'roleplay':
       return 'roleplay';
     case 'themes':
@@ -50,6 +62,10 @@ export function parseHashRoute(hash: string): RouteKey {
       return 'kpi-import';
     case 'memo':
       return 'memo';
+    case 'admin-members':
+      return 'admin-members';
+    case 'admin-permissions':
+      return 'admin-permissions';
     case 'directory':
     default:
       return 'directory';
@@ -63,11 +79,16 @@ export function canAccessRoute(
 ): boolean {
   if (!role) return false;
   switch (route) {
+    case 'home':
+    case 'karte':
     case 'kpi-alerts':
     case 'memo':
       return role === 'leader' || role === 'mgr' || role === 'ceo';
     case 'kpi-import':
+    case 'admin-members':
       return isAdmin;
+    case 'admin-permissions':
+      return isAdmin || role === 'ceo';
     case 'directory':
     case 'roleplay':
     case 'themes':

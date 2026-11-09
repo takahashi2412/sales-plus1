@@ -340,6 +340,7 @@ export function KpiImportPage() {
       const { alertCount } = await approvePendingImportAndGenerateAlerts(
         log,
         screenData.holidaysSetting,
+        screenData.workdaysSetting,
       )
       await loadData()
       // アップロード中の行があれば同日の承認済みメンバーIDも更新
@@ -377,6 +378,7 @@ export function KpiImportPage() {
       const { alertCount } = await generateAlertsForApprovedImport(
         log,
         screenData.holidaysSetting,
+        screenData.workdaysSetting,
       )
       await loadData()
       setSuccessMsg(

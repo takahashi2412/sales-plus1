@@ -30,6 +30,8 @@ export interface KpiImportScreenData {
   importLogs: ImportLogRow[]
   holidaysSetting: string[] | null
   holidaysConfigured: boolean
+  workdaysSetting: string[] | null
+  workdaysConfigured: boolean
 }
 
 export async function fetchKpiImportScreenData(): Promise<KpiImportScreenData> {
@@ -45,6 +47,8 @@ export async function fetchKpiImportScreenData(): Promise<KpiImportScreenData> {
       importLogs: [],
       holidaysSetting: null,
       holidaysConfigured: false,
+      workdaysSetting: null,
+      workdaysConfigured: false,
     }
   }
 
@@ -75,7 +79,10 @@ export async function fetchKpiImportScreenData(): Promise<KpiImportScreenData> {
       .select('*')
       .order('target_date', { ascending: false })
       .order('imported_at', { ascending: false }),
-    supabase.from('settings').select('key, value').eq('key', 'kpi_holidays').limit(1),
+    supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['kpi_holidays', 'kpi_workdays']),
   ])
 
   if (membersRes.error) throw membersRes.error
@@ -86,10 +93,17 @@ export async function fetchKpiImportScreenData(): Promise<KpiImportScreenData> {
   if (importLogsRes.error) throw importLogsRes.error
   if (settingsRes.error) throw settingsRes.error
 
-  const settingRow = (settingsRes.data ?? [])[0] as { key: string; value: unknown } | undefined
+  const settingRows = (settingsRes.data ?? []) as Array<{ key: string; value: unknown }>
+  const holidaysRow = settingRows.find((r) => r.key === 'kpi_holidays')
+  const workdaysRow = settingRows.find((r) => r.key === 'kpi_workdays')
+
   const holidaysSetting =
-    settingRow && Array.isArray(settingRow.value)
-      ? settingRow.value.filter((v): v is string => typeof v === 'string')
+    holidaysRow && Array.isArray(holidaysRow.value)
+      ? holidaysRow.value.filter((v): v is string => typeof v === 'string')
+      : null
+  const workdaysSetting =
+    workdaysRow && Array.isArray(workdaysRow.value)
+      ? workdaysRow.value.filter((v): v is string => typeof v === 'string')
       : null
 
   return {
@@ -102,6 +116,8 @@ export async function fetchKpiImportScreenData(): Promise<KpiImportScreenData> {
     importLogs: (importLogsRes.data ?? []) as ImportLogRow[],
     holidaysSetting,
     holidaysConfigured: holidaysSetting !== null,
+    workdaysSetting,
+    workdaysConfigured: workdaysSetting !== null,
   }
 }
 
@@ -310,16 +326,18 @@ export async function cancelPendingImportLog(importLogId: string): Promise<void>
 }
 
 /**
- * 承認済みの import_log に対して未達を計算し、alerts に入れ（.select() なし・ignoreDuplicates）、
+ * 承認済みの import_log に対して未達を計算し、alerts に1回の insert でまとめて入れ
+ * （.select() なし・upsert 不使用。一意制約違反 23505 は前に入れ終えた扱い）、
  * import_logs の alerts_created_at と alert_count を記録する。
  */
 export async function generateAlertsForApprovedImport(
   importLog: ImportLogRow,
   holidaysSetting: readonly string[] | null,
+  workdaysSetting: readonly string[] | null = null,
 ): Promise<{ alertCount: number; drafts: GeneratedAlertDraft[] }> {
   const targetDate = importLog.target_date
   const monthFirst = getMonthFirstDate(targetDate)
-  const busCtx = buildBusinessDaysContext(targetDate, holidaysSetting)
+  const busCtx = buildBusinessDaysContext(targetDate, holidaysSetting, workdaysSetting)
 
   // この取り込みに含まれるメンバー一覧を取得
   const { data: logEntries, error: logEntriesErr } = await supabase
@@ -399,6 +417,7 @@ export async function generateAlertsForApprovedImport(
       memberId,
       targetDate,
       holidays: busCtx.holidays,
+      workdays: busCtx.workdays,
       monthlyTarget,
       approvedMonthEntries: memberEntries,
     })
@@ -418,6 +437,7 @@ export async function generateAlertsForApprovedImport(
 export async function approvePendingImportAndGenerateAlerts(
   importLog: ImportLogRow,
   holidaysSetting: readonly string[] | null,
+  workdaysSetting: readonly string[] | null = null,
 ): Promise<{ alertCount: number; drafts: GeneratedAlertDraft[] }> {
   // 1. status を 'approved' に更新（approved_by, approved_at, approval_kind はDBトリガーが設定）
   const { data: approvedRows, error: approveErr } = await supabase
@@ -435,6 +455,7 @@ export async function approvePendingImportAndGenerateAlerts(
   return generateAlertsForApprovedImport(
     { ...importLog, status: 'approved' },
     holidaysSetting,
+    workdaysSetting,
   )
 }
 

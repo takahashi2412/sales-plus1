@@ -5,6 +5,7 @@ import type { MemberAffiliationRow } from '../../src/foundation/types'
 import {
   buildBusinessDaysContext,
   calculateKpiTargets,
+  calculateShouldBe,
   countBusinessDaysElapsed,
   decodeShiftJis,
   evaluateMemberAlertsForImport,
@@ -696,5 +697,167 @@ describe('KPI 共通ロジック：営業日数・日ごと未達・月ペース
     expect(formatKpiErrorMessage('未達の出し直しに失敗しました', otherError)).toBe(
       '未達の出し直しに失敗しました（理由：new row violates row-level security policy for table "alerts"）',
     )
+  })
+
+  it('あるべきの関数（calculateShouldBe）：月の目標 × 基準日までの営業日の数 ÷ 月の営業日の数を返す', () => {
+    const ctx = buildBusinessDaysContext(
+      '2026-10-24',
+      ['2026-10-12'],
+      ['2026-10-24'], // 稼働する土曜
+    )
+    // 2026年10月：平日22日 - 休日1日(10/12) + 稼働土曜1日(10/24) = 22営業日
+    expect(ctx.totalBusinessDays).toBe(22)
+    expect(ctx.businessDaysInMonth).toContain('2026-10-24')
+    expect(ctx.businessDaysInMonth).not.toContain('2026-10-17')
+
+    // 10/24（土）時点の経過営業日数：10/1〜10/23 の平日17日 - 10/12(祝)1日 + 10/24(土)1日 = 17日
+    expect(countBusinessDaysElapsed('2026-10-24', ctx.businessDaysInMonth)).toBe(17)
+    expect(calculateShouldBe(2200, '2026-10-24', ctx.businessDaysInMonth)).toBeCloseTo(1700, 6)
+    expect(calculateShouldBe(2200, '2026-10-01', [])).toBe(0)
+  })
+
+  it('稼働しない土曜・日曜・休みの日の取り込みでは、日ごとも月のペースも目標未入力も未達が出ず、かけた数は次の営業日の月のペース累計に入る', () => {
+    const monthlyTarget: KpiTargetRow = {
+      id: 'target-oct',
+      member_id: 'member-a',
+      month: '2026-10-01',
+      goes_to_sales: false,
+      target_profit: null,
+      unit_price: null,
+      completion_rate: null,
+      rate_order: null,
+      apo_target: 22,
+      working_days: 22,
+      call_hours: 5,
+      term: 20, // 日次総=100、月次総=2200
+      rate_connected: 40,
+      rate_recall: 30,
+      rate_owner: 15,
+      rate_prospect: 4,
+      rate_apo_owner: 10,
+      rate_adoption: 80,
+      history: [],
+      revised_at: null,
+      created_at: '2026-10-01T00:00:00Z',
+      updated_at: '2026-10-01T00:00:00Z',
+    }
+    const holidays = ['2026-10-12']
+    const workdays = ['2026-10-24'] // 10/17 は入れていない土曜
+
+    // 1. 入れていない土曜（2026-10-17）の取り込み：目標ありでも日ごと・月のペースともに未達が出ない
+    const nonWorkSatAlerts = evaluateMemberAlertsForImport({
+      importLogId: 'log-sat-off',
+      memberId: 'member-a',
+      targetDate: '2026-10-17',
+      holidays,
+      workdays,
+      monthlyTarget,
+      approvedMonthEntries: [
+        { date: '2026-10-17', total: 20, connected: 5, recall: 3, owner: 1, prospect: 0, apo: 0 },
+      ],
+    })
+    expect(nonWorkSatAlerts).toEqual([])
+
+    // 目標が未入力の人でも、入れていない土曜（2026-10-17）は target_missing を出さない
+    const nonWorkSatMissingTarget = evaluateMemberAlertsForImport({
+      importLogId: 'log-sat-off-2',
+      memberId: 'member-no-target',
+      targetDate: '2026-10-17',
+      holidays,
+      workdays,
+      monthlyTarget: null,
+      approvedMonthEntries: [
+        { date: '2026-10-17', total: 20, connected: 5, recall: 3, owner: 1, prospect: 0, apo: 0 },
+      ],
+    })
+    expect(nonWorkSatMissingTarget).toEqual([])
+
+    // 2. 10/17（非稼働土曜）にかけた数が、次の営業日の月のペース累計に入ることの確認
+    // 10/1（第1営業日：80件）、10/2（第2営業日：100件）、10/3（非稼働土曜：20件）→ 10/5（第3営業日：100件）で累計300件になり、あるべき300件に届く
+    const monAlerts = evaluateMemberAlertsForImport({
+      importLogId: 'log-mon',
+      memberId: 'member-a',
+      targetDate: '2026-10-05',
+      holidays,
+      workdays,
+      monthlyTarget,
+      approvedMonthEntries: [
+        { date: '2026-10-01', total: 80, connected: 40, recall: 30, owner: 15, prospect: 4, apo: 2 },
+        { date: '2026-10-02', total: 100, connected: 40, recall: 30, owner: 15, prospect: 4, apo: 2 },
+        { date: '2026-10-03', total: 20, connected: 10, recall: 5, owner: 3, prospect: 1, apo: 0 },
+        { date: '2026-10-05', total: 100, connected: 40, recall: 30, owner: 15, prospect: 4, apo: 2 },
+      ],
+    })
+    expect(monAlerts.find((a) => a.compare === 'pace' && a.item === 'total')).toBeUndefined()
+  })
+
+  it('稼働する土曜に新しく月のペースが遅れ、次の営業日（月曜）も遅れているとき、前の営業日がその土曜になるため月曜は needs_response = false になる', () => {
+    // 2026年10月：休日 10/12、稼働土曜 10/03（第3営業日）で全22営業日
+    const holidays = ['2026-10-12']
+    const workdays = ['2026-10-03']
+    const monthlyTarget: KpiTargetRow = {
+      id: 'target-work-sat',
+      member_id: 'member-a',
+      month: '2026-10-01',
+      goes_to_sales: false,
+      target_profit: null,
+      unit_price: null,
+      completion_rate: null,
+      rate_order: null,
+      apo_target: 22,
+      working_days: 22,
+      call_hours: 5,
+      term: 20, // 1営業日あたり総100、月次総2200
+      rate_connected: 40,
+      rate_recall: 30,
+      rate_owner: 15,
+      rate_prospect: 4,
+      rate_apo_owner: 10,
+      rate_adoption: 80,
+      history: [],
+      revised_at: null,
+      created_at: '2026-10-01T00:00:00Z',
+      updated_at: '2026-10-01T00:00:00Z',
+    }
+
+    const entriesUpToSat = [
+      // 10/1(木・第1営業日): 100（順調）
+      { date: '2026-10-01', total: 100, connected: 40, recall: 30, owner: 15, prospect: 4, apo: 2 },
+      // 10/2(金・第2営業日): 100（累計200・順調）
+      { date: '2026-10-02', total: 100, connected: 40, recall: 30, owner: 15, prospect: 4, apo: 2 },
+      // 10/3(土・稼働土曜・第3営業日): 50（累計250 < あるべき300 で新しく遅れ）
+      { date: '2026-10-03', total: 50, connected: 40, recall: 20, owner: 15, prospect: 4, apo: 1 },
+    ]
+
+    const satAlerts = evaluateMemberAlertsForImport({
+      importLogId: 'log-sat-work',
+      memberId: 'member-a',
+      targetDate: '2026-10-03',
+      holidays,
+      workdays,
+      monthlyTarget,
+      approvedMonthEntries: entriesUpToSat,
+    })
+    const satPaceTotal = satAlerts.find((a) => a.compare === 'pace' && a.item === 'total')
+    expect(satPaceTotal).toBeDefined()
+    expect(satPaceTotal?.needs_response).toBe(true)
+
+    // 次の営業日 10/5(月・第4営業日)：当日100件かけても累計350 < あるべき400 で遅れが継続
+    // 前の営業日は 10/3(土) なので needs_response = false になる
+    const monAlerts = evaluateMemberAlertsForImport({
+      importLogId: 'log-mon-after-sat',
+      memberId: 'member-a',
+      targetDate: '2026-10-05',
+      holidays,
+      workdays,
+      monthlyTarget,
+      approvedMonthEntries: [
+        ...entriesUpToSat,
+        { date: '2026-10-05', total: 100, connected: 40, recall: 30, owner: 15, prospect: 4, apo: 1 },
+      ],
+    })
+    const monPaceTotal = monAlerts.find((a) => a.compare === 'pace' && a.item === 'total')
+    expect(monPaceTotal).toBeDefined()
+    expect(monPaceTotal?.needs_response).toBe(false)
   })
 })

@@ -111,6 +111,7 @@ describe('土台の名簿表示ロジック（directory）', () => {
     expect(mem.roleLabel).toBe('メンバー');
     expect(mem.currentTeamText).toBe('架空チームA');
     expect(mem.currentBaseText).toBe('架空拠点A');
+    expect(mem.isRetired).toBe(false);
 
     const mgr = entries.find((e) => e.id === 'mgr-1')!;
     expect(mgr.roleLabel).toBe('MGR');
@@ -119,5 +120,32 @@ describe('土台の名簿表示ロジック（directory）', () => {
     const ceo = entries.find((e) => e.id === 'ceo-1')!;
     expect(ceo.roleLabel).toBe('代表');
     expect(ceo.currentTeamText).toBe('全体（所属チームなし）');
+  });
+
+  it('退職した人は一覧の下にまとまり、退職の印（isRetired = true）がつく', () => {
+    const membersWithRetired: MemberRow[] = [
+      {
+        id: 'ret-1',
+        auth_user_id: null,
+        email: 'retired@example.test',
+        name: 'あ退職メンバー',
+        role: 'member',
+        goes_to_sales: false,
+        hired_on: '2025-04-01',
+        retired_on: '2026-10-07',
+      },
+      ...members,
+    ];
+    const entries = buildDirectoryEntries(
+      membersWithRetired,
+      teams,
+      affiliations,
+      mgrAssignments,
+      '2026-11-04',
+    );
+    // 名前が「あ」で始まっていても、退職した人は一番下になる
+    expect(entries[entries.length - 1].id).toBe('ret-1');
+    expect(entries[entries.length - 1].isRetired).toBe(true);
+    expect(entries.slice(0, -1).every((e) => !e.isRetired)).toBe(true);
   });
 });

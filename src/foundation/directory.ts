@@ -7,6 +7,13 @@ import type {
   TeamRow,
 } from './types';
 
+declare module './types' {
+  interface DirectoryEntry {
+    isRetired?: boolean;
+    retiredOn?: string | null;
+  }
+}
+
 export const ROLE_LABELS: Record<MemberRole, string> = {
   member: 'メンバー',
   leader: 'リーダー',
@@ -33,6 +40,13 @@ export function isActivePeriod(
   return true;
 }
 
+export function isRetiredMember(
+  retiredOn: string | null | undefined,
+  todayJst: string,
+): boolean {
+  return retiredOn !== null && retiredOn !== undefined && retiredOn < todayJst;
+}
+
 export function buildDirectoryEntries(
   members: MemberRow[],
   teams: TeamRow[],
@@ -50,8 +64,16 @@ export function buildDirectoryEntries(
   );
 
   return [...members]
-    .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+    .sort((a, b) => {
+      const aRetired = isRetiredMember(a.retired_on, todayJst);
+      const bRetired = isRetiredMember(b.retired_on, todayJst);
+      if (aRetired !== bRetired) {
+        return aRetired ? 1 : -1;
+      }
+      return a.name.localeCompare(b.name, 'ja');
+    })
     .map((m) => {
+      const isRetired = isRetiredMember(m.retired_on, todayJst);
       const memberAffs = activeAffiliations.filter((a) => a.member_id === m.id);
       const affTeamNames = memberAffs
         .map((a) => teamMap.get(a.team_id))
@@ -82,6 +104,8 @@ export function buildDirectoryEntries(
         currentBaseText: bases.length > 0 ? bases.join('・') : '－',
         goesToSales: m.goes_to_sales,
         hiredOn: m.hired_on,
+        isRetired,
+        retiredOn: m.retired_on,
       };
     });
 }

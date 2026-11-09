@@ -20,6 +20,10 @@ import {
   type RouteKey,
 } from './components/layout/AppLayout';
 import { NoticeBox } from './components/ui';
+import { HomePage } from './features/home';
+import { KartePage } from './features/karte';
+import { AdminMembersPage } from './features/admin/members';
+import { AdminPermissionsPage } from './features/admin/permissions';
 import { RoleplayRecordPage } from './features/roleplay/record';
 import { RoleplayTalksPage } from './features/roleplay/talks';
 import { RoleplaySeminarPage } from './features/roleplay/seminar';
@@ -113,6 +117,22 @@ export function App() {
         setSelfEntry(foundSelf);
         setIsAdmin(hasAdmin);
         setEntries(built);
+
+        // ログインした直後（アドレスに #/… がないとき）：リーダー・MGR・代表はホーム、メンバーは名簿の確認
+        if (typeof window !== 'undefined') {
+          const hashPath = window.location.hash.replace(/^#\/?/, '').trim();
+          if (hashPath === '') {
+            if (
+              foundSelf.role === 'leader' ||
+              foundSelf.role === 'mgr' ||
+              foundSelf.role === 'ceo'
+            ) {
+              setRoute('home');
+            } else {
+              setRoute('directory');
+            }
+          }
+        }
       }
       setDataLoading(false);
     }
@@ -169,6 +189,8 @@ export function App() {
         </section>
       ) : (
         <>
+          {route === 'home' && <HomePage />}
+          {route === 'karte' && <KartePage />}
           {route === 'directory' && (
             <DirectoryView selfEntry={selfEntry} entries={entries} onSignOut={handleSignOut} />
           )}
@@ -180,6 +202,8 @@ export function App() {
           {route === 'kpi-alerts' && <KpiAlertsPage />}
           {route === 'kpi-import' && <KpiImportPage />}
           {route === 'memo' && <SubordinateMemoPage />}
+          {route === 'admin-members' && <AdminMembersPage />}
+          {route === 'admin-permissions' && <AdminPermissionsPage />}
         </>
       )}
     </AppLayout>

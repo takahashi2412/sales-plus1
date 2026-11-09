@@ -34,6 +34,8 @@ export interface KpiTargetsScreenData {
   nextMonth: string // 'YYYY-MM-01'
   holidaysSetting: string[] | null
   holidaysConfigured: boolean
+  workdaysSetting: string[] | null
+  workdaysConfigured: boolean
 }
 
 export function getNextMonthFirstDate(monthFirst: string): string {
@@ -70,6 +72,8 @@ export async function fetchKpiTargetsScreenData(): Promise<KpiTargetsScreenData>
       nextMonth,
       holidaysSetting: null,
       holidaysConfigured: false,
+      workdaysSetting: null,
+      workdaysConfigured: false,
     }
   }
 
@@ -82,7 +86,10 @@ export async function fetchKpiTargetsScreenData(): Promise<KpiTargetsScreenData>
       .select('*')
       .in('month', [currentMonth, nextMonth])
       .order('month', { ascending: false }),
-    supabase.from('settings').select('key, value').eq('key', 'kpi_holidays').limit(1),
+    supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['kpi_holidays', 'kpi_workdays']),
   ])
 
   if (membersRes.error) throw membersRes.error
@@ -96,10 +103,17 @@ export async function fetchKpiTargetsScreenData(): Promise<KpiTargetsScreenData>
   const affiliations = (affRes.data ?? []) as MemberAffiliationRow[]
   const targets = (targetsRes.data ?? []) as KpiTargetRow[]
 
-  const settingRow = (settingsRes.data ?? [])[0] as { key: string; value: unknown } | undefined
+  const settingRows = (settingsRes.data ?? []) as Array<{ key: string; value: unknown }>
+  const holidaysRow = settingRows.find((r) => r.key === 'kpi_holidays')
+  const workdaysRow = settingRows.find((r) => r.key === 'kpi_workdays')
+
   const holidaysSetting =
-    settingRow && Array.isArray(settingRow.value)
-      ? settingRow.value.filter((v): v is string => typeof v === 'string')
+    holidaysRow && Array.isArray(holidaysRow.value)
+      ? holidaysRow.value.filter((v): v is string => typeof v === 'string')
+      : null
+  const workdaysSetting =
+    workdaysRow && Array.isArray(workdaysRow.value)
+      ? workdaysRow.value.filter((v): v is string => typeof v === 'string')
       : null
 
   const teamNameById = new Map<string, string>(teams.map((t) => [t.id, t.name]))
@@ -135,6 +149,8 @@ export async function fetchKpiTargetsScreenData(): Promise<KpiTargetsScreenData>
     nextMonth,
     holidaysSetting,
     holidaysConfigured: holidaysSetting !== null,
+    workdaysSetting,
+    workdaysConfigured: workdaysSetting !== null,
   }
 }
 
@@ -193,8 +209,9 @@ export function getDefaultTargetValues(
   goesToSales: boolean,
   monthFirst: string,
   holidaysSetting: readonly string[] | null,
+  workdaysSetting: readonly string[] | null = null,
 ): KpiTargetValues {
-  const busCtx = buildBusinessDaysContext(monthFirst, holidaysSetting)
+  const busCtx = buildBusinessDaysContext(monthFirst, holidaysSetting, workdaysSetting)
   const defaultWorkingDays = busCtx.totalBusinessDays > 0 ? busCtx.totalBusinessDays : 20
 
   return {

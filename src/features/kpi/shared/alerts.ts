@@ -30,6 +30,7 @@ export interface EvaluateMemberAlertsInput {
   memberId: string;
   targetDate: string;
   holidays: readonly string[];
+  workdays?: readonly string[];
   /** その人のその月の目標（未入力なら null） */
   monthlyTarget: KpiTargetRow | null;
   /** その人のその月の承認済みの日々のKPI（当日の取り込み分を含む、すべて承認済みの行） */
@@ -37,6 +38,21 @@ export interface EvaluateMemberAlertsInput {
     KpiEntryRow,
     'date' | 'total' | 'connected' | 'recall' | 'owner' | 'prospect' | 'apo'
   >[];
+}
+
+/**
+ * 月の目標・基準の日・その月の営業日の一覧から「あるべき」
+ * （月の目標 × 基準の日までの営業日の数 ÷ 月の営業日の数）を返す。
+ */
+export function calculateShouldBe(
+  monthlyGoal: number,
+  asOfDate: string,
+  businessDaysInMonth: readonly string[],
+): number {
+  const totalBusDays = businessDaysInMonth.length;
+  if (totalBusDays <= 0) return 0;
+  const elapsedBusDays = countBusinessDaysElapsed(asOfDate, businessDaysInMonth);
+  return (monthlyGoal * elapsedBusDays) / totalBusDays;
 }
 
 function sumEntriesUpToDate(
@@ -80,9 +96,7 @@ function evaluatePaceItemsAtDate(
   asOfDate: string,
   businessDaysInMonth: readonly string[],
 ): Map<Exclude<AlertItem, 'target_missing'>, PaceItemCheck> {
-  const totalBusDays = businessDaysInMonth.length;
   const elapsedBusDays = countBusinessDaysElapsed(asOfDate, businessDaysInMonth);
-  const ratio = totalBusDays > 0 ? elapsedBusDays / totalBusDays : 0;
 
   const effectiveValues = resolveTargetValuesAtDate(monthlyTarget, asOfDate);
   const calc = calculateKpiTargets(monthlyTarget.goes_to_sales, effectiveValues);
@@ -102,7 +116,7 @@ function evaluatePaceItemsAtDate(
   ];
 
   for (const ci of countItems) {
-    const shouldBe = ci.monthlyGoal * ratio;
+    const shouldBe = calculateShouldBe(ci.monthlyGoal, asOfDate, businessDaysInMonth);
     const isUnmet = elapsedBusDays > 0 && ci.actualVal < shouldBe - 1e-9;
     map.set(ci.item, {
       item: ci.item,
@@ -131,15 +145,32 @@ function evaluatePaceItemsAtDate(
 export function evaluateMemberAlertsForImport(
   input: EvaluateMemberAlertsInput,
 ): GeneratedAlertDraft[] {
-  const { importLogId, memberId, targetDate, holidays, monthlyTarget, approvedMonthEntries } =
-    input;
+  const {
+    importLogId,
+    memberId,
+    targetDate,
+    holidays,
+    workdays = [],
+    monthlyTarget,
+    approvedMonthEntries,
+  } = input;
   const monthFirst = getMonthFirstDate(targetDate);
+  const isTargetBusinessDay = isBusinessDay(targetDate, holidays, workdays);
+
+  // 対象の日が営業日でないとき（入れていない土曜と日曜・休みの日）は、
+  // 日ごとも月のペースも未達を出さない（目標が未入力の未達も出さない）
+  if (!isTargetBusinessDay) {
+    return [];
+  }
 
   // 1. 目標が未入力（target_missing）
   if (!monthlyTarget) {
-    // その月でその人の承認済みの日々のKPIがはじめて出た日だけ needs_response を真にする
+    // その月でその人の承認済みの日々のKPIがはじめて出た営業日だけ needs_response を真にする
     const hasEarlierApprovedDayInMonth = approvedMonthEntries.some(
-      (e) => e.date >= monthFirst && e.date < targetDate,
+      (e) =>
+        e.date >= monthFirst &&
+        e.date < targetDate &&
+        isBusinessDay(e.date, holidays, workdays),
     );
     return [
       {
@@ -155,14 +186,13 @@ export function evaluateMemberAlertsForImport(
     ];
   }
 
-  const businessDaysInMonth = listBusinessDaysInMonth(monthFirst, holidays);
-  const isTargetBusinessDay = isBusinessDay(targetDate, holidays);
+  const businessDaysInMonth = listBusinessDaysInMonth(monthFirst, holidays, workdays);
   const dailySum = sumEntriesUpToDate(approvedMonthEntries, targetDate, true);
 
   const drafts: GeneratedAlertDraft[] = [];
 
   // 2. 日ごとの未達：対象の日が営業日で、その日の総が1以上の人だけ（総が0の日＝休みの日は日ごとの未達を出さない）
-  if (isTargetBusinessDay && dailySum.total >= 1) {
+  if (dailySum.total >= 1) {
     const effectiveValues = resolveTargetValuesAtDate(monthlyTarget, targetDate);
     const calc = calculateKpiTargets(monthlyTarget.goes_to_sales, effectiveValues);
 
@@ -209,7 +239,7 @@ export function evaluateMemberAlertsForImport(
     }
   }
 
-  // 3. 月のペースの未達：対象の日が営業日のとき（休んだ分も月のペースに出る）
+  // 3. 月のペースの未達：対象の日が営業日のとき（休んだ分や非営業日にかけた分も月のペースに出る）
   const elapsedBusDays = countBusinessDaysElapsed(targetDate, businessDaysInMonth);
   if (elapsedBusDays >= 1) {
     const todayPaceMap = evaluatePaceItemsAtDate(
