@@ -29,6 +29,7 @@ import {
   filterApprovedKpiEntries,
   getTwoMonthsAgoFirstDate,
   pickSelectableKarteMembers,
+  resolveInitialKarteYearMonth,
   resolveScopedMemberIdsForKarteKpi,
   type KarteRoleplayRow,
   type KarteSeminarRow,
@@ -150,7 +151,11 @@ export async function fetchKarteMemberScopedKpiData(
     affiliations,
     todayJst,
   )
-  const fromDate = getTwoMonthsAgoFirstDate(todayJst)
+  const initialYm = resolveInitialKarteYearMonth(selectedMember, todayJst)
+  const todayFromDate = getTwoMonthsAgoFirstDate(todayJst)
+  const memberFromDate = getTwoMonthsAgoFirstDate(initialYm)
+  const fromDate =
+    memberFromDate < todayFromDate ? memberFromDate : todayFromDate
 
   const [rawEntries, targets] = await Promise.all([
     fetchAllRowsByRange<KpiEntryRow>((from, to) =>

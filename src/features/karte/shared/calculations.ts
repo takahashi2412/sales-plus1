@@ -259,6 +259,29 @@ export function pickSelectableKarteMembers(
 }
 
 /**
+ * カルテを最初に開いたとき（または対象メンバーを切り替えたとき）の「対象の月」（YYYY-MM）を返す。
+ * - 退職した人を選んだときは、退職日の月（retired_on の YYYY-MM）
+ * - 現役の人を選んだとき（または未選択のとき）は、今月（todayJst の YYYY-MM）
+ */
+export function resolveInitialKarteYearMonth(
+  member: Pick<MemberRow, 'retired_on'> | null | undefined,
+  todayJst: string = getTodayJstDateString(),
+): string {
+  const currentYm = todayJst.slice(0, 7)
+  if (!member) {
+    return currentYm
+  }
+  if (
+    member.retired_on !== null &&
+    member.retired_on < todayJst &&
+    /^\d{4}-\d{2}/.test(member.retired_on)
+  ) {
+    return member.retired_on.slice(0, 7)
+  }
+  return currentYm
+}
+
+/**
  * 基準の日：その人のその月の、承認済みの日々のKPIがある最後の日を返す
  */
 export function resolveKarteAsOfDate(

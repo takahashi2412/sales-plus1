@@ -64,14 +64,22 @@
      - あわせて `src/features/karte/api.ts` と `src/features/home/api.ts` のすべての `.from(...)` の表名（`members`・`member_affiliations`・`teams`・`settings`・`roleplay_themes`・`masters`・`import_logs`・`kpi_entries`・`kpi_targets`・`roleplays`・`member_themes`・`seminars`・`seminar_members`・`subordinate_memos`・`subordinate_memo_targets`・`alerts`・`talks`）が `supabase/migrations/` の定義と一致していることを確認しました。
    - **② 未定義のCSS変数（`--navy`・`--sub`・`--card`・`--bg`・`--muted`）の置きかえ**：
      - `src/features/home/styles.css`・`src/features/karte/styles.css`・`src/features/karte/index.tsx`・`src/features/home/index.tsx` で使われていた未定義の色変数を、すべて `src/index.css` に定義されている変数（`--navy-band`・`--navy-text`・`--ink-muted`・`--surface`・`--surface-sunken`・`--on-dark`）に置きかえ、件数バッジ（例：「2件」）や見出し番号・選択中チップの背景色と文字色が正しく表示されるように修正しました。
+6. **画面の確かめで見つかった追加3点の修正**
+   - **① 推移グラフの「指導した日」の色と画面内の赤（`--brand`）の使用箇所の確認**：
+     - 「赤は1画面1〜2か所」の決まりに従い、`src/features/karte/index.tsx` の推移グラフ（`KarteTrendSvgChart`）の「指導した日」の縦線および凡例を赤（`--brand`）から橙の破線（`--warn`）に変更しました。また、カルテ画面・ホーム画面全体で通常表示時に赤（`--brand`・`tone="brand"`・`tone="alert"`）が使われていないことを確認しました。
+   - **② 推移グラフ上の「指導（…）」文字の重なり解消**：
+     - 日付が近いときにグラフ上部の文字が重なって読めなくなる問題を解消するため、SVGグラフ上には文字を置かず縦線（破線）のみとし、日付と指導内容はグラフ下の「指導した日の一覧」に表示する形に統一しました。
+   - **③ 退職した人を選んだときの初期「対象の月」を退職日の月にする改善**：
+     - `src/features/karte/shared/calculations.ts` に、最初に開く月を決める純粋関数 `resolveInitialKarteYearMonth`（現役＝今月、退職者＝`retired_on` の月）を追加し、`tests/karte/karte-shared.test.ts` に単体テストを追加しました。
+     - `src/features/karte/index.tsx` と `src/features/karte/api.ts` で、退職した人を選んだとき（初期表示および対象メンバー切り替え時）に「対象の月」が自動的に退職日の月になり、その月と前月のKPI・目標も取得範囲に含まれるようにしました。
 
 ## 決められずに止めたこと・質問
 - なし（計画書初回指定時の `plan_karte-common_v1.md` と `plan_karte_v1.md` の確認のみ0章で実施し、本人の指示どおり `plan_karte_v1.md` を進めました）。
 
 ## テストの結果（通った数／全体）
-- 単体テスト＋守りのテスト（`npm test`）：**14ファイル／190テスト中 190テスト通過**（失敗 0）
+- 単体テスト＋守りのテスト（`npm test`）：**14ファイル／191テスト中 191テスト通過**（失敗 0）
   - 内訳：
-    - `tests/karte/karte-shared.test.ts`：14 / 14 通過
+    - `tests/karte/karte-shared.test.ts`：15 / 15 通過
     - `tests/home/home-shared.test.ts`：3 / 3 通過
     - 既存の単体テスト（`foundation`・`roleplay`・`kpi`・`memo`）：8ファイル 85 / 85 通過
     - 守りのテスト（`tests/guard/permissions.test.ts`・`roleplay.test.ts`・`kpi-memo.test.ts`・`karte.test.ts`）：4ファイル 88 / 88 通過

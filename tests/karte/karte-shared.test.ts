@@ -27,6 +27,7 @@ import {
   formatRatioAndDiff,
   getTwoMonthsAgoFirstDate,
   pickSelectableKarteMembers,
+  resolveInitialKarteYearMonth,
   resolveKarteAsOfDate,
   resolveScopedMemberIdsForKarteKpi,
 } from '../../src/features/karte/shared'
@@ -933,6 +934,36 @@ describe('karte shared calculations', () => {
         fakeClient as never,
       )
       expect(queriedTables).toEqual(['kpi_entries', 'kpi_targets'])
+    })
+
+    it('最初に開く月（resolveInitialKarteYearMonth）：現役の人は今月、退職した人は退職日の月になる', () => {
+      const activeMember = members.find((m) => m.id === 'member-1')!
+      const retiredMember = members.find((m) => m.id === 'retired-1')!
+
+      // 現役の人（retired_on: null）は今月
+      expect(resolveInitialKarteYearMonth(activeMember, '2026-11-09')).toBe(
+        '2026-11',
+      )
+      // 退職した人（retired_on: '2026-10-31'）は退職日の月
+      expect(resolveInitialKarteYearMonth(retiredMember, '2026-11-09')).toBe(
+        '2026-10',
+      )
+      // 別の月に退職した人（retired_on: '2026-08-15'）
+      expect(
+        resolveInitialKarteYearMonth(
+          { retired_on: '2026-08-15' },
+          '2026-11-09',
+        ),
+      ).toBe('2026-08')
+      // 退職予定日が今日以降（まだ現役）の場合は今月
+      expect(
+        resolveInitialKarteYearMonth(
+          { retired_on: '2026-12-31' },
+          '2026-11-09',
+        ),
+      ).toBe('2026-11')
+      // 未選択（null）の場合は今月
+      expect(resolveInitialKarteYearMonth(null, '2026-11-09')).toBe('2026-11')
     })
   })
 })

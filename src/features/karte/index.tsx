@@ -28,6 +28,7 @@ import {
   formatRatioAndDiff,
   getPreviousYearMonth,
   pickSelectableKarteMembers,
+  resolveInitialKarteYearMonth,
   resolveKarteAsOfDate,
   resolveScopedMemberIdsForKarteKpi,
   type KarteKpiMetricKey,
@@ -161,8 +162,8 @@ function KarteTrendSvgChart({
           <span
             className="karte-legend-swatch"
             style={{
-              backgroundColor: 'var(--brand)',
-              borderTop: '2px dashed var(--brand)',
+              backgroundColor: 'transparent',
+              borderTop: '2px dashed var(--warn)',
             }}
           />
           指導した日（ロープレ・部下メモ）
@@ -212,7 +213,7 @@ function KarteTrendSvgChart({
           )
         })}
 
-        {/* 指導した日の縦線 */}
+        {/* 指導した日の縦線（文字は重なり防止のためグラフ上には置かず、下の「指導した日の一覧」に表示） */}
         {trend.guidanceDates.map((g) => {
           const x = getX(g.date)
           const labelParts: string[] = []
@@ -220,25 +221,16 @@ function KarteTrendSvgChart({
           if (g.hasMemo) labelParts.push('部下メモ')
           return (
             <g key={`guidance-${g.date}`}>
+              <title>{`${g.date} 指導（${labelParts.join('・')}）`}</title>
               <line
                 x1={x}
                 y1={padTop}
                 x2={x}
                 y2={padTop + plotH}
-                stroke="var(--brand)"
+                stroke="var(--warn)"
                 strokeWidth="1.5"
                 strokeDasharray="4 3"
               />
-              <text
-                x={x}
-                y={padTop - 6}
-                textAnchor="middle"
-                fontSize="10"
-                fontWeight="700"
-                fill="var(--brand)"
-              >
-                指導({labelParts.join('・')})
-              </text>
             </g>
           )
         })}
@@ -330,6 +322,7 @@ export function KartePage() {
   })
   const [selectedPeriod, setSelectedPeriod] = useState<KartePeriod>('month')
   const [selectedYearMonth, setSelectedYearMonth] = useState<string>('')
+  const [yearMonthMemberId, setYearMonthMemberId] = useState<string>('')
   const [timelineFilter, setTimelineFilter] =
     useState<KarteTimelineFilter>('all')
   const [expandedLegacyIds, setExpandedLegacyIds] = useState<Set<string>>(
@@ -346,7 +339,6 @@ export function KartePage() {
           : null
       const data = await fetchKartePageDataset(hint)
       setDataset(data)
-      setSelectedYearMonth((prev) => prev || data.todayJst.slice(0, 7))
     } catch (err) {
       setErrorMessage(formatKarteDbError(err))
     } finally {
@@ -450,8 +442,31 @@ export function KartePage() {
     }
   }, [dataset, selectedMemberInfo])
 
+  // 選んだ人が決まった・切り替わったとき、初期の「対象の月」（現役＝今月、退職者＝退職日の月）に合わせる
+  useEffect(() => {
+    if (!dataset || !selectedMemberInfo) return
+    const memberId = selectedMemberInfo.member.id
+    if (yearMonthMemberId !== memberId) {
+      setYearMonthMemberId(memberId)
+      setSelectedYearMonth(
+        resolveInitialKarteYearMonth(
+          selectedMemberInfo.member,
+          dataset.todayJst,
+        ),
+      )
+    }
+  }, [dataset, selectedMemberInfo, yearMonthMemberId])
+
   const handleSelectMember = (memberId: string) => {
     setSelectedMemberId(memberId)
+    if (dataset) {
+      const targetMember =
+        selectableMembers.find((m) => m.member.id === memberId)?.member ?? null
+      setYearMonthMemberId(memberId)
+      setSelectedYearMonth(
+        resolveInitialKarteYearMonth(targetMember, dataset.todayJst),
+      )
+    }
     if (typeof window !== 'undefined') {
       window.location.hash = buildKarteMemberHash(memberId)
     }
@@ -469,11 +484,23 @@ export function KartePage() {
     })
   }
 
+  const initialYearMonthForMember = useMemo(() => {
+    if (!dataset) return ''
+    return resolveInitialKarteYearMonth(
+      selectedMemberInfo?.member ?? null,
+      dataset.todayJst,
+    )
+  }, [dataset, selectedMemberInfo])
+
   const availableYearMonths = useMemo(() => {
     if (!dataset) return []
     const currentYm = dataset.todayJst.slice(0, 7)
     const prevYm = getPreviousYearMonth(currentYm)
     const ymSet = new Set<string>([currentYm, prevYm])
+    if (initialYearMonthForMember) {
+      ymSet.add(initialYearMonthForMember)
+      ymSet.add(getPreviousYearMonth(initialYearMonthForMember))
+    }
     for (const e of dataset.approvedEntries) {
       ymSet.add(e.date.slice(0, 7))
     }
@@ -481,12 +508,26 @@ export function KartePage() {
       ymSet.add(t.month.slice(0, 7))
     }
     return [...ymSet].sort((a, b) => b.localeCompare(a))
-  }, [dataset])
+  }, [dataset, initialYearMonthForMember])
 
   const activeYearMonth = useMemo(() => {
-    if (selectedYearMonth) return selectedYearMonth
-    return dataset?.todayJst.slice(0, 7) ?? '2026-11'
-  }, [selectedYearMonth, dataset])
+    if (
+      selectedYearMonth &&
+      selectedMemberInfo &&
+      yearMonthMemberId === selectedMemberInfo.member.id
+    ) {
+      return selectedYearMonth
+    }
+    return (
+      initialYearMonthForMember || dataset?.todayJst.slice(0, 7) || '2026-11'
+    )
+  }, [
+    selectedYearMonth,
+    selectedMemberInfo,
+    yearMonthMemberId,
+    initialYearMonthForMember,
+    dataset,
+  ])
 
   const asOfDate = useMemo(() => {
     if (!dataset || !selectedMemberInfo) return null
@@ -744,7 +785,10 @@ export function KartePage() {
               value: ym,
               label: formatYearMonthLabel(ym),
             }))}
-            onChange={(e) => setSelectedYearMonth(e.target.value)}
+            onChange={(e) => {
+              setYearMonthMemberId(selectedMemberInfo.member.id)
+              setSelectedYearMonth(e.target.value)
+            }}
           />
         </div>
       </section>
