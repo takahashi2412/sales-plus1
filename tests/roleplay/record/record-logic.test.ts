@@ -13,6 +13,10 @@ import {
   buildReadableMemberMap,
   buildThemeNoticesSummary,
   canCreateDraftRoleplay,
+  canModifyRoleplay,
+  formatRoleplayPassResultDisplay,
+  formatRoleplayThemeDisplay,
+  formatRoleplayTimeSlotDisplay,
   diffDaysBetweenDates,
   evaluateCheckRoleplayNotice,
   evaluateGraduationCandidate,
@@ -700,5 +704,55 @@ describe('ロープレ入力・一覧・トーク追加の補助計算', () => {
     await expect(
       updateMemberThemeRow('mt-1', { status: 'graduated' }, deniedClient),
     ).rejects.toThrow('この操作はできません');
+  });
+});
+
+
+describe('過去の記録（is_legacy = true）の編集不可判定と空欄表示（ロープレ）', () => {
+  it('is_legacy = true のロープレは編集不可と判定され、空の time_slot・theme_id・pass_result が「－」や「（過去の記録：なし）」になる', () => {
+    const legacyRow = makeRoleplay({
+      id: 'rp-legacy',
+      time_slot: null,
+      theme_id: null,
+      pass_result: null,
+      is_legacy: true,
+    });
+    const currentRow = makeRoleplay({
+      id: 'rp-current',
+      time_slot: '10',
+      theme_id: 't-apo-1',
+      pass_result: null,
+      is_legacy: false,
+    });
+
+    expect(canModifyRoleplay(legacyRow)).toBe(false);
+    expect(canModifyRoleplay(currentRow)).toBe(true);
+
+    expect(formatRoleplayTimeSlotDisplay(legacyRow.time_slot)).toBe('－');
+    expect(formatRoleplayTimeSlotDisplay(currentRow.time_slot)).toBe('10時台');
+
+    const themeMap = new Map<string, RoleplayThemeRow>([
+      [
+        't-apo-1',
+        {
+          id: 't-apo-1',
+          no: 1,
+          stage: 1,
+          name: '架空アポ1',
+          kind: 'apo',
+          pass_example: '例',
+          is_active: true,
+        },
+      ],
+    ]);
+    expect(formatRoleplayThemeDisplay(legacyRow, themeMap)).toBe('（過去の記録：なし）');
+    expect(formatRoleplayThemeDisplay(currentRow, themeMap)).toBe('架空アポ1');
+
+    expect(formatRoleplayPassResultDisplay(legacyRow)).toBe('（過去の記録：なし）');
+    expect(formatRoleplayPassResultDisplay(currentRow)).toBe('－');
+
+    // time_slot が null でも sortRoleplaysByDateAndTimeSlot が崩れないこと
+    const sorted = sortRoleplaysByDateAndTimeSlot([legacyRow, currentRow], 'asc');
+    expect(sorted.map((r) => r.id)).toEqual(['rp-current', 'rp-legacy']);
   });
 });

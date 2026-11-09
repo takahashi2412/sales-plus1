@@ -612,12 +612,12 @@ export function MemberThemesView({
                   );
                 })}
                 {noticesSummary.overMinutesRoleplays.map((rp) => {
-                  const t = themeMap.get(rp.theme_id);
+                  const t = rp.theme_id ? themeMap.get(rp.theme_id) : undefined;
                   return (
                     <li key={`over-${rp.id}`}>
                       <span>
                         <strong>{formatMemberName(rp.member_id)}</strong>（
-                        <DateText value={rp.date} />）：{t?.name ?? 'テーマ'}（1回{rp.minutes}
+                        <DateText value={rp.date} />）：{t?.name ?? (rp.is_legacy ? '（過去の記録：なし）' : 'テーマ')}（1回{rp.minutes}
                         分・確認）
                       </span>
                     </li>

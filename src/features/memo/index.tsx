@@ -14,6 +14,8 @@ import {
 import { getTodayJstDateString } from '../../foundation/directory';
 import {
   buildReadableMemberMap,
+  canModifyMemo,
+  formatMemoMasterDisplay,
   createSequentialTaskQueue,
   fetchMemoPageDataset,
   filterAndSortSubmittedMemos,
@@ -178,7 +180,7 @@ export function SubordinateMemoPage() {
   const isWriterOfSelected = useMemo(() => {
     if (!viewer) return false;
     if (!selectedMemo) return true; // 新規作成
-    return selectedMemo.created_by === viewer.memberId;
+    return canModifyMemo(viewer.memberId, selectedMemo);
   }, [viewer, selectedMemo]);
 
   const isSubmittedSelected = Boolean(selectedMemo && selectedMemo.submitted_at !== null);
@@ -587,8 +589,8 @@ export function SubordinateMemoPage() {
       className: 'memo-col-nowrap',
       render: (row) => (
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap' }}>
-          <Tag tone="navy">{row.theme_id ? (masterNameMap.get(row.theme_id) ?? '－') : '－'}</Tag>
-          <Tag tone="plain">{row.kind_id ? (masterNameMap.get(row.kind_id) ?? '－') : '－'}</Tag>
+          <Tag tone="navy">{formatMemoMasterDisplay(row.theme_id, Boolean(row.is_legacy), masterNameMap)}</Tag>
+          <Tag tone="plain">{formatMemoMasterDisplay(row.kind_id, Boolean(row.is_legacy), masterNameMap)}</Tag>
         </div>
       ),
     },
@@ -628,6 +630,11 @@ export function SubordinateMemoPage() {
         return (
           <div>
             <DateText value={row.date} />
+            {row.is_legacy && (
+              <div style={{ marginTop: '2px' }}>
+                <Tag tone="warn">過去の記録（見るだけ）</Tag>
+              </div>
+            )}
             {updatedLabel && (
               <div style={{ marginTop: '2px' }}>
                 <Tag tone="plain">{updatedLabel}</Tag>
@@ -649,7 +656,7 @@ export function SubordinateMemoPage() {
       header: 'テーマ',
       className: 'memo-col-nowrap',
       render: (row) => (
-        <Tag tone="navy">{row.theme_id ? (masterNameMap.get(row.theme_id) ?? '－') : '－'}</Tag>
+        <Tag tone="navy">{formatMemoMasterDisplay(row.theme_id, Boolean(row.is_legacy), masterNameMap)}</Tag>
       ),
     },
     {
@@ -657,7 +664,7 @@ export function SubordinateMemoPage() {
       header: '種類',
       className: 'memo-col-nowrap',
       render: (row) => (
-        <Tag tone="plain">{row.kind_id ? (masterNameMap.get(row.kind_id) ?? '－') : '－'}</Tag>
+        <Tag tone="plain">{formatMemoMasterDisplay(row.kind_id, Boolean(row.is_legacy), masterNameMap)}</Tag>
       ),
     },
     {
@@ -701,7 +708,7 @@ export function SubordinateMemoPage() {
       className: 'memo-col-nowrap',
       render: (row) => (
         <Button variant="secondary" onClick={() => loadMemoIntoForm(row)}>
-          {row.created_by === viewer.memberId ? '開く・直す' : '詳細を見る'}
+          {canModifyMemo(viewer.memberId, row) ? '開く・直す' : '詳細を見る'}
         </Button>
       ),
     },
@@ -746,6 +753,7 @@ export function SubordinateMemoPage() {
                     ? '送った部下メモを確認・直す'
                     : '部下メモの詳細（閲覧のみ）'}
             </h1>
+            {selectedMemo?.is_legacy && <Tag tone="warn">過去の記録（見るだけ）</Tag>}
             {selectedUpdatedLabel && <Tag tone="plain">{selectedUpdatedLabel}</Tag>}
             {autoSaveStatus && <span className="form-hint">{autoSaveStatus}</span>}
           </div>
@@ -808,13 +816,13 @@ export function SubordinateMemoPage() {
               <div className="profile-item">
                 <dt>テーマ</dt>
                 <dd>
-                  {selectedMemo.theme_id ? (masterNameMap.get(selectedMemo.theme_id) ?? '－') : '－'}
+                  {formatMemoMasterDisplay(selectedMemo.theme_id, Boolean(selectedMemo.is_legacy), masterNameMap)}
                 </dd>
               </div>
               <div className="profile-item">
                 <dt>種類</dt>
                 <dd>
-                  {selectedMemo.kind_id ? (masterNameMap.get(selectedMemo.kind_id) ?? '－') : '－'}
+                  {formatMemoMasterDisplay(selectedMemo.kind_id, Boolean(selectedMemo.is_legacy), masterNameMap)}
                 </dd>
               </div>
               <div className="profile-item">

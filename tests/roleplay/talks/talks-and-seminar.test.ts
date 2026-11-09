@@ -308,6 +308,7 @@ describe('研修の記録：参加者候補と追加・外す・戻す判定', (
       isCeo: false,
     };
     expect(canEditSeminar(leaderA, 'leader-a')).toBe(true);
+    expect(canEditSeminar(leaderA, 'leader-a', true)).toBe(false);
     expect(canEditSeminar(leaderA, 'leader-b')).toBe(false);
   });
 });
