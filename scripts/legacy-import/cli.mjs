@@ -1,24 +1,32 @@
 // @ts-check
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import {
   buildMastersLookup,
+  buildOutReportData,
+  chunkArray,
+  extractHostFromUrl,
+  fetchAllWithRange,
   filterAlreadyImportedRecords,
   formatSafeTerminalOutput,
   parseNamesMapping,
   processLegacyCsvFile,
+  validateWriteSafetyFlags,
 } from './core.mjs';
 
 /**
  * コマンドライン引数を解析する。
  * @param {string[]} argv
  */
-function parseCliArgs(argv) {
+export function parseCliArgs(argv) {
   const mode = argv[0] ?? '';
   let namesPath = '';
   let dirPath = '';
   let outDir = '';
+  let expectHost = '';
+  let yes = false;
   /** @type {string[]} */
   const files = [];
 
@@ -36,10 +44,15 @@ function parseCliArgs(argv) {
     } else if (arg === '--file' && argv[i + 1]) {
       files.push(argv[i + 1]);
       i += 1;
+    } else if (arg === '--expect-host' && argv[i + 1]) {
+      expectHost = argv[i + 1];
+      i += 1;
+    } else if (arg === '--yes') {
+      yes = true;
     }
   }
 
-  return { mode, namesPath, dirPath, outDir, files };
+  return { mode, namesPath, dirPath, outDir, expectHost, yes, files };
 }
 
 /**
@@ -53,30 +66,46 @@ function formatDbError(step, error) {
   return `${step} に失敗しました (code=${code}, message=${message})`;
 }
 
-function createServiceClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error(
-      '.env に VITE_SUPABASE_URL と SUPABASE_SERVICE_ROLE_KEY を設定してください。',
-    );
-    process.exit(1);
-  }
-
+/**
+ * @param {string} supabaseUrl
+ * @param {string} serviceRoleKey
+ */
+function createServiceClient(supabaseUrl, serviceRoleKey) {
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
 
 /**
+ * 取り込み済みの過去の記録を 1000 件ずつ全件取得し、重複判定用のキー集合を返す。
  * @param {ReturnType<typeof createServiceClient>} admin
  */
 async function fetchExistingLegacyKeys(admin) {
   const [memosRes, roleplaysRes, seminarsRes] = await Promise.all([
-    admin.from('subordinate_memos').select('id, legacy_source').eq('is_legacy', true),
-    admin.from('roleplays').select('id, member_id, legacy_source').eq('is_legacy', true),
-    admin.from('seminars').select('id, legacy_source').eq('is_legacy', true),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('subordinate_memos')
+        .select('id, legacy_source')
+        .eq('is_legacy', true)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('roleplays')
+        .select('id, member_id, legacy_source')
+        .eq('is_legacy', true)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('seminars')
+        .select('id, legacy_source')
+        .eq('is_legacy', true)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   if (memosRes.error) {
@@ -91,7 +120,7 @@ async function fetchExistingLegacyKeys(admin) {
 
   /** @type {Set<string>} */
   const existingMemoKeys = new Set();
-  for (const row of memosRes.data ?? []) {
+  for (const row of memosRes.data) {
     const src = /** @type {any} */ (row.legacy_source);
     if (src && src.file != null && src.row != null) {
       existingMemoKeys.add(`${src.file}:${src.row}`);
@@ -100,7 +129,7 @@ async function fetchExistingLegacyKeys(admin) {
 
   /** @type {Set<string>} */
   const existingRoleplayKeys = new Set();
-  for (const row of roleplaysRes.data ?? []) {
+  for (const row of roleplaysRes.data) {
     const src = /** @type {any} */ (row.legacy_source);
     if (src && src.file != null && src.row != null && row.member_id) {
       existingRoleplayKeys.add(`${src.file}:${src.row}:${row.member_id}`);
@@ -109,7 +138,7 @@ async function fetchExistingLegacyKeys(admin) {
 
   /** @type {Set<string>} */
   const existingSeminarKeys = new Set();
-  for (const row of seminarsRes.data ?? []) {
+  for (const row of seminarsRes.data) {
     const src = /** @type {any} */ (row.legacy_source);
     if (src && src.file != null && src.row != null) {
       existingSeminarKeys.add(`${src.file}:${src.row}`);
@@ -125,7 +154,13 @@ async function fetchExistingLegacyKeys(admin) {
 
 /**
  * @param {'preview' | 'import'} mode
- * @param {{ namesPath: string, dirPath: string, outDir: string }} opts
+ * @param {{
+ *   namesPath: string,
+ *   dirPath: string,
+ *   outDir: string,
+ *   supabaseUrl: string,
+ *   serviceRoleKey: string,
+ * }} opts
  */
 async function runPreviewOrImport(mode, opts) {
   if (!opts.namesPath || !opts.dirPath) {
@@ -154,11 +189,23 @@ async function runPreviewOrImport(mode, opts) {
     process.exit(1);
   }
 
-  const admin = createServiceClient();
+  const admin = createServiceClient(opts.supabaseUrl, opts.serviceRoleKey);
 
   const [membersRes, mastersRes, existingKeys] = await Promise.all([
-    admin.from('members').select('id, email'),
-    admin.from('masters').select('id, kind, name, is_active'),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('members')
+        .select('id, email')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('masters')
+        .select('id, kind, name, is_active')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
     fetchExistingLegacyKeys(admin),
   ]);
 
@@ -170,8 +217,8 @@ async function runPreviewOrImport(mode, opts) {
   }
 
   const namesBytes = fs.readFileSync(opts.namesPath);
-  const namesMapping = parseNamesMapping(namesBytes, membersRes.data ?? []);
-  const mastersLookup = buildMastersLookup(mastersRes.data ?? []);
+  const namesMapping = parseNamesMapping(namesBytes, membersRes.data);
+  const mastersLookup = buildMastersLookup(mastersRes.data);
 
   const globalErrors = [...namesMapping.errors, ...mastersLookup.errors];
 
@@ -201,37 +248,25 @@ async function runPreviewOrImport(mode, opts) {
     existingSeminarKeys: existingKeys.existingSeminarKeys,
   });
 
+  const counts = {
+    newMemos: deduped.newMemos.length,
+    existingMemoCount: deduped.existingMemoCount,
+    newRoleplays: deduped.newRoleplays.length,
+    existingRoleplayCount: deduped.existingRoleplayCount,
+    newSeminars: deduped.newSeminars.length,
+    existingSeminarCount: deduped.existingSeminarCount,
+  };
+
   if (opts.outDir) {
     fs.mkdirSync(opts.outDir, { recursive: true });
     const reportPath = path.join(opts.outDir, 'legacy-report.json');
-    fs.writeFileSync(
-      reportPath,
-      JSON.stringify(
-        {
-          mode,
-          globalErrors,
-          files: fileResults.map((f) => ({
-            fileIndex: f.fileIndex,
-            fileName: f.fileName,
-            form: f.form,
-            targetRowCount: f.targetRowCount,
-            skippedRows: f.skippedRows,
-            errors: f.errors,
-          })),
-          counts: {
-            newMemos: deduped.newMemos.length,
-            existingMemoCount: deduped.existingMemoCount,
-            newRoleplays: deduped.newRoleplays.length,
-            existingRoleplayCount: deduped.existingRoleplayCount,
-            newSeminars: deduped.newSeminars.length,
-            existingSeminarCount: deduped.existingSeminarCount,
-          },
-        },
-        null,
-        2,
-      ),
-      'utf8',
-    );
+    const reportData = buildOutReportData({
+      mode,
+      globalErrors,
+      fileResults,
+      counts,
+    });
+    fs.writeFileSync(reportPath, JSON.stringify(reportData, null, 2), 'utf8');
   }
 
   const totalErrorCount =
@@ -241,14 +276,7 @@ async function runPreviewOrImport(mode, opts) {
     mode,
     fileSummaries: fileResults,
     globalErrors,
-    counts: {
-      newMemos: deduped.newMemos.length,
-      existingMemoCount: deduped.existingMemoCount,
-      newRoleplays: deduped.newRoleplays.length,
-      existingRoleplayCount: deduped.existingRoleplayCount,
-      newSeminars: deduped.newSeminars.length,
-      existingSeminarCount: deduped.existingSeminarCount,
-    },
+    counts,
   });
 
   if (totalErrorCount > 0) {
@@ -328,7 +356,30 @@ async function runPreviewOrImport(mode, opts) {
 }
 
 /**
- * @param {{ dirPath: string, files: string[] }} opts
+ * 100件ずつに分けて .delete().in(column, chunk) を実行する。
+ *
+ * @param {ReturnType<typeof createServiceClient>} admin
+ * @param {string} table
+ * @param {string} column
+ * @param {string[]} ids
+ * @param {string} stepLabel
+ */
+async function deleteInChunks(admin, table, column, ids, stepLabel) {
+  for (const chunk of chunkArray(ids, 100)) {
+    const { error } = await admin.from(table).delete().in(column, chunk);
+    if (error) {
+      throw new Error(formatDbError(stepLabel, error));
+    }
+  }
+}
+
+/**
+ * @param {{
+ *   dirPath: string,
+ *   files: string[],
+ *   supabaseUrl: string,
+ *   serviceRoleKey: string,
+ * }} opts
  */
 async function runRemove(opts) {
   /** @type {Set<string>} */
@@ -352,17 +403,38 @@ async function runRemove(opts) {
 
   if (targetFiles.size === 0) {
     console.error(
-      '使い方: npm run legacy:remove -- --dir <フォルダ> または --file <ファイル名>',
+      '使い方: npm run legacy:remove -- --file <ファイル名> --expect-host <ホスト名> --yes',
     );
     process.exit(1);
   }
 
-  const admin = createServiceClient();
+  const admin = createServiceClient(opts.supabaseUrl, opts.serviceRoleKey);
 
   const [memosRes, roleplaysRes, seminarsRes] = await Promise.all([
-    admin.from('subordinate_memos').select('id, legacy_source').eq('is_legacy', true),
-    admin.from('roleplays').select('id, legacy_source').eq('is_legacy', true),
-    admin.from('seminars').select('id, legacy_source').eq('is_legacy', true),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('subordinate_memos')
+        .select('id, legacy_source')
+        .eq('is_legacy', true)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('roleplays')
+        .select('id, legacy_source')
+        .eq('is_legacy', true)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllWithRange((from, to) =>
+      admin
+        .from('seminars')
+        .select('id, legacy_source')
+        .eq('is_legacy', true)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   if (memosRes.error) {
@@ -375,21 +447,21 @@ async function runRemove(opts) {
     throw new Error(formatDbError('seminars 読み込み', seminarsRes.error));
   }
 
-  const memoIds = (memosRes.data ?? [])
+  const memoIds = memosRes.data
     .filter((r) => {
       const src = /** @type {any} */ (r.legacy_source);
       return src && typeof src.file === 'string' && targetFiles.has(src.file);
     })
     .map((r) => r.id);
 
-  const roleplayIds = (roleplaysRes.data ?? [])
+  const roleplayIds = roleplaysRes.data
     .filter((r) => {
       const src = /** @type {any} */ (r.legacy_source);
       return src && typeof src.file === 'string' && targetFiles.has(src.file);
     })
     .map((r) => r.id);
 
-  const seminarIds = (seminarsRes.data ?? [])
+  const seminarIds = seminarsRes.data
     .filter((r) => {
       const src = /** @type {any} */ (r.legacy_source);
       return src && typeof src.file === 'string' && targetFiles.has(src.file);
@@ -397,49 +469,35 @@ async function runRemove(opts) {
     .map((r) => r.id);
 
   if (memoIds.length > 0) {
-    const { error: tgtErr } = await admin
-      .from('subordinate_memo_targets')
-      .delete()
-      .in('memo_id', memoIds);
-    if (tgtErr) {
-      throw new Error(formatDbError('subordinate_memo_targets 削除', tgtErr));
-    }
-
-    const { error: memoErr } = await admin
-      .from('subordinate_memos')
-      .delete()
-      .in('id', memoIds);
-    if (memoErr) {
-      throw new Error(formatDbError('subordinate_memos 削除', memoErr));
-    }
+    await deleteInChunks(
+      admin,
+      'subordinate_memo_targets',
+      'memo_id',
+      memoIds,
+      'subordinate_memo_targets 削除',
+    );
+    await deleteInChunks(
+      admin,
+      'subordinate_memos',
+      'id',
+      memoIds,
+      'subordinate_memos 削除',
+    );
   }
 
   if (roleplayIds.length > 0) {
-    const { error: rpErr } = await admin
-      .from('roleplays')
-      .delete()
-      .in('id', roleplayIds);
-    if (rpErr) {
-      throw new Error(formatDbError('roleplays 削除', rpErr));
-    }
+    await deleteInChunks(admin, 'roleplays', 'id', roleplayIds, 'roleplays 削除');
   }
 
   if (seminarIds.length > 0) {
-    const { error: smErr } = await admin
-      .from('seminar_members')
-      .delete()
-      .in('seminar_id', seminarIds);
-    if (smErr) {
-      throw new Error(formatDbError('seminar_members 削除', smErr));
-    }
-
-    const { error: semErr } = await admin
-      .from('seminars')
-      .delete()
-      .in('id', seminarIds);
-    if (semErr) {
-      throw new Error(formatDbError('seminars 削除', semErr));
-    }
+    await deleteInChunks(
+      admin,
+      'seminar_members',
+      'seminar_id',
+      seminarIds,
+      'seminar_members 削除',
+    );
+    await deleteInChunks(admin, 'seminars', 'id', seminarIds, 'seminars 削除');
   }
 
   console.log('=== 過去の記録 取り消し ===');
@@ -448,23 +506,60 @@ async function runRemove(opts) {
   console.log(`seminars: 削除 ${seminarIds.length}件`);
 }
 
-async function main() {
-  const args = parseCliArgs(process.argv.slice(2));
+/**
+ * CLI エントリーポイント。
+ * @param {string[]} argv
+ */
+export async function runCli(argv) {
+  const args = parseCliArgs(argv);
+
+  if (args.mode !== 'preview' && args.mode !== 'import' && args.mode !== 'remove') {
+    console.error('使い方: cli.mjs <preview|import|remove> [options]');
+    process.exit(1);
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const actualHost = extractHostFromUrl(supabaseUrl);
+
+  // 最初に、つなぐ先のホスト名だけを出す
+  console.log(`接続先ホスト: ${actualHost || '不明'}`);
+
+  // import / remove は --expect-host と --yes が必須。違う・ない場合は何も書かず・消さずに止める
+  const safety = validateWriteSafetyFlags({
+    mode: args.mode,
+    actualHost,
+    expectHost: args.expectHost,
+    yes: args.yes,
+  });
+  if (!safety.ok) {
+    console.error(safety.reason);
+    process.exit(1);
+  }
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error(
+      '.env に SUPABASE_URL（または VITE_SUPABASE_URL）と SUPABASE_SERVICE_ROLE_KEY を設定してください。',
+    );
+    process.exit(1);
+  }
+
   try {
     if (args.mode === 'preview' || args.mode === 'import') {
       await runPreviewOrImport(args.mode, {
         namesPath: args.namesPath,
         dirPath: args.dirPath,
         outDir: args.outDir,
+        supabaseUrl,
+        serviceRoleKey,
       });
-    } else if (args.mode === 'remove') {
+    } else {
       await runRemove({
         dirPath: args.dirPath,
         files: args.files,
+        supabaseUrl,
+        serviceRoleKey,
       });
-    } else {
-      console.error('使い方: cli.mjs <preview|import|remove> [options]');
-      process.exit(1);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : '不明なエラー';
@@ -473,4 +568,10 @@ async function main() {
   }
 }
 
-main();
+const isDirectRun =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+if (isDirectRun) {
+  runCli(process.argv.slice(2));
+}

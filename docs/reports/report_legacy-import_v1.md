@@ -1,101 +1,131 @@
 # 報告書：カルテ第1版④ 過去の記録の取り込み（`plan_legacy-import_v1`）
 
-- 作成日：2026-11-09
-- ブランチ：`task/legacy-import`
+- 作業用ブランチ：`task/legacy-import`
+- 作業用ワークツリー：`C:\Workspace\apps\sales-plus1-worktrees\legacy-import`
+- 計画ファイルを受け取った日：2026-11-09
+- 作業を終えた日：2026-11-09
 - 対象計画書：`docs/tasks/plan_legacy-import_v1.md`
+- 0-4 で報告した読み込んでいたルールファイル：なし（`AGENTS.md`・`GEMINI.md` ともに存在せず）
+- Security Advisor の確認：**要る**（`roleplays`・`subordinate_memos`・`seminars` の表・制約・トリガー関数を変更したため、本人が Supabase の管理画面で Security Advisor を開き、確認する）
 
 ---
 
-## 1. 作業開始前の5つの確認結果（セクション0）
+## 1. 本人が画面で確かめる手順（3〜5行）
 
-1. **対象物の確認**：作業フォルダが `C:\Workspace\apps\sales-plus1-worktrees\legacy-import` であることを確認。
-2. **Git 状態の確認**：`git status` でブランチが `task/legacy-import` であり、未コミットの変更がないことを確認。
-3. **`.env` の有無**：このワークツリー直下に `.env` が存在することを確認（中身は閲覧せず存在のみ確認）。
-4. **読み込まれているルールファイル**：`AGENTS.md` / `GEMINI.md` ともに**なし**。
-5. **`npm install` と既存テストの確認**：`npm install` 実行後、単体テスト（11ファイル・118テスト）がすべて通ることを確認。
+1. `npm run fixtures:dev-role -- leader` を実行して開発用の役割をリーダー（リーダーA）に切り替え、`npm run dev` で開いた画面にログインする。
+2. 左メニューの「カルテ」からメンバーA（またはメンバーB）を選び、タイムラインの2025年4〜6月の履歴に「過去の記録」の印がつき、空のテーマ・種類が「（過去の記録：なし）」と表示されることを確かめる。
+3. 「ロープレ」「部下メモ」「研修」の各画面を開き、2025年4〜6月の過去の記録の行に「過去の記録（見るだけ）」と出て、編集・見えなくする・送信・参加者の追加と削除などのボタンが出ず、空の欄が「（過去の記録：なし）」「－」と出ることを確かめる。
+4. 確認が終わったら、ターミナルで `npm run fixtures:dev-role -- ceo` を実行して役割を代表（`ceo`）に戻す。
 
 ---
 
-## 2. 変更・追加したファイル一覧と実施内容
+## 2. 変更・追加したファイル一覧（すべて計画4章の「触ってよいファイル・フォルダ」の範囲内）
 
-### (1) データベース・マイグレーション
 - `supabase/migrations/20261109000007_legacy_records.sql`（新規追加）
-  - `public.roleplays`：`theme_id`・`time_slot` の NOT NULL を外し、`is_legacy or (theme_id is not null and time_slot is not null)` のチェック制約を追加。無名チェック制約 `roleplays_check` を `if exists` なしで落として付け直し、`is_legacy = true` の行を送信時の必須項目チェック（`fixed_point`・`minutes`・`pass_result`）の対象外にした。`private.check_roleplay_write` でログインユーザー（`auth.role() = 'authenticated'`）による `old.is_legacy = true` の更新を禁止（エラー文に `legacy` を含む）。
-  - `public.subordinate_memos` / `public.subordinate_memo_targets`：無名チェック制約 `subordinate_memos_check` を `if exists` なしで落として付け直し、`is_legacy = true` のときは `theme_id`・`kind_id` が空でも通るようにした（`noticed` または `guidance` のいずれかが非空である条件は維持）。`private.handle_subordinate_memo_write` で過去のメモの更新を禁止し、`private.check_subordinate_memo_target_write` で過去のメモに対する対象者の追加・更新を禁止。
-  - `public.seminars` / `public.seminar_members`：`seminars` に `is_legacy boolean not null default false` と `legacy_source jsonb` を追加。新規トリガー関数 `private.check_seminar_write` でログインユーザーによる `is_legacy = true` / `legacy_source` 付きの追加・変更・過去の研修の更新を禁止し、`private.check_seminar_member_write` で過去の研修に対する参加者の追加・更新を禁止。
-  - すべてのトリガー関数は `private` スキーマに置き、`security definer` と `set search_path = ''` を付与し、`public, anon, authenticated` から実行権を剥奪。
-
-### (2) 過去の記録の取り込み道具・コマンド
 - `scripts/legacy-import/core.mjs`（新規追加）
-  - 外部ライブラリを使わない純粋な計算モジュール（DB 接続なし）。
-  - UTF-8 厳密デコード（Shift_JIS 等の不正バイト列を `UTF-8 で読めない` として検出）・先頭 BOM 除去。
-  - クォート内改行・カンマ・二重クォート（`""`）対応の自前 CSV パーサ。
-  - 見出し行の左端一致による形A（部下メモ）・形B（ロープレ・研修管理表）・形C（指導履歴）の自動判定（形Cの頭2行などの無視、右端の空列や `列1` の許容）。
-  - 外して進む4種類の行（中身が空の行、`社員`/`名前` が `テスト` の行、同じファイル内の完全重複行、途中に再度現れる見出し行）のスキップ判定。
-  - 日付（`YYYY/M/D`・`YYYY-M-D`・`YYYY年M月D日`・時刻付き・Excel 連続日数 `30000`〜`60000`）、時間（数字・`20分`・`0:15`）、〇△×（`〇`/`○`/`◯` → `o`、`△` → `d`、`×`/`✕`/`x`/`X` → `x`、それ以外は `null`）、名前（`、`・`,`・`・`・`／` 分割、空白と後ろの丸カッコのふりがな除去）の変換。
-  - 形A・B・Cから `subordinate_memos`（＋`subordinate_memo_targets`）・`roleplays`・`seminars`（＋`seminar_members`）への振り分けと `is_legacy: true`・`legacy_source: { file, row, values }`・`submitted_at`（当日 `00:00:00+09:00`）の付与。
-  - 停止理由の一括収集と、個人情報（実名・メール・本文・元ファイル名）を一切出さないターミナル出力の整形、および `legacy_source` の `file`＋`row`（`roleplays` は `＋member_id`）による二重取り込み防止。
 - `scripts/legacy-import/cli.mjs`（新規追加）
-  - `preview`（検査と件数表示のみ）・`import`（検査通過後に書き込み）・`remove`（指定フォルダ／ファイル由来の過去の記録の削除）の CLI 実行スクリプト。Supabase エラー時も `code` と `message` のみを出力。
-- `package.json`
-  - `legacy:preview`、`legacy:import`、`legacy:remove`、`fixtures:legacy:load`、`fixtures:legacy:remove` の5つのスクリプトを追加。
-
-### (3) 架空の昔CSV（`fixtures/legacy/`）
-- `fixtures/legacy/names.csv`（新規追加）：`fixtures/foundation/data.mjs` の架空メンバーのメール（`fixture-*@example.test`）への対応表。同じ人の2つの書き方（`メンバーA` と `メンA`）および同姓別人（`架空イトウ` が `上席` ではリーダーA、`対象` ではメンバーB）を含む。
-- `fixtures/legacy/clean/`（新規追加）：形A 2ファイル（`01_form_a_team1.csv` UTF-8 BOM つき、`02_form_a_team2.csv`）、形B 1ファイル（`03_form_b.csv`）、形C 1ファイル（`04_form_c.csv` 頭2行の説明行つき）。
-- `fixtures/legacy/errors/`（新規追加）：止める理由を一通り確かめるためのエラー確認用 CSV（`01_form_a_errors.csv`、`02_form_b_errors.csv`、`03_form_c_errors.csv`、`bad_names.csv`）。
-
-### (4) 画面の対応（過去の記録の表示・編集不可対応）
+- `scripts/legacy-import/fixtures-runner.mjs`（新規追加）
+- `package.json`（`scripts` に5行追加のみ）
+- `fixtures/legacy/names.csv`（新規追加）
+- `fixtures/legacy/clean/01_form_a_team1.csv`（新規追加）
+- `fixtures/legacy/clean/02_form_a_team2.csv`（新規追加）
+- `fixtures/legacy/clean/03_form_b.csv`（新規追加）
+- `fixtures/legacy/clean/04_form_c.csv`（新規追加）
+- `fixtures/legacy/errors/01_form_a_errors.csv`（新規追加）
+- `fixtures/legacy/errors/02_form_b_errors.csv`（新規追加）
+- `fixtures/legacy/errors/03_form_c_errors.csv`（新規追加）
+- `fixtures/legacy/errors/bad_names.csv`（新規追加）
 - `src/features/karte/shared/calculations.ts`
-  - `buildKarteTimeline` で `is_legacy = true` の部下メモのテーマ・種類が空のとき、および過去のロープレのテーマが空のときに `（過去の記録：なし）` と表示するように更新（今の記録の表示は変更なし）。
-- `src/features/roleplay/shared/types.ts`、`src/features/roleplay/record/logic.ts`、`src/features/roleplay/record/RoleplayRecordView.tsx`、`src/features/roleplay/record/MemberThemesView.tsx`
-  - `RoleplayRow` の `time_slot`・`theme_id` を `string | null` とし、`RoleplayRow` と `SeminarRow` に `is_legacy`・`legacy_source` を追加。
-  - ロープレ一覧で `is_legacy === true` の行に「過去の記録（見るだけ）」の印を出し、編集・見えなくするボタンを非表示化。空の `time_slot` を `－`、空の `theme_id` を `（過去の記録：なし）`、空の `pass_result` を `－` と表示。
-- `src/features/memo/memo-logic.ts`、`src/features/memo/index.tsx`
-  - `is_legacy === true` のメモは自分が `created_by` でも編集不可（閲覧のみ）とし、確認待ち・書きかけ一覧から除外。一覧と詳細に「過去の記録（見るだけ）」の印を出し、編集・送信・下書き保存・見えなくするボタン・対象者チェック変更を出さず、空の `theme_id`・`kind_id` を `（過去の記録：なし）` と表示。
-- `src/features/roleplay/seminar/logic.ts`、`src/features/roleplay/seminar/index.tsx`
-  - `canEditSeminar` で `isLegacy === true` のときは自分が `created_by` でも `false` を返すように変更。一覧で「過去の記録（見るだけ）」の印を出し、編集・見えなくする・参加者の追加と外すボタンを非表示化。
+- `src/features/roleplay/shared/types.ts`
+- `src/features/roleplay/record/logic.ts`
+- `src/features/roleplay/record/RoleplayRecordView.tsx`
+- `src/features/roleplay/record/MemberThemesView.tsx`
+- `src/features/roleplay/seminar/logic.ts`
+- `src/features/roleplay/seminar/index.tsx`
+- `src/features/memo/memo-logic.ts`
+- `src/features/memo/index.tsx`
+- `tests/legacy-import/legacy-import.test.ts`（新規追加）
+- `tests/karte/karte-shared.test.ts`
+- `tests/roleplay/record/record-logic.test.ts`
+- `tests/roleplay/talks/talks-and-seminar.test.ts`
+- `tests/memo/memo-logic.test.ts`
+- `docs/reports/report_legacy-import_v1.md`（新規追加）
 
-### (5) 単体テストの追加・更新
-- `tests/legacy-import/legacy-import.test.ts`（新規追加）：CSV パーサ、UTF-8 / BOM / 不正バイト列、形A・B・C自動判定、4種類のスキップ行、日付・時間・〇△×・名前分割、3つの表への振り分け、全停止理由の検出、個人情報非表示、二重取り込み防止のテスト（13テスト）。
-- `tests/karte/karte-shared.test.ts`、`tests/roleplay/record/record-logic.test.ts`、`tests/roleplay/talks/talks-and-seminar.test.ts`、`tests/memo/memo-logic.test.ts`：`is_legacy = true` の編集不可判定と空欄表示（`（過去の記録：なし）`・`－`）のテストを追加。
-
----
-
-## 3. 実行結果（マイグレーション・取り込み・取り消し・テスト・ビルド）
-
-1. **`npm run db:push -- --dry-run` / `npm run db:push`**
-   - `dry-run` で `20261109000007_legacy_records.sql` のみが対象であることを確認後、`npm run db:push` で適用完了。
-2. **`npm run fixtures:legacy:load`（1回目）**
-   - 形A 2本・形B 1本・形C 1本を検査（止める理由 0件）し、`subordinate_memos` 15件・`roleplays` 14件・`seminars` 3件を新規投入完了。
-3. **`npm run fixtures:legacy:load`（2回目：二重取り込み防止の確認）**
-   - `subordinate_memos: 新しく入れる 0件（すでに入っている 15件）`、`roleplays: 新しく入れる 0件（すでに入っている 14件）`、`seminars: 新しく入れる 0件（すでに入っている 3件）` となり、1件も重複投入されないことを確認。
-4. **`npm run fixtures:legacy:remove`（取り消しの確認）**
-   - `subordinate_memos: 削除 15件`、`roleplays: 削除 14件`、`seminars: 削除 3件` で過去の記録のみが削除されることを確認。
-5. **`npm run fixtures:legacy:load`（再投入の確認）**
-   - 削除後に再度 `subordinate_memos` 15件・`roleplays` 14件・`seminars` 3件を新規投入できることを確認。
-6. **`npm test`（守りのテストを含む全テスト）**
-   - **全16ファイル・228テスト成功**（`tests/guard/karte.test.ts` の「取り込んだ過去の記録は、だれも直せない・消せない（2026-11-09。管理者でも）」を含む）。
-7. **`npm run build`**
-   - `tsc -b && vite build` がエラーなしで完了。
+守りのテスト（`tests/guard/permissions.test.ts`・`tests/guard/roleplay.test.ts`・`tests/guard/kpi-memo.test.ts`・`tests/guard/karte.test.ts`）には一切触れていません。
 
 ---
 
-## 4. 途中で止まった原因と修正内容
+## 3. やったこと
 
-1. **マイグレーション内の退職者チェック条件の修正（Claude Code レビュー指摘）**
-   - **原因**：`20261109000007_legacy_records.sql` で `check_roleplay_write`・`check_subordinate_memo_target_write`・`check_seminar_member_write` を書き直した際、退職者のチェックが `20261107000006_karte_common.sql` の `private.is_retired_member(new.member_id)` ではなく `retired_on < date` の比較になっており、計画①の制約を弱めてしまっていた。
-   - **修正**：退職者のチェック条件とエラー文言を `20261107000006_karte_common.sql` と完全に同じ形（`private.is_retired_member(new.member_id)` を使用し、INSERT 時・`member_id` 変更時・`removed_at` を空に戻す時に検査する形）に戻した上で、`auth.role() = 'authenticated'` のときのみ過去の記録・退職者チェックを止める形に統一した。
-2. **`legacy:preview` / `fixtures:legacy:load` 初回実行時の停止（同時実行と架空データの食い違い）**
-   - **原因**：
-     1. 土台・部下メモの見本データ投入（`fixtures:load` / `fixtures:memo:load`）と `legacy:preview` / `fixtures:legacy:load` を同じターンで同時に呼んだため、土台データの投入完了前に検査が走った。
-     2. `fixtures/legacy/names.csv` と `fixtures/legacy/clean/` に書いたメール・テーマ名が、`fixtures/foundation/data.mjs`（`fixture-leader-a@example.test` など）および `fixtures/memo/data.mjs`（`アポ`・`リスト`・`営業`・`管理`・`採用`・`姿勢`・`その他`）の定義と食い違っていたため、事前チェックで「対応表のメールが名簿にない」「部下メモのテーマが一覧にない」として停止した。
-   - **修正**：
-     1. `fixtures/legacy/names.csv` と `fixtures/legacy/clean/`・`errors/` のメールとテーマ名を `fixtures/foundation/data.mjs`・`fixtures/memo/data.mjs` の定義に完全にそろえ、`cli.mjs` の接続先環境変数も `SUPABASE_URL || VITE_SUPABASE_URL` に対応させた。
-     2. コマンドは1つずつ順番に実行し、前のコマンドの完了を確認してから次のコマンドを実行する手順で通し直した。
+### (1) 表の直し（マイグレーション `20261109000007_legacy_records.sql`）
+- `public.roleplays`：`theme_id`・`time_slot` の NOT NULL を外し、`check (is_legacy or (theme_id is not null and time_slot is not null))` を追加。`roleplays_check` を `if exists` なしで外し、`is_legacy` の行は必須チェックから除く形で付け直した。
+- `public.subordinate_memos`：`subordinate_memos_check` を `if exists` なしで外し、`is_legacy` の行では `theme_id`・`kind_id` が空でも通る形で付け直した（`noticed` または `guidance` のいずれかが非空である条件は維持）。
+- `public.seminars`：`is_legacy boolean not null default false` と `legacy_source jsonb` を追加し、ログインした人による `is_legacy = true`・`legacy_source` の設定や変更を禁止した。
+- `roleplays`・`subordinate_memos`（および `subordinate_memo_targets`）・`seminars`（および `seminar_members`）のすべてで、ログインした人（`auth.role() = 'authenticated'`）による過去の記録（`is_legacy = true`）の更新・対象者や参加者の追加変更を禁止し、エラー文に `legacy` を含めた。すべての関数は `private` スキーマに置き、`security definer`・`set search_path = ''` を設定し、`public, anon, authenticated` から実行権を外した。
+
+### (2) 取り込みの道具（`scripts/legacy-import/`）と架空の過去データ（`fixtures/legacy/`）
+- 外部ライブラリを使わず、UTF-8 厳密デコード・BOM 除去・クォート内改行とカンマ対応の CSV パーサ・見出し行からの形A／B／C自動判定・日付と時間と〇△×と名前の変換・外して進む行のスキップ・止める理由の一括収集・二重取り込み防止を `scripts/legacy-import/core.mjs` に実装。
+- `scripts/legacy-import/cli.mjs` で最初に接続先ホスト名だけを表示し、`import` と `remove` では `--expect-host` と `--yes` を必須化。`members`・`masters`・既存の過去の記録の読み込みは `.range` で1000件ずつ全件取得し、`remove` の `.in()` 削除は100件ずつに分割して実行。
+- ターミナルには実名・メール・本文・元ファイル名を一切出さず、`--out` で指定したフォルダのファイル（`legacy-report.json`）にのみ番号とファイル名の対応および「対応表にない名前」の行ごとの元の名前と「上席か対象か」を書き出す形にした。
+
+### (3) 画面の対応
+- カルテのタイムライン（`src/features/karte/`）で、過去の部下メモのテーマ・種類が空のときと過去のロープレのテーマが空のときに `（過去の記録：なし）` と表示。
+- ロープレの記録・部下メモ・研修の記録の画面で、過去の記録の行に「過去の記録（見るだけ）」の印を出し、編集・見えなくする・送信・下書き保存・参加者の変更ボタンを非表示にし、空の欄を `（過去の記録：なし）`・`－` に統一。
 
 ---
 
-## 5. 残した課題・気づいたこと
+## 4. テスト・下見・動作確認の結果
 
-- なし（すべての要件・守りのテスト・単体テスト・ビルドを通過済み）。
+1. **`fixtures:legacy:remove` → `fixtures:legacy:load`（2回）→ `fixtures:legacy:remove` → `fixtures:legacy:load`（1つずつ順番に実行）**
+   - 1回目の `fixtures:legacy:remove`：既存の架空過去データ（`subordinate_memos` 15件・`roleplays` 14件・`seminars` 3件）を削除。
+   - 1回目の `fixtures:legacy:load`：`接続先ホスト: slsoprchnwyveqekaupf.supabase.co` を表示し、形A 2本・形B 1本・形C 1本を検査（止める理由 0件）して `subordinate_memos` 15件・`roleplays` 14件・`seminars` 3件を新規投入。
+   - 2回目の `fixtures:legacy:load`：`subordinate_memos: 新しく入れる 0件（すでに入っている 15件）`、`roleplays: 新しく入れる 0件（すでに入っている 14件）`、`seminars: 新しく入れる 0件（すでに入っている 3件）` となり、重複して入らないことを確認。
+   - 2回目の `fixtures:legacy:remove`：15件・14件・3件を削除。
+   - 3回目の `fixtures:legacy:load`：再度 15件・14件・3件を新規投入できることを確認。
+2. **`fixtures/legacy/errors` の下見（`legacy:preview`）の結果**
+   - `npm run legacy:preview -- --names fixtures/legacy/names.csv --dir fixtures/legacy/errors` を実行し、以下の通り止める理由が件数と行番号だけで表示され、個人名・メール・本文・元ファイル名が一切ターミナルに出ず、終了コード 1 で止まることを確認：
+     - `ファイル1（形A）: 対象 6行 / 外して進む 0行 / 止める理由 6件`（読めない日付×2、対応表にない名前、上司・実行者・社員・名前が空、部下メモのテーマが一覧にない、上司・実行者が2人以上）
+     - `ファイル2（形B）: 対象 2行 / 外して進む 0行 / 止める理由 2件`（内容・方法が振り分けの表にない、上司・実行者・社員・名前が空）
+     - `ファイル3（形C）: 対象 3行 / 外して進む 0行 / 止める理由 3件`（内容・方法が振り分けの表にない×3：面談・AP・クローザー）
+     - `ファイル4（不明）: 対象 0行 / 外して進む 0行 / 止める理由 1件`（見出しの行が見つからない）
+3. **`--expect-host` が違うホスト名のときに `import` と `remove` が止まることの確認**
+   - `npm run legacy:import -- --names fixtures/legacy/names.csv --dir fixtures/legacy/clean --expect-host wrong-host.example.test --yes` を実行し、`--expect-host が接続先ホスト名と一致しません（指定: wrong-host.example.test, 接続先: slsoprchnwyveqekaupf.supabase.co）。書き込み・削除を行わずに終了します。` と出て何も書き込まずに終了コード 1 で止まることを確認。
+   - `npm run legacy:remove -- --file 01_form_a_team1.csv --expect-host wrong-host.example.test --yes` を実行し、同じく何も消さずに終了コード 1 で止まることを確認。
+4. **`npm test` と `npm run build` の結果**
+   - `npm test`：**全16ファイル・230テスト成功**（`tests/legacy-import/legacy-import.test.ts` の15テスト、および守りのテスト4ファイルすべてを含む）。
+   - `npm run build`：`tsc -b && vite build` がエラーなしで完了。
+
+---
+
+## 5. 途中で止まった原因と、レビューで直したこと
+
+### (1) 初回実行時に止まった原因と修正
+- **原因**：土台・部下メモの見本データ投入と `legacy:preview` / `fixtures:legacy:load` を同じターンで同時に呼んだこと、および `fixtures/legacy/` に書いたメールとテーマ名が `fixtures/foundation/data.mjs`・`fixtures/memo/data.mjs` の定義と食い違っていたこと。
+- **修正**：メールとテーマ名を土台・部下メモの見本データにそろえ、コマンドは必ず1つずつ順番に実行して前のコマンドが終わってから次を動かすようにした。
+
+### (2) Claude Code のレビューで直したこと（13項目）
+1. **`--expect-host` と `--yes` の必須化**：`preview`・`import`・`remove` の最初に接続先ホスト名だけを表示し、`import` と `remove` では `--expect-host` が接続先ホスト名と一致しない（または未指定）場合や `--yes` がない場合に何も書かず・消さずに終了コード 1 で止めるようにした。`package.json` の `fixtures:legacy:load`・`fixtures:legacy:remove` は `scripts/legacy-import/fixtures-runner.mjs` で `.env` の URL からホスト名を読み取って `--expect-host` と `--yes` を渡す形にした（`package.json` にホスト名を直書きしない）。
+2. **形A の `kind_id`**：指導内容や今後の指導があっても常に `null` にした（2026-11-09 本人の選択）。
+3. **対応表（`names.csv`）の見出し**：計画4章の通り `元の名前,上席か対象か,名簿のメール`（後ろに列追加可）とし、`fixtures/legacy/names.csv` と `fixtures/legacy/errors/bad_names.csv` も同じ見出しに直した。
+4. **ロープレ（形B・形C）の `pass_result`**：常に `null` にし、結果・実践結果は `legacy_source` にだけ残すようにした。
+5. **形C のロープレの `next_homework` と `note`**：引継ぎ事項を `next_homework` に入れ、`note` は常に `null` にした。
+6. **形C の FIX**：`noticed` に詳細を入れ、`guidance` には空でない「引継ぎ事項：…」「実践結果：…」を改行でつないだものを入れるようにした。
+7. **形B の内容「営業研修」**：ロープレ（`sales`）に振り分けるようにした。
+8. **形C のロープレの内容の振り分け**：形Bと同じ（`アポ`→`apo`、`営業`・`営業研修`→`sales`）だけにし、`AP`・`クローザー` は外して「内容・方法が振り分けの表にない」で止めるようにした。`fixtures/legacy/clean/04_form_c.csv` の `AP` は `アポ`、`クローザー` は `営業研修` に直した。
+9. **形B の研修の `theme`**：「`研修：`＋詳細の頭30文字」（詳細が空なら「`研修`」）にした。
+10. **1000件の上限と削除の分割**：`members`・`masters`・取り込み済みの過去の記録を読むときは `.range` で1000件ずつ全件読むようにし、`remove` の `.in()` は100件ずつに分けて消すようにした。
+11. **形A の「今後の指導」**：指導内容の下に改行して `今後の指導：…` と足す形にした（`【】` は使わない）。
+12. **上司・実行者が2人以上**：上司・実行者の欄に2人以上の名前があったら、止める理由「`上司・実行者が2人以上`」にするようにした。
+13. **`--out` のファイルの未登録名**：`--out` で書き出すファイル（`legacy-report.json`）に、「対応表にない名前」の行ごとに元の名前と「上席か対象か」を記録し、ターミナルには一切出さないようにした。
+
+---
+
+## 6. 決められずに止めたこと・質問
+
+- なし
+
+---
+
+## 7. 残した課題・気になった点
+
+- **取り込みが途中で失敗したときの扱い**：`legacy:import` でデータベースへの書き込み途中に通信エラーなどで失敗した場合、それまでに書き込まれた一部の行だけが入った状態になる。その場合は `npm run legacy:remove -- --file <ファイル名> --expect-host <ホスト名> --yes` で対象の過去データを一度消してから、もう一度 `legacy:import` で入れ直す運用とする（またはそのまま再実行しても、`legacy_source` の `file`＋`row` で既に入った行は飛ばして残りの行だけを入れられる）。

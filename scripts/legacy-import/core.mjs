@@ -3,7 +3,7 @@
 /**
  * カルテ第1版④：過去の記録の取り込み（純粋な計算モジュール）
  * DB接続やファイルI/Oを持たず、バイト列・文字列・名簿・マスタを受け取って
- * 判定・変換・集計・ターミナル表示文の組み立てを行う。
+ * 判定・変換・集計・ターミナル表示文・--out 用詳細データの組み立てを行う。
  */
 
 export const FORM_A_HEADERS = [
@@ -42,7 +42,107 @@ export const FORM_C_HEADERS = [
   '実践結果（FIXも）',
 ];
 
-export const NAMES_CSV_HEADERS = ['元の名前', '上席か対象か', 'メール', '備考'];
+export const NAMES_CSV_HEADERS = ['元の名前', '上席か対象か', '名簿のメール'];
+
+/**
+ * 接続先 URL からホスト名だけを取り出す。
+ *
+ * @param {string | null | undefined} rawUrl
+ * @returns {string}
+ */
+export function extractHostFromUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
+  try {
+    return new URL(rawUrl.trim()).hostname;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * import / remove 実行時の安全フラグ（--expect-host と --yes）を検査する。
+ *
+ * @param {{
+ *   mode: string,
+ *   actualHost: string,
+ *   expectHost?: string,
+ *   yes?: boolean,
+ * }} params
+ * @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+export function validateWriteSafetyFlags(params) {
+  const { mode, actualHost, expectHost, yes } = params;
+  if (mode !== 'import' && mode !== 'remove') {
+    return { ok: true };
+  }
+  if (!actualHost) {
+    return {
+      ok: false,
+      reason: '接続先 URL からホスト名を取得できません。処理を中止します。',
+    };
+  }
+  const normalizedExpect = (expectHost ?? '').trim();
+  if (!normalizedExpect || normalizedExpect !== actualHost) {
+    return {
+      ok: false,
+      reason: `--expect-host が接続先ホスト名と一致しません（指定: ${normalizedExpect || 'なし'}, 接続先: ${actualHost}）。書き込み・削除を行わずに終了します。`,
+    };
+  }
+  if (!yes) {
+    return {
+      ok: false,
+      reason: '--yes が指定されていません。書き込み・削除を行わずに終了します。',
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * 1000件ずつのページネーション（.range(from, to)）で全件を取得する汎用ヘルパー。
+ *
+ * @template T
+ * @param {(from: number, to: number) => Promise<{ data: T[] | null, error: { code?: string, message?: string } | null }>} fetchPage
+ * @param {number} [pageSize=1000]
+ * @returns {Promise<{ data: T[], error: { code?: string, message?: string } | null }>}
+ */
+export async function fetchAllWithRange(fetchPage, pageSize = 1000) {
+  /** @type {T[]} */
+  const allRows = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + pageSize - 1;
+    const { data, error } = await fetchPage(from, to);
+    if (error) {
+      return { data: [], error };
+    }
+    const batch = data ?? [];
+    allRows.push(...batch);
+    if (batch.length < pageSize) {
+      break;
+    }
+    from += pageSize;
+  }
+
+  return { data: allRows, error: null };
+}
+
+/**
+ * 配列を指定件数（既定100件）ずつの塊に分割する。
+ *
+ * @template T
+ * @param {T[]} items
+ * @param {number} [chunkSize=100]
+ * @returns {T[][]}
+ */
+export function chunkArray(items, chunkSize = 100) {
+  /** @type {T[][]} */
+  const chunks = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    chunks.push(items.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
 
 /**
  * バイト列を UTF-8 として厳密にデコードし、先頭の BOM (\uFEFF) を取り除く。
@@ -343,6 +443,7 @@ export function parseLegacyJudge(raw) {
 
 /**
  * names.csv を読み取り、対応表と停止エラーを返す。
+ * 見出しは「元の名前,上席か対象か,名簿のメール」（後ろに備考などの列が足されていてもよい）。
  *
  * @param {Uint8Array | Buffer | string} input
  * @param {Array<{ id: string, email: string }>} members
@@ -500,7 +601,16 @@ export function processLegacyCsvFile(params) {
   } = params;
 
   const fileLabelBase = `ファイル${fileIndex}`;
-  /** @type {Array<{ sourceLabel: string, rowNumber: number | null, reason: string, fileName: string }>} */
+  /**
+   * @type {Array<{
+   *   sourceLabel: string,
+   *   rowNumber: number | null,
+   *   reason: string,
+   *   fileName: string,
+   *   originalName?: string,
+   *   roleKind?: '上席' | '対象',
+   * }>}
+   */
   const errors = [];
   /** @type {Array<{ rowNumber: number, reason: string }>} */
   const skippedRows = [];
@@ -529,9 +639,10 @@ export function processLegacyCsvFile(params) {
    *   kind: 'apo' | 'sales',
    *   theme_id: null,
    *   minutes: number | null,
-   *   pass_result: 'o' | 'd' | 'x' | null,
+   *   pass_result: null,
    *   fixed_point: string,
-   *   note: string | null,
+   *   next_homework: string | null,
+   *   note: null,
    *   submitted_at: string,
    *   is_legacy: true,
    *   legacy_source: { file: string, row: number, values: Record<string, string> },
@@ -669,13 +780,19 @@ export function processLegacyCsvFile(params) {
 
     targetRowCount += 1;
     let rowHasError = false;
-    const addRowError = (/** @type {string} */ reason) => {
+    /**
+     * @param {string} reason
+     * @param {{ originalName?: string, roleKind?: '上席' | '対象' }} [extra]
+     */
+    const addRowError = (reason, extra) => {
       rowHasError = true;
       errors.push({
         sourceLabel: fileLabelBase,
         rowNumber,
         reason,
         fileName,
+        ...(extra?.originalName ? { originalName: extra.originalName } : {}),
+        ...(extra?.roleKind ? { roleKind: extra.roleKind } : {}),
       });
     };
 
@@ -692,13 +809,19 @@ export function processLegacyCsvFile(params) {
     if (supervisorNames.length === 0 || targetNames.length === 0) {
       addRowError('上司・実行者・社員・名前が空');
     }
+    if (supervisorNames.length >= 2) {
+      addRowError('上司・実行者が2人以上');
+    }
 
     /** @type {string[]} */
     const resolvedSupervisors = [];
     for (const supName of supervisorNames) {
       const id = nameToMemberId.get(`上席:${supName}`);
       if (!id) {
-        addRowError('対応表にない名前');
+        addRowError('対応表にない名前', {
+          originalName: supName,
+          roleKind: '上席',
+        });
       } else if (!resolvedSupervisors.includes(id)) {
         resolvedSupervisors.push(id);
       }
@@ -709,7 +832,10 @@ export function processLegacyCsvFile(params) {
     for (const tgtName of targetNames) {
       const id = nameToMemberId.get(`対象:${tgtName}`);
       if (!id) {
-        addRowError('対応表にない名前');
+        addRowError('対応表にない名前', {
+          originalName: tgtName,
+          roleKind: '対象',
+        });
       } else if (!resolvedTargets.includes(id)) {
         resolvedTargets.push(id);
       }
@@ -739,20 +865,19 @@ export function processLegacyCsvFile(params) {
 
       let guidance = guidanceRaw;
       if (futureRaw.length > 0) {
-        guidance = guidanceRaw.length > 0
-          ? `${guidanceRaw}\n【今後の指導】${futureRaw}`
-          : `【今後の指導】${futureRaw}`;
+        guidance =
+          guidanceRaw.length > 0
+            ? `${guidanceRaw}\n今後の指導：${futureRaw}`
+            : `今後の指導：${futureRaw}`;
       }
 
-      const kindId =
-        guidanceRaw.length > 0 || futureRaw.length > 0 ? guidanceKindId : null;
-
+      // 形A の kind_id は常に null（2026-11-09 本人の選択）
       if (!rowHasError && parsedDate && resolvedSupervisors[0]) {
         memos.push({
           date: parsedDate,
           created_by: resolvedSupervisors[0],
           theme_id: themeId,
-          kind_id: kindId,
+          kind_id: null,
           noticed,
           guidance,
           action_check: parseLegacyJudge(values['行動']),
@@ -768,9 +893,12 @@ export function processLegacyCsvFile(params) {
       const detail = (values['詳細'] ?? '').trim();
       const minutes = parseLegacyMinutes(values['時間']);
 
-      if (contentKind === 'アポ' || contentKind === '営業') {
+      if (
+        contentKind === 'アポ' ||
+        contentKind === '営業' ||
+        contentKind === '営業研修'
+      ) {
         const kind = contentKind === 'アポ' ? 'apo' : 'sales';
-        const passResult = parseLegacyJudge(values['結果']);
         if (!rowHasError && parsedDate && resolvedSupervisors[0]) {
           for (const memberId of resolvedTargets) {
             roleplays.push({
@@ -781,8 +909,9 @@ export function processLegacyCsvFile(params) {
               kind,
               theme_id: null,
               minutes,
-              pass_result: passResult,
+              pass_result: null,
               fixed_point: detail,
+              next_homework: null,
               note: null,
               submitted_at: `${parsedDate}T00:00:00+09:00`,
               is_legacy: true,
@@ -791,10 +920,12 @@ export function processLegacyCsvFile(params) {
           }
         }
       } else if (contentKind === '研修') {
+        const seminarTheme =
+          detail.length > 0 ? `研修：${detail.slice(0, 30)}` : '研修';
         if (!rowHasError && parsedDate && resolvedSupervisors[0]) {
           seminars.push({
             date: parsedDate,
-            theme: '過去の研修',
+            theme: seminarTheme,
             lecturer: (values['実行者'] ?? '').trim(),
             minutes: minutes ?? 0,
             content: detail,
@@ -819,20 +950,15 @@ export function processLegacyCsvFile(params) {
       if (method === 'ロープレ') {
         /** @type {'apo' | 'sales' | null} */
         let kind = null;
-        if (contentKind === 'アポ' || contentKind === 'AP') {
+        if (contentKind === 'アポ') {
           kind = 'apo';
-        } else if (contentKind === '営業' || contentKind === 'クローザー') {
+        } else if (contentKind === '営業' || contentKind === '営業研修') {
           kind = 'sales';
         } else {
           addRowError('内容・方法が振り分けの表にない');
         }
 
-        const passResult = parseLegacyJudge(practiceRes);
-        const noteParts = [
-          handover,
-          passResult === null && practiceRes.length > 0 ? practiceRes : '',
-        ].filter((s) => s.length > 0);
-        const note = noteParts.length > 0 ? noteParts.join('\n') : null;
+        const nextHomework = handover.length > 0 ? handover : null;
 
         if (!rowHasError && parsedDate && resolvedSupervisors[0] && kind) {
           for (const memberId of resolvedTargets) {
@@ -844,9 +970,10 @@ export function processLegacyCsvFile(params) {
               kind,
               theme_id: null,
               minutes,
-              pass_result: passResult,
+              pass_result: null,
               fixed_point: detail,
-              note,
+              next_homework: nextHomework,
+              note: null,
               submitted_at: `${parsedDate}T00:00:00+09:00`,
               is_legacy: true,
               legacy_source: legacySource,
@@ -858,7 +985,7 @@ export function processLegacyCsvFile(params) {
         if (!rowHasError && parsedDate && resolvedSupervisors[0]) {
           seminars.push({
             date: parsedDate,
-            theme: contentKind.length > 0 ? contentKind : '過去の研修',
+            theme: contentKind.length > 0 ? contentKind : '研修',
             lecturer: (values['実行者'] ?? '').trim(),
             minutes: minutes ?? 0,
             content: contentParts.join('\n'),
@@ -869,16 +996,22 @@ export function processLegacyCsvFile(params) {
           });
         }
       } else if (method === 'FIX') {
-        const guidanceParts = [detail, handover, practiceRes].filter(
-          (s) => s.length > 0,
-        );
+        /** @type {string[]} */
+        const guidanceParts = [];
+        if (handover.length > 0) {
+          guidanceParts.push(`引継ぎ事項：${handover}`);
+        }
+        if (practiceRes.length > 0) {
+          guidanceParts.push(`実践結果：${practiceRes}`);
+        }
+
         if (!rowHasError && parsedDate && resolvedSupervisors[0] && guidanceKindId) {
           memos.push({
             date: parsedDate,
             created_by: resolvedSupervisors[0],
             theme_id: null,
             kind_id: guidanceKindId,
-            noticed: '',
+            noticed: detail,
             guidance: guidanceParts.join('\n'),
             action_check: null,
             result_check: null,
@@ -970,6 +1103,82 @@ export function filterAlreadyImportedRecords(params) {
     existingRoleplayCount,
     newSeminars,
     existingSeminarCount,
+  };
+}
+
+/**
+ * --out 指定フォルダに書き出す詳細レポートオブジェクトを組み立てる。
+ * 「対応表にない名前」の行ごとに、元の名前（originalName）と上席か対象か（roleKind）を含める。
+ *
+ * @param {{
+ *   mode: 'preview' | 'import',
+ *   globalErrors: Array<{ sourceLabel: string, rowNumber: number | null, reason: string }>,
+ *   fileResults: Array<{
+ *     fileIndex: number,
+ *     fileName: string,
+ *     form: 'A' | 'B' | 'C' | null,
+ *     targetRowCount: number,
+ *     skippedRows: Array<{ rowNumber: number, reason: string }>,
+ *     errors: Array<{
+ *       sourceLabel: string,
+ *       rowNumber: number | null,
+ *       reason: string,
+ *       fileName: string,
+ *       originalName?: string,
+ *       roleKind?: '上席' | '対象',
+ *     }>,
+ *   }>,
+ *   counts: {
+ *     newMemos: number,
+ *     existingMemoCount: number,
+ *     newRoleplays: number,
+ *     existingRoleplayCount: number,
+ *     newSeminars: number,
+ *     existingSeminarCount: number,
+ *   },
+ * }} params
+ */
+export function buildOutReportData(params) {
+  const { mode, globalErrors, fileResults, counts } = params;
+
+  /**
+   * @type {Array<{
+   *   fileIndex: number,
+   *   fileName: string,
+   *   rowNumber: number | null,
+   *   originalName: string,
+   *   roleKind: '上席' | '対象',
+   * }>}
+   */
+  const unmappedNames = [];
+
+  for (const f of fileResults) {
+    for (const err of f.errors) {
+      if (err.reason === '対応表にない名前' && err.originalName && err.roleKind) {
+        unmappedNames.push({
+          fileIndex: f.fileIndex,
+          fileName: f.fileName,
+          rowNumber: err.rowNumber,
+          originalName: err.originalName,
+          roleKind: err.roleKind,
+        });
+      }
+    }
+  }
+
+  return {
+    mode,
+    globalErrors,
+    unmappedNames,
+    files: fileResults.map((f) => ({
+      fileIndex: f.fileIndex,
+      fileName: f.fileName,
+      form: f.form,
+      targetRowCount: f.targetRowCount,
+      skippedRows: f.skippedRows,
+      errors: f.errors,
+    })),
+    counts,
   };
 }
 

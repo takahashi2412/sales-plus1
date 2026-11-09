@@ -29,8 +29,8 @@
     "legacy:preview": "node --env-file=.env scripts/legacy-import/cli.mjs preview",
     "legacy:import": "node --env-file=.env scripts/legacy-import/cli.mjs import",
     "legacy:remove": "node --env-file=.env scripts/legacy-import/cli.mjs remove",
-    "fixtures:legacy:load": "node --env-file=.env scripts/legacy-import/cli.mjs import --names fixtures/legacy/names.csv --dir fixtures/legacy/clean",
-    "fixtures:legacy:remove": "node --env-file=.env scripts/legacy-import/cli.mjs remove --dir fixtures/legacy/clean"
+    "fixtures:legacy:load": "node --env-file=.env scripts/legacy-import/fixtures-runner.mjs load",
+    "fixtures:legacy:remove": "node --env-file=.env scripts/legacy-import/fixtures-runner.mjs remove"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

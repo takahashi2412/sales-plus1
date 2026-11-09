@@ -1,4 +1,4 @@
-元の名前,上席か対象か,メール,備考
+元の名前,上席か対象か,名簿のメール,備考
 リーダーA,上席,fixture-leader-a@example.test,1行目
 リーダーA,上席,fixture-leader-a@example.test,同じ組の重複行
 未登録メンバー,対象,unknown-user@example.test,名簿にないメール
