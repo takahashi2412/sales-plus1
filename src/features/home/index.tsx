@@ -192,7 +192,7 @@ export function HomePage() {
           <h2 className="home-section-title">
             これからの区切りで出る項目（予告）
           </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--sub)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
             それぞれの区切りでホームに加わります
           </span>
         </div>

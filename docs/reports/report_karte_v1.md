@@ -56,8 +56,14 @@
      - ホーム（`src/features/home/api.ts`・`src/features/home/shared/`）：`alerts` はDBのRLS（`is_approved_import`）で既に承認済みの取り込み分しか読めないため、`approvedImportIds` による絞り込みを廃止し、読めた `alerts` のうち `needs_response` が真で `response` が空のものを数える形に修正しました。
      - カルテ（`src/features/karte/api.ts`・`src/features/karte/shared/`）：`import_logs` が読めることを前提にせず、「読めた `import_logs` のうち `status` が `approved` でない記録」に入っている `kpi_entries` だけを外す純粋関数 `filterApprovedKpiEntries` を実装しました（管理者でない人は `import_logs` が0件のため何も外さず、管理者は自分の承認前・置きかえ分のKPIだけが外れます）。単体テストも追加しました。
    - **② Supabase 1,000行上限への対応（範囲絞り込み＋`.range()` 分割読み込み）**：
-     - `kpi_entries`・`targets` の取得範囲を「選んだ人とその人の今のチームの人（順位用）」かつ「2か月前の月の1日から今日まで」（`resolveScopedMemberIdsForKarteKpi`・`getTwoMonthsAgoFirstDate`）に絞り込み、選んだ人を切り替えたときも必要な範囲を読み込むようにしました。
+     - `kpi_entries`・`kpi_targets` の取得範囲を「選んだ人とその人の今のチームの人（順位用）」かつ「2か月前の月の1日から今日まで」（`resolveScopedMemberIdsForKarteKpi`・`getTwoMonthsAgoFirstDate`）に絞り込み、選んだ人を切り替えたときも必要な範囲を読み込むようにしました。
      - `.range()` で1,000行ずつ分けて1,000行未満になるまで読み続ける共通関数（`fetchAllRowsByRange` / `fetchAllHomeRowsByRange`）を `karte`・`home` に実装し、日々のKPI・目標・取り込み記録・ロープレの記録・テーマ表・研修・部下メモ・未達・トークの読み込みにすべて適用しました。偽のクライアントで2,500行を3回に分けて全件読める単体テストを追加しました。
+5. **画面の確かめで見つかった2点の修正**
+   - **① 月の目標の表名（`kpi_targets`）の修正と全 `.from(...)` 表名の照合**：
+     - `src/features/karte/api.ts` で `.from('targets')` となっていた箇所を `.from('kpi_targets')` に修正し、`tests/karte/karte-shared.test.ts` に `fetchKarteMemberScopedKpiData` が `kpi_entries` と `kpi_targets` を参照することの単体テストを追加しました。
+     - あわせて `src/features/karte/api.ts` と `src/features/home/api.ts` のすべての `.from(...)` の表名（`members`・`member_affiliations`・`teams`・`settings`・`roleplay_themes`・`masters`・`import_logs`・`kpi_entries`・`kpi_targets`・`roleplays`・`member_themes`・`seminars`・`seminar_members`・`subordinate_memos`・`subordinate_memo_targets`・`alerts`・`talks`）が `supabase/migrations/` の定義と一致していることを確認しました。
+   - **② 未定義のCSS変数（`--navy`・`--sub`・`--card`・`--bg`・`--muted`）の置きかえ**：
+     - `src/features/home/styles.css`・`src/features/karte/styles.css`・`src/features/karte/index.tsx`・`src/features/home/index.tsx` で使われていた未定義の色変数を、すべて `src/index.css` に定義されている変数（`--navy-band`・`--navy-text`・`--ink-muted`・`--surface`・`--surface-sunken`・`--on-dark`）に置きかえ、件数バッジ（例：「2件」）や見出し番号・選択中チップの背景色と文字色が正しく表示されるように修正しました。
 
 ## 決められずに止めたこと・質問
 - なし（計画書初回指定時の `plan_karte-common_v1.md` と `plan_karte_v1.md` の確認のみ0章で実施し、本人の指示どおり `plan_karte_v1.md` を進めました）。

@@ -7,6 +7,7 @@ import type {
 import type { ViewerContext } from '../../src/foundation/viewer'
 import {
   buildKarteMemberHash,
+  fetchKarteMemberScopedKpiData,
   formatKarteDbError,
   parseKarteSettings,
   parseMemberIdFromHash,
@@ -904,6 +905,34 @@ describe('karte shared calculations', () => {
       expect(loaded.length).toBe(2500)
       expect(loaded[0].id).toBe('row-1')
       expect(loaded[2499].id).toBe('row-2500')
+
+      // fetchKarteMemberScopedKpiData が月の目標を kpi_targets 表（targets ではなく）から読み込むこと
+      const queriedTables: string[] = []
+      const fakeClient = {
+        from(tableName: string) {
+          queriedTables.push(tableName)
+          const chain = {
+            select: () => chain,
+            in: () => chain,
+            gte: () => chain,
+            lte: () => chain,
+            order: () => chain,
+            range: async () => ({ data: [], error: null }),
+          }
+          return chain
+        },
+      }
+      await fetchKarteMemberScopedKpiData(
+        {
+          selectedMember: m1,
+          members,
+          affiliations,
+          todayJst: '2026-11-09',
+          readableImportLogs: [],
+        },
+        fakeClient as never,
+      )
+      expect(queriedTables).toEqual(['kpi_entries', 'kpi_targets'])
     })
   })
 })

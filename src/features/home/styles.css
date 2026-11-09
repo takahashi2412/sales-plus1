@@ -5,7 +5,7 @@
 }
 
 .home-section {
-  background-color: var(--card);
+  background-color: var(--surface);
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 20px 24px;
@@ -19,14 +19,15 @@
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 10px;
-  border-bottom: 2px solid var(--navy);
+  border-bottom: 2px solid var(--navy-band);
 }
 
 .home-section-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--navy-text);
 }
 
 .home-todo-grid {
@@ -40,17 +41,17 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 16px 18px;
-  background-color: var(--bg);
+  background-color: var(--surface-sunken);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--navy);
+  border-left: 4px solid var(--navy-band);
   border-radius: 4px;
   text-align: left;
   cursor: pointer;
 }
 
 .home-todo-card:hover {
-  background-color: var(--card);
-  border-color: var(--navy);
+  background-color: var(--surface);
+  border-color: var(--navy-band);
 }
 
 .home-todo-card-top {
@@ -63,14 +64,16 @@
 
 .home-todo-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--navy-text);
 }
 
 .home-todo-count {
   display: inline-block;
   padding: 3px 10px;
+  font-family: var(--font-figure);
   font-size: 1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -79,20 +82,20 @@
 }
 
 .home-todo-count.has-items {
-  color: #ffffff;
-  background-color: var(--navy);
+  color: var(--on-dark);
+  background-color: var(--navy-band);
 }
 
 .home-todo-count.is-zero {
-  color: var(--sub);
-  background-color: var(--card);
+  color: var(--ink-muted);
+  background-color: var(--surface);
   border: 1px solid var(--line);
 }
 
 .home-todo-desc {
   margin: 0 0 12px;
   font-size: 0.86rem;
-  color: var(--sub);
+  color: var(--ink-muted);
   line-height: 1.5;
 }
 
@@ -105,7 +108,7 @@
   border-top: 1px solid var(--line);
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--navy-text);
 }
 
 .home-future-grid {
@@ -116,14 +119,15 @@
 
 .home-future-box {
   padding: 14px 16px;
-  background-color: var(--bg);
+  background-color: var(--surface-sunken);
   border: 1px dashed var(--line);
-  border-left: 4px solid var(--sub);
+  border-left: 4px solid var(--ink-muted);
   border-radius: 4px;
 }
 
 .home-future-title {
   margin: 0 0 6px;
+  font-family: var(--font-display);
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--ink);
@@ -133,7 +137,7 @@
   margin: 0;
   font-size: 0.84rem;
   font-weight: 600;
-  color: var(--sub);
+  color: var(--ink-muted);
 }
 
 .home-karte-launcher {
@@ -142,7 +146,7 @@
   align-items: flex-end;
   gap: 12px;
   padding: 16px;
-  background-color: var(--bg);
+  background-color: var(--surface-sunken);
   border: 1px solid var(--line);
   border-radius: 4px;
   margin-bottom: 14px;
@@ -162,13 +166,13 @@
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--ink);
-  background-color: var(--bg);
+  background-color: var(--surface-sunken);
   border: 1px solid var(--line);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .home-karte-member-btn:hover {
-  background-color: var(--card);
-  border-color: var(--navy);
+  background-color: var(--surface);
+  border-color: var(--navy-band);
 }

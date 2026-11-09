@@ -146,7 +146,7 @@ function KarteTrendSvgChart({
         <span className="karte-legend-item">
           <span
             className="karte-legend-swatch"
-            style={{ backgroundColor: 'var(--navy)' }}
+            style={{ backgroundColor: 'var(--navy-band)' }}
           />
           総（コール数・左軸：最大 {maxTotal}件）
         </span>
@@ -195,7 +195,7 @@ function KarteTrendSvgChart({
                 y={y + 4}
                 textAnchor="end"
                 fontSize="11"
-                fill="var(--sub)"
+                fill="var(--ink-muted)"
               >
                 {totalLabel}
               </text>
@@ -247,7 +247,7 @@ function KarteTrendSvgChart({
         {trend.points.length > 1 && (
           <polyline
             fill="none"
-            stroke="var(--navy)"
+            stroke="var(--navy-band)"
             strokeWidth="2"
             points={totalPolyline}
           />
@@ -258,7 +258,7 @@ function KarteTrendSvgChart({
             cx={getX(p.date)}
             cy={getYTotal(p.total)}
             r="3.5"
-            fill="var(--navy)"
+            fill="var(--navy-band)"
           />
         ))}
 
@@ -294,7 +294,7 @@ function KarteTrendSvgChart({
               y={height - 12}
               textAnchor="middle"
               fontSize="11"
-              fill="var(--sub)"
+              fill="var(--ink-muted)"
             >
               {shortDate}
             </text>
@@ -303,7 +303,7 @@ function KarteTrendSvgChart({
       </svg>
 
       {trend.guidanceDates.length > 0 && (
-        <div style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--sub)' }}>
+        <div style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
           <strong>指導した日の一覧：</strong>{' '}
           {trend.guidanceDates
             .map((g) => {
@@ -898,7 +898,7 @@ export function KartePage() {
               </Button>
             ))}
           </div>
-          <div style={{ fontSize: '0.88rem', color: 'var(--sub)' }}>
+          <div style={{ fontSize: '0.88rem', color: 'var(--ink-muted)' }}>
             {asOfDate && kpiAggregation ? (
               <span>
                 集計期間：{kpiAggregation.startDate} 〜 {kpiAggregation.endDate}（
@@ -1167,7 +1167,7 @@ export function KartePage() {
             <span className="karte-section-number">4</span>
             推移（2か月分の日ごとのア・総と指導した日）
           </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--sub)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
             指導の前後で数字が動いたかを確認します
           </span>
         </div>
@@ -1184,7 +1184,7 @@ export function KartePage() {
             <span className="karte-section-number">5</span>
             時間帯別（14区分・{PERIOD_LABELS[selectedPeriod]}）
           </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--sub)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
             月の実率の目標を下回る時間帯（総が0は除く）を「弱い時間帯」として橙で表示します
           </span>
         </div>
@@ -1226,9 +1226,9 @@ export function KartePage() {
                     {row.isWeak ? (
                       <Tag tone="warn">弱い時間帯（実率目標未達）</Tag>
                     ) : row.total === 0 ? (
-                      <span style={{ color: 'var(--muted)' }}>コールなし</span>
+                      <span style={{ color: 'var(--ink-muted)' }}>コールなし</span>
                     ) : row.targetRateConnected === null ? (
-                      <span style={{ color: 'var(--sub)' }}>目標が未入力</span>
+                      <span style={{ color: 'var(--ink-muted)' }}>目標が未入力</span>
                     ) : (
                       <Tag tone="good">目標以上</Tag>
                     )}
@@ -1325,7 +1325,7 @@ export function KartePage() {
             <span className="karte-section-number">7</span>
             タイムライン（指導と活動の記録）
           </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--sub)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
             ロープレの記録・研修の記録・部下メモ（上席だけ）を新しい順に表示します
           </span>
         </div>
@@ -1353,7 +1353,7 @@ export function KartePage() {
               </Button>
             ))}
           </div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--sub)' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
             表示件数：{timelineItems.length}件
           </div>
         </div>

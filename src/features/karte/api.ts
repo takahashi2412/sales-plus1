@@ -119,7 +119,7 @@ export function formatKarteDbError(err: unknown): string {
 
 /**
  * 選んだ人と、その人の今のチームの人（順位に使う）だけを対象に、
- * 「2か月前の月の1日」から今日までの kpi_entries と targets を .range() で分割取得し、
+ * 「2か月前の月の1日」から今日までの kpi_entries と kpi_targets を .range() で分割取得し、
  * 読めた import_logs のうち approved でないものに入っている kpi_entries だけを外して返す
  */
 export async function fetchKarteMemberScopedKpiData(
@@ -166,7 +166,7 @@ export async function fetchKarteMemberScopedKpiData(
     ),
     fetchAllRowsByRange<KpiTargetRow>((from, to) =>
       client
-        .from('targets')
+        .from('kpi_targets')
         .select('*')
         .in('member_id', scopedMemberIds)
         .gte('month', fromDate)
