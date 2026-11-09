@@ -19,11 +19,15 @@ import {
   calculateCallHoursAndUnmetSlots,
   calculateTeamRankings,
   evaluateKarteKpiTargets,
+  fetchAllRowsByRange,
+  filterApprovedKpiEntries,
   formatKarteAsOfDateLabel,
   formatKarteRate,
   formatRatioAndDiff,
+  getTwoMonthsAgoFirstDate,
   pickSelectableKarteMembers,
   resolveKarteAsOfDate,
+  resolveScopedMemberIdsForKarteKpi,
 } from '../../src/features/karte/shared'
 import type {
   KpiEntryRow,
@@ -817,6 +821,89 @@ describe('karte shared calculations', () => {
       expect(formatKarteDbError({ message: 'permission denied' })).toContain(
         'この操作はできません',
       )
+    })
+
+    it('filterApprovedKpiEntries：管理者でない場合（import_logsが0件）は何も外さず、管理者の場合は承認前（pending等）の分だけを外す', () => {
+      const sampleEntries: KpiEntryRow[] = [
+        makeEntry({
+          id: 'e-approved',
+          import_log_id: 'imp-approved',
+          member_id: 'member-1',
+          date: '2026-11-06',
+          total: 50,
+        }),
+        makeEntry({
+          id: 'e-pending',
+          import_log_id: 'imp-pending',
+          member_id: 'member-1',
+          date: '2026-11-07',
+          total: 60,
+        }),
+      ]
+
+      // 管理者でない場合：import_logs は RLS で 0件になる → DBが既に承認済みだけ返しているため何も外さない
+      const forNonAdmin = filterApprovedKpiEntries([sampleEntries[0]], [])
+      expect(forNonAdmin.map((e) => e.id)).toEqual(['e-approved'])
+
+      // 管理者の場合：読めた import_logs のうち status が approved でない記録（pending / replaced）の分だけ外す
+      const forAdmin = filterApprovedKpiEntries(sampleEntries, [
+        { id: 'imp-approved', status: 'approved' },
+        { id: 'imp-pending', status: 'pending' },
+      ])
+      expect(forAdmin.map((e) => e.id)).toEqual(['e-approved'])
+    })
+
+    it('読む範囲の絞り込み（選んだ人と今のチームの人・2か月前の月の1日から）と、2,500行を3回に分けて全部読める .range() 共通関数', async () => {
+      const m1 = members.find((m) => m.id === 'member-1')!
+      const ret1 = members.find((m) => m.id === 'retired-1')!
+
+      // 現役の member-1 を選んだときは、同じチームAの現役（member-1, leader-a）だけ（退職者やチームBは含まない）
+      const scopedActive = resolveScopedMemberIdsForKarteKpi(
+        m1,
+        members,
+        affiliations,
+        '2026-11-09',
+      )
+      expect(scopedActive.sort()).toEqual(['leader-a', 'member-1'])
+
+      // 退職者を選んだときは本人だけ
+      const scopedRetired = resolveScopedMemberIdsForKarteKpi(
+        ret1,
+        members,
+        affiliations,
+        '2026-11-09',
+      )
+      expect(scopedRetired).toEqual(['retired-1'])
+
+      // 2か月前の月の1日
+      expect(getTwoMonthsAgoFirstDate('2026-11-09')).toBe('2026-09-01')
+      expect(getTwoMonthsAgoFirstDate('2026-01-15')).toBe('2025-11-01')
+
+      // 偽のクライアントで 2,500行を 1,000行ずつ3回に分けて全部読めること
+      const totalRows = Array.from({ length: 2500 }, (_, i) => ({
+        id: `row-${i + 1}`,
+        index: i,
+      }))
+      const rangeCalls: Array<[number, number]> = []
+      const fakeQuery = {
+        range: async (from: number, to: number) => {
+          rangeCalls.push([from, to])
+          return {
+            data: totalRows.slice(from, to + 1),
+            error: null,
+          }
+        },
+      }
+
+      const loaded = await fetchAllRowsByRange(fakeQuery)
+      expect(rangeCalls).toEqual([
+        [0, 999],
+        [1000, 1999],
+        [2000, 2999],
+      ])
+      expect(loaded.length).toBe(2500)
+      expect(loaded[0].id).toBe('row-1')
+      expect(loaded[2499].id).toBe('row-2500')
     })
   })
 })

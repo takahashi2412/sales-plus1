@@ -51,15 +51,22 @@
    - `src/features/karte/index.tsx`・`api.ts`・`styles.css` を作成し、アドレス `#/karte?member=…` の読み書きと同期、退職者選択時の案内、設定値不足時の「設定値が入っていません」案内、および設計書10章の7つの部品（1.基本情報と順位、2.KPI（9段階＋粗利）、3.約束と見込み、4.推移（SVG折れ線＋指導日の縦線）、5.時間帯別（弱い時間帯を橙強調）、6.育成の状態、7.タイムライン）を順番どおりに実装しました。
 3. **リーダー用ホーム画面の実装（Step 3）**
    - `src/features/home/index.tsx`・`api.ts`・`styles.css` を作成し、役割ごとの件数つき項目（0件の項目も表示・押すと対象画面へ遷移）、これからの区切りで出る予告枠、および下部の「メンバーカルテを開く」ランチャーを実装しました。
+4. **レビュー指摘2点の修正**
+   - **① 管理者でない人への未達・KPI表示の修正**：
+     - ホーム（`src/features/home/api.ts`・`src/features/home/shared/`）：`alerts` はDBのRLS（`is_approved_import`）で既に承認済みの取り込み分しか読めないため、`approvedImportIds` による絞り込みを廃止し、読めた `alerts` のうち `needs_response` が真で `response` が空のものを数える形に修正しました。
+     - カルテ（`src/features/karte/api.ts`・`src/features/karte/shared/`）：`import_logs` が読めることを前提にせず、「読めた `import_logs` のうち `status` が `approved` でない記録」に入っている `kpi_entries` だけを外す純粋関数 `filterApprovedKpiEntries` を実装しました（管理者でない人は `import_logs` が0件のため何も外さず、管理者は自分の承認前・置きかえ分のKPIだけが外れます）。単体テストも追加しました。
+   - **② Supabase 1,000行上限への対応（範囲絞り込み＋`.range()` 分割読み込み）**：
+     - `kpi_entries`・`targets` の取得範囲を「選んだ人とその人の今のチームの人（順位用）」かつ「2か月前の月の1日から今日まで」（`resolveScopedMemberIdsForKarteKpi`・`getTwoMonthsAgoFirstDate`）に絞り込み、選んだ人を切り替えたときも必要な範囲を読み込むようにしました。
+     - `.range()` で1,000行ずつ分けて1,000行未満になるまで読み続ける共通関数（`fetchAllRowsByRange` / `fetchAllHomeRowsByRange`）を `karte`・`home` に実装し、日々のKPI・目標・取り込み記録・ロープレの記録・テーマ表・研修・部下メモ・未達・トークの読み込みにすべて適用しました。偽のクライアントで2,500行を3回に分けて全件読める単体テストを追加しました。
 
 ## 決められずに止めたこと・質問
 - なし（計画書初回指定時の `plan_karte-common_v1.md` と `plan_karte_v1.md` の確認のみ0章で実施し、本人の指示どおり `plan_karte_v1.md` を進めました）。
 
 ## テストの結果（通った数／全体）
-- 単体テスト＋守りのテスト（`npm test`）：**14ファイル／187テスト中 187テスト通過**（失敗 0）
+- 単体テスト＋守りのテスト（`npm test`）：**14ファイル／190テスト中 190テスト通過**（失敗 0）
   - 内訳：
-    - `tests/karte/karte-shared.test.ts`：12 / 12 通過
-    - `tests/home/home-shared.test.ts`：2 / 2 通過
+    - `tests/karte/karte-shared.test.ts`：14 / 14 通過
+    - `tests/home/home-shared.test.ts`：3 / 3 通過
     - 既存の単体テスト（`foundation`・`roleplay`・`kpi`・`memo`）：8ファイル 85 / 85 通過
     - 守りのテスト（`tests/guard/permissions.test.ts`・`roleplay.test.ts`・`kpi-memo.test.ts`・`karte.test.ts`）：4ファイル 88 / 88 通過
 - ビルド確認（`npm run build`）：型チェック（`tsc -b`）および本番ビルド（`vite build`）ともにエラーなしで通過

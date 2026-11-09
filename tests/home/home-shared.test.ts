@@ -11,6 +11,7 @@ import {
   countPendingTalksForViewer,
   countRoleplayNotices,
   countUnrespondedAlerts,
+  fetchAllHomeRowsByRange,
 } from '../../src/features/home/shared'
 import type { AlertRow, ImportLogRow } from '../../src/features/kpi/shared/types'
 import type { SubordinateMemoRow } from '../../src/features/memo/memo-logic'
@@ -272,9 +273,8 @@ const sampleImportLogs: ImportLogRow[] = [
 ]
 
 describe('home shared calculations', () => {
-  it('未対応の未達・部下メモの確認待ち・ロープレの知らせ・トークの確認待ち・CSV取り込みを各画面と同じ式で数える', () => {
-    const approvedIds = new Set(['imp-approved'])
-    expect(countUnrespondedAlerts(sampleAlerts, approvedIds)).toBe(1)
+  it('未対応の未達（import_logsが読めない非管理者でもalertsから直接数える）・部下メモの確認待ち・ロープレの知らせ・トークの確認待ち・CSV取り込みを各画面と同じ式で数える', () => {
+    expect(countUnrespondedAlerts(sampleAlerts)).toBe(1)
     expect(
       countPendingCheckMemos(sampleMemos, 'leader-a', '2026-11-06'),
     ).toBe(1)
@@ -300,17 +300,17 @@ describe('home shared calculations', () => {
       teamId: 'team-a',
       mgrTeamIds: [],
     }
+    // 管理者でないリーダーは importLogs が 0件（[]）でも未対応の未達が 1件出る
     const leaderRes = buildHomeSummary({
       viewer: viewerLeaderNonAdmin,
       todayJst: '2026-11-06',
       alerts: sampleAlerts,
-      approvedImportIds: new Set(['imp-approved']),
       memos: sampleMemos,
       memberThemes: sampleMemberThemes,
       roleplays: sampleRoleplays,
       roleplaySettings: defaultRoleplaySettings,
       talks: sampleTalks,
-      importLogs: sampleImportLogs,
+      importLogs: [],
     })
 
     expect(leaderRes.items.map((i) => i.key)).toEqual([
@@ -319,6 +319,7 @@ describe('home shared calculations', () => {
       'roleplay_notices',
       'pending_talks',
     ])
+    expect(leaderRes.counts.unrespondedAlerts).toBe(1)
     expect(leaderRes.counts.pendingTalks).toBe(1)
 
     const viewerLeaderAdmin: ViewerContext = {
@@ -329,7 +330,6 @@ describe('home shared calculations', () => {
       viewer: viewerLeaderAdmin,
       todayJst: '2026-11-06',
       alerts: sampleAlerts,
-      approvedImportIds: new Set(['imp-approved']),
       memos: sampleMemos,
       memberThemes: sampleMemberThemes,
       roleplays: sampleRoleplays,
@@ -353,14 +353,14 @@ describe('home shared calculations', () => {
       viewer: viewerMgr,
       todayJst: '2026-11-06',
       alerts: sampleAlerts,
-      approvedImportIds: new Set(['imp-approved']),
       memos: sampleMemos,
       memberThemes: sampleMemberThemes,
       roleplays: sampleRoleplays,
       roleplaySettings: defaultRoleplaySettings,
       talks: sampleTalks,
-      importLogs: sampleImportLogs,
+      importLogs: [],
     })
+    expect(mgrRes.counts.unrespondedAlerts).toBe(1)
     expect(countPendingTalksForViewer(sampleTalks, viewerMgr)).toBe(2)
     expect(mgrRes.counts.pendingCheckMemos).toBe(0)
     expect(
@@ -380,7 +380,6 @@ describe('home shared calculations', () => {
       viewer: viewerCeo,
       todayJst: '2026-11-06',
       alerts: sampleAlerts,
-      approvedImportIds: new Set(['imp-approved']),
       memos: sampleMemos,
       memberThemes: sampleMemberThemes,
       roleplays: sampleRoleplays,
@@ -396,5 +395,25 @@ describe('home shared calculations', () => {
     expect(formatHomeDbError({ message: 'rls denied' })).toContain(
       'この操作はできません',
     )
+  })
+
+  it('fetchAllHomeRowsByRange：偽のクライアントで2,500行を1,000行ずつ3回に分けて全部読める', async () => {
+    const totalRows = Array.from({ length: 2500 }, (_, i) => ({
+      id: `alert-${i + 1}`,
+    }))
+    const rangeCalls: Array<[number, number]> = []
+    const loaded = await fetchAllHomeRowsByRange((from, to) => {
+      rangeCalls.push([from, to])
+      return Promise.resolve({
+        data: totalRows.slice(from, to + 1),
+        error: null,
+      })
+    })
+    expect(rangeCalls).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ])
+    expect(loaded.length).toBe(2500)
   })
 })

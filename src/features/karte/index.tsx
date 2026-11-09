@@ -8,6 +8,7 @@ import {
 import { formatDecimal1 } from '../kpi/shared/targets'
 import { ROLEPLAY_KIND_LABELS } from '../roleplay/shared/types'
 import {
+  fetchKarteMemberScopedKpiData,
   fetchKartePageDataset,
   formatKarteDbError,
   type KartePageDataset,
@@ -28,6 +29,7 @@ import {
   getPreviousYearMonth,
   pickSelectableKarteMembers,
   resolveKarteAsOfDate,
+  resolveScopedMemberIdsForKarteKpi,
   type KarteKpiMetricKey,
   type KartePeriod,
   type KarteRateMetricKey,
@@ -338,7 +340,11 @@ export function KartePage() {
     setLoading(true)
     setErrorMessage(null)
     try {
-      const data = await fetchKartePageDataset()
+      const hint =
+        typeof window !== 'undefined'
+          ? parseMemberIdFromHash(window.location.hash)
+          : null
+      const data = await fetchKartePageDataset(hint)
       setDataset(data)
       setSelectedYearMonth((prev) => prev || data.todayJst.slice(0, 7))
     } catch (err) {
@@ -397,6 +403,52 @@ export function KartePage() {
       }
     }
   }, [selectedMemberInfo, selectedMemberId])
+
+  // 選んだ人が切り替わったとき、その人と今のチームの人の KPI・目標を読み込む
+  useEffect(() => {
+    if (!dataset || !selectedMemberInfo) return
+    const neededIds = resolveScopedMemberIdsForKarteKpi(
+      selectedMemberInfo.member,
+      dataset.members,
+      dataset.affiliations,
+      dataset.todayJst,
+    )
+    const loadedSet = new Set(dataset.scopedMemberIds)
+    const allAlreadyLoaded = neededIds.every((id) => loadedSet.has(id))
+    if (allAlreadyLoaded) return
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const scoped = await fetchKarteMemberScopedKpiData({
+          selectedMember: selectedMemberInfo.member,
+          members: dataset.members,
+          affiliations: dataset.affiliations,
+          todayJst: dataset.todayJst,
+          readableImportLogs: dataset.readableImportLogs,
+        })
+        if (cancelled) return
+        setDataset((prev) =>
+          prev
+            ? {
+                ...prev,
+                scopedMemberIds: scoped.scopedMemberIds,
+                approvedEntries: scoped.approvedEntries,
+                targets: scoped.targets,
+              }
+            : prev,
+        )
+      } catch (err) {
+        if (!cancelled) {
+          setErrorMessage(formatKarteDbError(err))
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [dataset, selectedMemberInfo])
 
   const handleSelectMember = (memberId: string) => {
     setSelectedMemberId(memberId)

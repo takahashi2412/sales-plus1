@@ -36,7 +36,6 @@ export interface BuildHomeSummaryInput {
   viewer: ViewerContext
   todayJst: string
   alerts: AlertRow[]
-  approvedImportIds?: Set<string>
   memos: SubordinateMemoRow[]
   memberThemes: MemberThemeRow[]
   roleplays: RoleplayRow[]

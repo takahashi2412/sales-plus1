@@ -44,7 +44,6 @@ export function HomePage() {
       viewer: dataset.viewer,
       todayJst: dataset.todayJst,
       alerts: dataset.alerts,
-      approvedImportIds: dataset.approvedImportIds,
       memos: dataset.memos,
       memberThemes: dataset.memberThemes,
       roleplays: dataset.roleplays,

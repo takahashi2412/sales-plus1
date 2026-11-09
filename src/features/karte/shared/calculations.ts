@@ -25,6 +25,7 @@ import {
 import {
   CSV_TIME_SLOT_HEADERS,
   KPI_TIME_SLOTS,
+  type ImportLogRow,
   type KpiEntryRow,
   type KpiSlotMetrics,
   type KpiTargetRow,
@@ -1288,3 +1289,113 @@ export function buildKarteTimeline(
 
   return items
 }
+
+/**
+ * 読めた kpi_entries から、「読めた import_logs のうち status が approved でない記録」に入っている日々のKPIだけを外す。
+ * - 管理者でない人は import_logs が0件なので、何も外さない（DBのRLSで既に承認済みのみに絞られている）
+ * - 管理者は自分の承認前（pending）や置きかえ（replaced）の import_logs も読めるため、approved 以外の分だけを外す
+ */
+export function filterApprovedKpiEntries(
+  entries: KpiEntryRow[],
+  readableImportLogs: ReadonlyArray<Pick<ImportLogRow, 'id' | 'status'>>,
+): KpiEntryRow[] {
+  const unapprovedIds = new Set<string>()
+  for (const log of readableImportLogs) {
+    if (log.status !== 'approved') {
+      unapprovedIds.add(log.id)
+    }
+  }
+  if (unapprovedIds.size === 0) {
+    return entries
+  }
+  return entries.filter((e) => !unapprovedIds.has(e.import_log_id))
+}
+
+/**
+ * 指定した日付（YYYY-MM-DD または YYYY-MM）から「2か月前の月の1日」（YYYY-MM-01）を返す
+ */
+export function getTwoMonthsAgoFirstDate(dateOrYearMonth: string): string {
+  const [y, m] = dateOrYearMonth.slice(0, 7).split('-').map(Number)
+  const d = new Date(Date.UTC(y, m - 3, 1))
+  const py = d.getUTCFullYear()
+  const pm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  return `${py}-${pm}-01`
+}
+
+/**
+ * カルテで KPI・目標を読む対象メンバーの ID 一覧を返す：
+ * 選んだ人と、その人の今のチームの人（現役メンバー・順位に使う）だけ
+ */
+export function resolveScopedMemberIdsForKarteKpi(
+  selectedMember: MemberRow,
+  members: MemberRow[],
+  affiliations: MemberAffiliationRow[],
+  todayJst: string = getTodayJstDateString(),
+): string[] {
+  const ids = new Set<string>([selectedMember.id])
+  if (!isMemberRetired(selectedMember, todayJst)) {
+    const teamId = resolveCurrentTeamId(
+      selectedMember.id,
+      affiliations,
+      todayJst,
+    )
+    if (teamId) {
+      for (const m of members) {
+        if (isMemberRetired(m, todayJst)) continue
+        if (resolveCurrentTeamId(m.id, affiliations, todayJst) === teamId) {
+          ids.add(m.id)
+        }
+      }
+    }
+  }
+  return [...ids]
+}
+
+export const KARTE_PAGE_SIZE = 1000
+
+export interface RangeQueryResult<T> {
+  data: T[] | null
+  error: unknown
+}
+
+export type RangeQuerySource<T> =
+  | {
+      range: (
+        from: number,
+        to: number,
+      ) => PromiseLike<RangeQueryResult<T>> | RangeQueryResult<T>
+    }
+  | ((
+      from: number,
+      to: number,
+    ) => PromiseLike<RangeQueryResult<T>> | RangeQueryResult<T>)
+
+/**
+ * Supabase の1回あたり最大1,000行の上限を回避し、.range() で1,000行ずつ分けて
+ * 返ってきた行が1,000行より少なくなるまで読み続ける共通関数
+ */
+export async function fetchAllRowsByRange<T>(
+  source: RangeQuerySource<T>,
+  pageSize: number = KARTE_PAGE_SIZE,
+): Promise<T[]> {
+  const allRows: T[] = []
+  let from = 0
+  while (true) {
+    const to = from + pageSize - 1
+    const res =
+      typeof source === 'function'
+        ? await source(from, to)
+        : await source.range(from, to)
+    if (res.error) {
+      throw res.error
+    }
+    const batch = res.data ?? []
+    allRows.push(...batch)
+    if (batch.length < pageSize) {
+      break
+    }
+    from += pageSize
+  }
+  return allRows
+}
+

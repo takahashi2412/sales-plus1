@@ -5,6 +5,7 @@ import type {
 } from '../../../foundation/types'
 import type { ViewerContext } from '../../../foundation/viewer'
 import type {
+  ImportLogRow,
   KpiEntryRow,
   KpiSlotMetrics,
   KpiTargetRow,
@@ -208,6 +209,7 @@ export interface BuildKarteTimelineInput {
 }
 
 export type {
+  ImportLogRow,
   KpiEntryRow,
   KpiSlotMetrics,
   KpiTargetRow,

@@ -60,20 +60,63 @@ export const HOME_FUTURE_ITEMS: readonly HomeFuturePlaceholderItem[] = [
   },
 ]
 
+export const HOME_PAGE_SIZE = 1000
+
+export interface HomeRangeQueryResult<T> {
+  data: T[] | null
+  error: unknown
+}
+
+export type HomeRangeQuerySource<T> =
+  | {
+      range: (
+        from: number,
+        to: number,
+      ) => PromiseLike<HomeRangeQueryResult<T>> | HomeRangeQueryResult<T>
+    }
+  | ((
+      from: number,
+      to: number,
+    ) => PromiseLike<HomeRangeQueryResult<T>> | HomeRangeQueryResult<T>)
+
+/**
+ * Supabase の1回あたり最大1,000行の上限を回避し、.range() で1,000行ずつ分けて
+ * 返ってきた行が1,000行より少なくなるまで読み続ける共通関数
+ */
+export async function fetchAllHomeRowsByRange<T>(
+  source: HomeRangeQuerySource<T>,
+  pageSize: number = HOME_PAGE_SIZE,
+): Promise<T[]> {
+  const allRows: T[] = []
+  let from = 0
+  while (true) {
+    const to = from + pageSize - 1
+    const res =
+      typeof source === 'function'
+        ? await source(from, to)
+        : await source.range(from, to)
+    if (res.error) {
+      throw res.error
+    }
+    const batch = res.data ?? []
+    allRows.push(...batch)
+    if (batch.length < pageSize) {
+      break
+    }
+    from += pageSize
+  }
+  return allRows
+}
+
 /**
  * 未対応の未達の件数を数える
- * 読める未達（alerts）のうち、承認済みの取り込みの分で、needs_response が真で response が空のもの（日付は全部）
+ * 未達（alerts）はDBのRLS（is_approved_import）で承認済みの取り込みの分しか読めないため、
+ * 読めた alerts のうち needs_response が真で response が空のものを数える（日付は全部）
  */
-export function countUnrespondedAlerts(
-  alerts: AlertRow[],
-  approvedImportIds?: Set<string>,
-): number {
-  return alerts.filter((alert) => {
-    if (approvedImportIds && !approvedImportIds.has(alert.import_log_id)) {
-      return false
-    }
-    return Boolean(alert.needs_response) && !alert.response
-  }).length
+export function countUnrespondedAlerts(alerts: AlertRow[]): number {
+  return alerts.filter(
+    (alert) => Boolean(alert.needs_response) && !alert.response,
+  ).length
 }
 
 /**
@@ -161,7 +204,6 @@ export function buildHomeSummary(
     viewer,
     todayJst,
     alerts,
-    approvedImportIds,
     memos,
     memberThemes,
     roleplays,
@@ -170,7 +212,7 @@ export function buildHomeSummary(
     importLogs,
   } = input
 
-  const unrespondedAlerts = countUnrespondedAlerts(alerts, approvedImportIds)
+  const unrespondedAlerts = countUnrespondedAlerts(alerts)
   const pendingCheckMemos = countPendingCheckMemos(
     memos,
     viewer.memberId,

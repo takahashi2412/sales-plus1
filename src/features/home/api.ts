@@ -7,10 +7,7 @@ import type {
   TeamRow,
 } from '../../foundation/types'
 import { fetchViewerContext, type ViewerContext } from '../../foundation/viewer'
-import type {
-  AlertRow,
-  ImportLogRow,
-} from '../kpi/shared/types'
+import type { AlertRow, ImportLogRow } from '../kpi/shared/types'
 import type { SubordinateMemoRow } from '../memo/memo-logic'
 import type {
   MemberThemeRow,
@@ -20,6 +17,7 @@ import type {
   SettingRow,
   TalkRow,
 } from '../roleplay/shared/types'
+import { fetchAllHomeRowsByRange } from './shared'
 
 export const DEFAULT_HOME_ROLEPLAY_SETTINGS: RoleplaySettingsMap = {
   roleplay_alert_minutes: 30,
@@ -40,7 +38,6 @@ export interface HomePageDataset {
   affiliations: MemberAffiliationRow[]
   teams: TeamRow[]
   alerts: AlertRow[]
-  approvedImportIds: Set<string>
   importLogs: ImportLogRow[]
   memos: SubordinateMemoRow[]
   memberThemes: MemberThemeRow[]
@@ -109,7 +106,6 @@ export async function fetchHomePageDataset(
       affiliations: [],
       teams: [],
       alerts: [],
-      approvedImportIds: new Set(),
       importLogs: [],
       memos: [],
       memberThemes: [],
@@ -126,62 +122,80 @@ export async function fetchHomePageDataset(
     membersRes,
     affRes,
     teamsRes,
-    alertsRes,
-    importLogsRes,
-    memosRes,
-    memberThemesRes,
-    roleplaysRes,
-    talksRes,
     settingsRes,
+    alerts,
+    importLogs,
+    memos,
+    memberThemes,
+    roleplays,
+    talks,
   ] = await Promise.all([
     client.from('members').select('*').order('name', { ascending: true }),
     client.from('member_affiliations').select('*'),
     client.from('teams').select('*').order('name', { ascending: true }),
-    client.from('alerts').select('*'),
-    client.from('import_logs').select('*'),
-    client
-      .from('subordinate_memos')
-      .select('*')
-      .is('hidden_at', null)
-      .order('date', { ascending: false }),
-    client
-      .from('member_themes')
-      .select('*')
-      .is('hidden_at', null)
-      .order('started_on', { ascending: false }),
-    client
-      .from('roleplays')
-      .select('*')
-      .is('hidden_at', null)
-      .order('date', { ascending: false }),
-    client
-      .from('talks')
-      .select('*')
-      .is('hidden_at', null)
-      .order('code', { ascending: true }),
     client.from('settings').select('*').in('key', [...ROLEPLAY_SETTING_KEYS]),
+    fetchAllHomeRowsByRange<AlertRow>((from, to) =>
+      client
+        .from('alerts')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    viewer.isAdmin
+      ? fetchAllHomeRowsByRange<ImportLogRow>((from, to) =>
+          client
+            .from('import_logs')
+            .select('*')
+            .order('imported_at', { ascending: false })
+            .order('id', { ascending: true })
+            .range(from, to),
+        )
+      : Promise.resolve([] as ImportLogRow[]),
+    fetchAllHomeRowsByRange<SubordinateMemoRow>((from, to) =>
+      client
+        .from('subordinate_memos')
+        .select('*')
+        .is('hidden_at', null)
+        .order('date', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllHomeRowsByRange<MemberThemeRow>((from, to) =>
+      client
+        .from('member_themes')
+        .select('*')
+        .is('hidden_at', null)
+        .order('started_on', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllHomeRowsByRange<RoleplayRow>((from, to) =>
+      client
+        .from('roleplays')
+        .select('*')
+        .is('hidden_at', null)
+        .order('date', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllHomeRowsByRange<TalkRow>((from, to) =>
+      client
+        .from('talks')
+        .select('*')
+        .is('hidden_at', null)
+        .order('code', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
   ])
 
   const firstError =
-    membersRes.error ||
-    affRes.error ||
-    teamsRes.error ||
-    alertsRes.error ||
-    importLogsRes.error ||
-    memosRes.error ||
-    memberThemesRes.error ||
-    roleplaysRes.error ||
-    talksRes.error ||
-    settingsRes.error
+    membersRes.error || affRes.error || teamsRes.error || settingsRes.error
 
   if (firstError) {
     throw firstError
   }
-
-  const importLogs = (importLogsRes.data ?? []) as ImportLogRow[]
-  const approvedImportIds = new Set(
-    importLogs.filter((l) => l.status === 'approved').map((l) => l.id),
-  )
 
   return {
     viewer,
@@ -189,13 +203,12 @@ export async function fetchHomePageDataset(
     members: (membersRes.data ?? []) as MemberRow[],
     affiliations: (affRes.data ?? []) as MemberAffiliationRow[],
     teams: (teamsRes.data ?? []) as TeamRow[],
-    alerts: (alertsRes.data ?? []) as AlertRow[],
-    approvedImportIds,
+    alerts,
     importLogs,
-    memos: (memosRes.data ?? []) as SubordinateMemoRow[],
-    memberThemes: (memberThemesRes.data ?? []) as MemberThemeRow[],
-    roleplays: (roleplaysRes.data ?? []) as RoleplayRow[],
-    talks: (talksRes.data ?? []) as TalkRow[],
+    memos,
+    memberThemes,
+    roleplays,
+    talks,
     settings: parseHomeRoleplaySettings((settingsRes.data ?? []) as SettingRow[]),
   }
 }
